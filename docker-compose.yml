@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  nodeseeker:
+    build: .
+    container_name: nodeseeker-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - DATABASE_PATH=/app/data/nodeseeker.db
+    volumes:
+      # 持久化数据库文件
+      - nodeseeker_data:/usr/src/app/data
+      # 如果需要自定义配置文件，可以挂载
+      # - ./.env:/usr/src/app/.env:ro
+    networks:
+      - nodeseeker_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # 可选：添加 Nginx 反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: nodeseeker-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro  # SSL 证书目录（如果需要 HTTPS）
+    depends_on:
+      - nodeseeker
+    networks:
+      - nodeseeker_network
+
+volumes:
+  nodeseeker_data:
+    driver: local
+
+networks:
+  nodeseeker_network:
+    driver: bridge

@@ -95,15 +95,21 @@ export class SchedulerService {
                 return;
             }
 
-            // 创建服务实例
             const rssService = new RSSService(this.dbService);
-            const telegramService = new TelegramService(this.dbService, config.bot_token);
-            const matcherService = new MatcherService(this.dbService, telegramService);
-
             // 1. 抓取新的 RSS 数据
             console.log('📡 开始抓取 RSS 数据...');
             const rssResult = await rssService.processNewRSSData();
             console.log(`📊 RSS 抓取完成: 新增 ${rssResult.new} 篇文章，跳过 ${rssResult.skipped} 篇`);
+
+            if (!config.bot_token) {
+                console.log('⚠️ 未配置 Bot Token，跳过任务');
+                return;
+            }
+
+            // 创建服务实例
+            const telegramService = new TelegramService(this.dbService, config.bot_token);
+            const matcherService = new MatcherService(this.dbService, telegramService);
+
 
             // 2. 处理未推送的文章
             if (rssResult.new > 0) {
