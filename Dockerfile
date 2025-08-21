@@ -35,22 +35,14 @@ RUN bun run build
 # 生产阶段
 FROM base AS release
 
-# 创建非 root 用户和组（使用兼容的方式）
-RUN groupadd --system --gid 1001 nodejs && \
-    useradd --system --uid 1001 --gid nodejs --shell /bin/bash --create-home bun
-
-# 创建目录并设置权限
-RUN mkdir -p /usr/src/app/data /usr/src/app/logs && \
-    chown -R bun:nodejs /usr/src/app
+# 创建目录
+RUN mkdir -p /usr/src/app/data /usr/src/app/logs
 
 # 复制应用文件
 COPY --from=install /temp/prod/node_modules node_modules
 COPY --from=prerelease /usr/src/app/dist ./dist
 COPY --from=prerelease /usr/src/app/public ./public
 COPY --from=prerelease /usr/src/app/package.json .
-
-# 切换到非 root 用户
-USER bun
 
 # 设置环境变量
 ENV NODE_ENV=production
