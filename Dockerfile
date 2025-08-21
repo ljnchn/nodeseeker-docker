@@ -1,5 +1,5 @@
 # 使用官方 Bun 镜像作为基础镜像
-FROM oven/bun:1 as base
+FROM oven/bun:1 AS base
 WORKDIR /usr/src/app
 
 # 安装系统依赖（用于健康检查）
@@ -35,9 +35,9 @@ RUN bun run build
 # 生产阶段
 FROM base AS release
 
-# 创建非 root 用户和组
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 --ingroup nodejs bun
+# 创建非 root 用户和组（使用兼容的方式）
+RUN groupadd --system --gid 1001 nodejs && \
+    useradd --system --uid 1001 --gid nodejs --shell /bin/bash --create-home bun
 
 # 创建目录并设置权限
 RUN mkdir -p /usr/src/app/data /usr/src/app/logs && \
@@ -54,16 +54,16 @@ USER bun
 
 # 设置环境变量
 ENV NODE_ENV=production
-ENV PORT=3001
+ENV PORT=3010
 ENV HOST=0.0.0.0
 ENV DATABASE_PATH=/usr/src/app/data/nodeseeker.db
 
 # 暴露端口
-EXPOSE 3001
+EXPOSE 3010
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:3001/health || exit 1
+    CMD curl -f http://localhost:3010/health || exit 1
 
 # 启动应用
 ENTRYPOINT [ "bun", "run", "start" ]

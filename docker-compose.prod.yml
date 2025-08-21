@@ -9,10 +9,10 @@ services:
     container_name: nodeseeker-app-prod
     restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "3010:3010"
     environment:
       - NODE_ENV=production
-      - PORT=3001
+      - PORT=3010
       - HOST=0.0.0.0
       - DATABASE_PATH=/usr/src/app/data/nodeseeker.db
       - JWT_SECRET=${JWT_SECRET}  # 生产环境必须设置
@@ -27,7 +27,7 @@ services:
     networks:
       - nodeseeker_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3010/health"]
       interval: 30s
       timeout: 10s
       retries: 3

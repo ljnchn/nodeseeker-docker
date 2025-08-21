@@ -56,7 +56,7 @@ docker pull ghcr.io/{username}/nodeseeker-docker:latest
 # 运行容器
 docker run -d \
   --name nodeseeker \
-  -p 3001:3001 \
+  -p 3010:3010 \
   -v ./data:/app/data \
   -e JWT_SECRET=your-secret-key \
   ghcr.io/{username}/nodeseeker-docker:latest

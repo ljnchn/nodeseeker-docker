@@ -2,7 +2,7 @@
 
 ## 基础信息
 
-- **Base URL**: `http://localhost:3000`
+- **Base URL**: `http://localhost:3010`
 - **认证方式**: JWT Bearer Token
 - **Content-Type**: `application/json`
 
@@ -482,7 +482,7 @@ interface KeywordSub {
 
 ### JavaScript/Node.js
 ```javascript
-const API_BASE = 'http://localhost:3000';
+const API_BASE = 'http://localhost:3010';
 let token = '';
 
 // 登录
@@ -537,7 +537,7 @@ async function addSubscription(keywords) {
 import requests
 
 class NodeSeekerAPI:
-    def __init__(self, base_url='http://localhost:3000'):
+    def __init__(self, base_url='http://localhost:3010'):
         self.base_url = base_url
         self.token = None
     

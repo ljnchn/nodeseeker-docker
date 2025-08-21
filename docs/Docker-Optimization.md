@@ -7,7 +7,7 @@
 ### ✅ 修复的问题
 
 1. **端口不一致问题**
-   - 统一端口配置为 3001
+   - 统一端口配置为 3010
    - 修正 Dockerfile 和 docker-compose.yml 中的端口映射
 
 2. **健康检查缺失**
@@ -66,14 +66,14 @@ docker-compose logs -f nodeseeker
 docker-compose -f docker-compose.prod.yml up -d
 
 # 检查健康状态
-curl http://localhost:3001/health
+curl http://localhost:3010/health
 ```
 
 ### 服务访问
 
-- **应用访问**: http://localhost:3001
-- **健康检查**: http://localhost:3001/health
-- **API 接口**: http://localhost:3001/api/
+- **应用访问**: http://localhost:3010
+- **健康检查**: http://localhost:3010/health
+- **API 接口**: http://localhost:3010/api/
 
 ## 📋 配置要点
 
@@ -137,7 +137,7 @@ docker-compose up -d
 
 ### 常见问题
 
-1. **端口冲突**: 检查端口 3001 是否被占用
+1. **端口冲突**: 检查端口 3010 是否被占用
 2. **权限问题**: 确保数据目录权限正确
 3. **健康检查失败**: 检查应用启动状态和日志
 4. **环境变量**: 确认 JWT_SECRET 等必需变量已设置
@@ -157,7 +157,7 @@ docker exec -it nodeseeker-app /bin/bash
 docker-compose logs nodeseeker
 
 # 测试健康检查
-curl http://localhost:3001/health
+curl http://localhost:3010/health
 ```
 
 ## 🌐 外部代理配置（可选）
@@ -171,7 +171,7 @@ server {
     server_name your-domain.com;
     
     location / {
-        proxy_pass http://localhost:3001;
+        proxy_pass http://localhost:3010;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -189,7 +189,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nodeseeker.rule=Host(`your-domain.com`)"
-      - "traefik.http.services.nodeseeker.loadbalancer.server.port=3001"
+      - "traefik.http.services.nodeseeker.loadbalancer.server.port=3010"
 ```
 
 优化完成！现在项目采用了更简洁的单容器架构，减少了复杂度的同时保持了生产环境的稳定性。

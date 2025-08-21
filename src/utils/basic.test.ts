@@ -12,7 +12,7 @@ describe('NodeSeeker Application', () => {
 
   it('should validate environment variables format', () => {
     // 测试端口号是否为数字
-    const port = process.env.PORT || '3001'
+    const port = process.env.PORT || '3010'
     expect(Number.isNaN(Number(port))).toBe(false)
     
     // 测试主机地址格式

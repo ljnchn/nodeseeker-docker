@@ -3,7 +3,7 @@ import { z } from 'zod';
 // 环境变量验证 schema
 const envSchema = z.object({
   // Server
-  PORT: z.string().transform(Number).default('3000'),
+  PORT: z.string().transform(Number).default('3010'),
   HOST: z.string().default('0.0.0.0'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   
@@ -34,7 +34,7 @@ const envSchema = z.object({
   TELEGRAM_WEBHOOK_URL: z.string().url().optional(),
   
   // CORS
-  CORS_ORIGINS: z.string().default('http://localhost:3000'),
+  CORS_ORIGINS: z.string().default('http://localhost:3010'),
   
   // Logging
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),

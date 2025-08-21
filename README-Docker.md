@@ -29,7 +29,7 @@ docker-compose ps
 docker-compose logs -f nodeseeker
 ```
 
-应用将在 http://localhost:3000 启动。
+应用将在 http://localhost:3010 启动。
 
 ### 生产环境
 
@@ -142,7 +142,7 @@ docker-compose logs -f
 1. **端口冲突**
    ```bash
    # 检查端口占用
-   netstat -tulpn | grep :3000
+   netstat -tulpn | grep :3010
    # 或者修改 docker-compose.yml 中的端口映射
    ```
 
