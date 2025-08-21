@@ -42,6 +42,7 @@ RUN mkdir -p /usr/src/app/data /usr/src/app/logs
 COPY --from=install /temp/prod/node_modules node_modules
 COPY --from=prerelease /usr/src/app/dist ./dist
 COPY --from=prerelease /usr/src/app/public ./public
+COPY --from=prerelease /usr/src/app/src/database ./src/database
 COPY --from=prerelease /usr/src/app/package.json .
 
 # 设置环境变量
