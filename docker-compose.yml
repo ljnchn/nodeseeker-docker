@@ -12,7 +12,6 @@ services:
       - PORT=3010
       - HOST=0.0.0.0
       - DATABASE_PATH=/usr/src/app/data/nodeseeker.db
-      - JWT_SECRET=${JWT_SECRET:-default-dev-secret-change-in-production}
       - RSS_URL=${RSS_URL:-https://rss.nodeseek.com/}
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3010}
     volumes:

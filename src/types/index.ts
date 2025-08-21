@@ -176,10 +176,6 @@ export interface ServerConfig {
   environment: 'development' | 'production' | 'test';
   corsOrigins: string[];
   jwtSecret: string;
-  rateLimit: {
-    windowMs: number;
-    max: number;
-  };
 }
 
 // 作业配置接口
@@ -241,9 +237,6 @@ export interface EnvVars {
   HOST: string;
   NODE_ENV: 'development' | 'production' | 'test';
   DATABASE_PATH: string;
-  JWT_SECRET: string;
-  RATE_LIMIT_WINDOW_MS: number;
-  RATE_LIMIT_MAX: number;
   RSS_URL: string;
   RSS_TIMEOUT: number;
   RSS_USER_AGENT: string;

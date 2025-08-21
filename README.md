@@ -26,12 +26,11 @@
 # 1. 拉取镜像
 docker pull ghcr.io/ljnchn/nodeseeker-docker:latest
 
-# 2. 运行容器
+# 2. 运行容器（无需设置 JWT_SECRET）
 docker run -d \
   --name nodeseeker \
   -p 3010:3010 \
   -v nodeseeker_data:/usr/src/app/data \
-  -e JWT_SECRET=your-very-secure-jwt-secret-key-at-least-32-characters-long \
   ghcr.io/ljnchn/nodeseeker-docker:latest
 ```
 
@@ -42,9 +41,9 @@ docker run -d \
 git clone https://github.com/ljnchn/NodeSeeker-docker.git
 cd NodeSeeker-docker
 
-# 2. 配置环境变量
+# 2. 配置环境变量（可选）
 cp .env.example .env
-# 编辑 .env 文件，重要：修改 JWT_SECRET
+# 编辑 .env 文件，主要配置 RSS 和 Telegram 设置
 
 # 3. 启动服务
 docker-compose up -d
@@ -67,13 +66,7 @@ curl http://localhost:3010/health
 
 ### 必需配置
 
-```bash
-# JWT 密钥（生产环境必须修改为至少32字符）
-JWT_SECRET=your-very-secure-jwt-secret-key-at-least-32-characters-long
-
-# 数据库路径（Docker 环境建议保持默认）
-DATABASE_PATH=/usr/src/app/data/nodeseeker.db
-```
+无需配置任何环境变量，开箱即用！
 
 ### 可选配置
 

@@ -15,7 +15,6 @@ services:
       - PORT=3010
       - HOST=0.0.0.0
       - DATABASE_PATH=/usr/src/app/data/nodeseeker.db
-      - JWT_SECRET=${JWT_SECRET}  # 生产环境必须设置
       - RSS_URL=${RSS_URL:-https://rss.nodeseek.com/}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_WEBHOOK_URL=${TELEGRAM_WEBHOOK_URL}

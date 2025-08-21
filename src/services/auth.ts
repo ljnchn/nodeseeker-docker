@@ -1,7 +1,6 @@
 import { DatabaseService } from './database';
 import { getEnvConfig } from '../config/env';
 import * as bcrypt from 'bcryptjs';
-import * as jwt from 'jsonwebtoken';
 import type { BaseConfig, JWTPayload, AuthVerification } from '../types';
 
 export interface LoginRequest {
@@ -26,55 +25,47 @@ export interface AuthResult {
 }
 
 export class AuthService {
-  private readonly JWT_SECRET: string;
-  private readonly TOKEN_EXPIRY = '7d'; // 7天过期
+  // 使用固定 Token，简化认证流程
+  private readonly FIXED_TOKEN = 'nodeseeker-admin-token-2024';
+  private readonly TOKEN_EXPIRY = '7d'; // 保留过期时间概念，但实际不过期
 
   constructor(private dbService: DatabaseService) {
-    const config = getEnvConfig();
-    this.JWT_SECRET = config.JWT_SECRET;
+    // 移除对 JWT_SECRET 的依赖
   }
 
   /**
-   * 生成 JWT token
+   * 生成固定 Token
    */
   private generateToken(username: string): string {
-    const payload: JWTPayload = {
-      userId: 1, // 单用户系统，固定为1
-      username,
-    };
-
-    return jwt.sign(payload, this.JWT_SECRET, {
-      expiresIn: this.TOKEN_EXPIRY,
-      issuer: 'nodeseeker',
-      audience: 'nodeseeker-client'
-    });
+    // 返回固定的管理员 token
+    return this.FIXED_TOKEN;
   }
 
   /**
-   * 验证 JWT token
+   * 验证固定 Token
    */
   async verifyToken(token: string): Promise<AuthVerification> {
     try {
-      const payload = jwt.verify(token, this.JWT_SECRET, {
-        issuer: 'nodeseeker',
-        audience: 'nodeseeker-client'
-      }) as JWTPayload;
+      // 简单验证：检查 token 是否为固定值
+      if (token !== this.FIXED_TOKEN) {
+        return { valid: false, message: 'Token 无效' };
+      }
 
       // 验证用户是否仍然存在
       const config = this.dbService.getBaseConfig();
-      if (!config || config.username !== payload.username) {
-        return { valid: false, message: '用户不存在' };
+      if (!config) {
+        return { valid: false, message: '系统未初始化' };
       }
+
+      // 返回固定的用户信息
+      const payload: JWTPayload = {
+        userId: 1,
+        username: config.username
+      };
 
       return { valid: true, payload };
     } catch (error) {
-      if (error instanceof jwt.TokenExpiredError) {
-        return { valid: false, message: 'Token 已过期' };
-      } else if (error instanceof jwt.JsonWebTokenError) {
-        return { valid: false, message: 'Token 无效' };
-      } else {
-        return { valid: false, message: `Token 验证失败: ${error}` };
-      }
+      return { valid: false, message: `Token 验证失败: ${error}` };
     }
   }
 
@@ -128,7 +119,7 @@ export class AuthService {
         only_title: 0
       });
 
-      // 生成 JWT token
+      // 生成固定 token
       const token = this.generateToken(config.username);
 
       return {
@@ -180,7 +171,7 @@ export class AuthService {
         };
       }
 
-      // 生成 JWT token
+      // 生成固定 token
       const token = this.generateToken(config.username);
 
       return {
@@ -202,7 +193,7 @@ export class AuthService {
   }
 
   /**
-   * 刷新 token
+   * 刷新 token（返回相同的固定 token）
    */
   async refreshToken(oldToken: string): Promise<AuthResult> {
     const verification = await this.verifyToken(oldToken);
@@ -214,6 +205,7 @@ export class AuthService {
       };
     }
 
+    // 返回相同的固定 token
     const newToken = this.generateToken(verification.payload.username);
 
     return {

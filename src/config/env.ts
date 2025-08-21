@@ -10,13 +10,6 @@ const envSchema = z.object({
   // Database
   DATABASE_PATH: z.string().default('./data/nodeseeker.db'),
   
-  // JWT
-  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
-  
-  // Rate Limiting
-  RATE_LIMIT_WINDOW_MS: z.string().transform(Number).default('60000'),
-  RATE_LIMIT_MAX: z.string().transform(Number).default('200'),
-  
   // RSS
   RSS_URL: z.string().url().default('https://rss.nodeseek.com/'),
   RSS_TIMEOUT: z.string().transform(Number).default('10000'),
