@@ -6,26 +6,28 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile
-    container_name: nodeseeker-app
+    container_name: nodeseeker-app-prod
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3001:3001"
     environment:
       - NODE_ENV=production
-      - PORT=3000
+      - PORT=3001
       - HOST=0.0.0.0
-      - DATABASE_PATH=/app/data/nodeseeker.db
-      - JWT_SECRET=${JWT_SECRET}
+      - DATABASE_PATH=/usr/src/app/data/nodeseeker.db
+      - JWT_SECRET=${JWT_SECRET}  # 生产环境必须设置
       - RSS_URL=${RSS_URL:-https://rss.nodeseek.com/}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_WEBHOOK_URL=${TELEGRAM_WEBHOOK_URL}
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://your-domain.com}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
     volumes:
       - nodeseeker_data:/usr/src/app/data
-      - ./logs:/usr/src/app/logs
+      - nodeseeker_logs:/usr/src/app/logs
     networks:
       - nodeseeker_network
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -35,30 +37,16 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
 
-  nginx:
-    image: nginx:alpine
-    container_name: nodeseeker-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
-      - ./logs/nginx:/var/log/nginx
-    depends_on:
-      nodeseeker:
-        condition: service_healthy
-    networks:
-      - nodeseeker_network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  # 可选：添加监控服务
+  # 自动更新服务（可选）
   watchtower:
     image: containrrr/watchtower
     container_name: nodeseeker-watchtower
@@ -67,11 +55,31 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - WATCHTOWER_CLEANUP=true
-      - WATCHTOWER_POLL_INTERVAL=3600
+      - WATCHTOWER_POLL_INTERVAL=3600  # 每小时检查一次
       - WATCHTOWER_INCLUDE_STOPPED=true
-    command: nodeseeker-app
+      - WATCHTOWER_NOTIFICATIONS=email
+      - WATCHTOWER_NOTIFICATION_EMAIL_FROM=${WATCHTOWER_EMAIL_FROM}
+      - WATCHTOWER_NOTIFICATION_EMAIL_TO=${WATCHTOWER_EMAIL_TO}
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER=${WATCHTOWER_EMAIL_SERVER}
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PORT=${WATCHTOWER_EMAIL_PORT:-587}
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_USER=${WATCHTOWER_EMAIL_USER}
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PASSWORD=${WATCHTOWER_EMAIL_PASSWORD}
+    command: nodeseeker-app-prod
     networks:
       - nodeseeker_network
+
+  # 可选：添加监控服务
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: nodeseeker-prometheus
+  #   restart: unless-stopped
+  #   ports:
+  #     - "9090:9090"
+  #   volumes:
+  #     - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  #     - prometheus_data:/prometheus
+  #   networks:
+  #     - nodeseeker_network
 
 volumes:
   nodeseeker_data:
@@ -79,8 +87,19 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /opt/nodeseeker/data
+      device: /opt/nodeseeker/data  # 生产环境数据目录
+  nodeseeker_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/nodeseeker/logs  # 生产环境日志目录
+  # prometheus_data:
+  #   driver: local
 
 networks:
   nodeseeker_network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

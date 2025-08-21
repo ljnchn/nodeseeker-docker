@@ -7,7 +7,6 @@
 - `Dockerfile` - Docker 镜像构建文件
 - `docker-compose.yml` - 开发环境 Docker Compose 配置
 - `docker-compose.prod.yml` - 生产环境 Docker Compose 配置
-- `nginx.conf` - Nginx 反向代理配置
 - `.dockerignore` - Docker 构建忽略文件
 - `deploy.sh` - 部署脚本（Linux/macOS）
 
@@ -112,13 +111,6 @@ docker-compose down
 - 开发环境：数据存储在 Docker 卷中
 - 生产环境：数据存储在 `/opt/nodeseeker/data` 目录
 
-### SSL 配置
-
-如果需要 HTTPS，请：
-
-1. 将 SSL 证书放在 `ssl/` 目录下
-2. 修改 `nginx.conf` 中的 HTTPS 配置
-3. 取消注释相关配置
 
 ## 监控和日志
 
@@ -200,9 +192,8 @@ docker run --rm -v nodeseeker_data:/data -v $(pwd):/backup alpine tar xzf /backu
 
 ## 性能优化
 
-1. **调整 Nginx 配置**：根据需要修改 `nginx.conf` 中的缓存和压缩设置
-2. **资源限制**：在 docker-compose.yml 中添加内存和 CPU 限制
-3. **日志轮转**：配置日志轮转以防止日志文件过大
+1. **资源限制**：在 docker-compose.yml 中添加内存和 CPU 限制
+2. **日志轮转**：配置日志轮转以防止日志文件过大
 
 ## 安全建议
 
