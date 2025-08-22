@@ -1,9 +1,9 @@
 // 控制台页面 JavaScript
 document.addEventListener('DOMContentLoaded', function() {
-  const token = localStorage.getItem('token');
+  const sessionId = localStorage.getItem('sessionId');
   
   // 检查登录状态
-  if (!token) {
+  if (!sessionId) {
     window.location.href = '/login';
     return;
   }
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
   async function apiRequest(url, options = {}) {
     const defaultOptions = {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${sessionId}`,
         'Content-Type': 'application/json',
         ...options.headers
       }
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const result = await response.json();
       
       if (response.status === 401) {
-        localStorage.removeItem('token');
+        localStorage.removeItem('sessionId');
         window.location.href = '/login';
         return null;
       }

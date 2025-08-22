@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun run:*)",
+      "Bash(sqlite3:*)",
+      "Bash(curl:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

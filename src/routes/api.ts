@@ -24,28 +24,36 @@ type Variables = ContextVariables & {
 
 export const apiRoutes = new Hono<{ Variables: Variables }>();
 
-// JWT 中间件
-const jwtMiddleware = async (c: any, next: any) => {
+// Session 中间件
+const sessionMiddleware = async (c: any, next: any) => {
     const authHeader = c.req.header('Authorization');
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return c.json(createErrorResponse('请提供有效的认证token'), 401);
     }
 
-    const token = authHeader.substring(7);
+    const sessionId = authHeader.substring(7);
     const authService = c.get('authService');
+    
+    // 获取客户端IP地址用于验证
+    const ipAddress = c.req.header('x-forwarded-for') || 
+                     c.req.header('x-real-ip') || 
+                     c.env?.CF_CONNECTING_IP || 
+                     '127.0.0.1';
 
-    const verification = await authService.verifyToken(token);
+    const verification = await authService.verifySession(sessionId, ipAddress);
     if (!verification.valid) {
-        return c.json(createErrorResponse(verification.message || 'Token无效'), 401);
+        return c.json(createErrorResponse(verification.message || 'Session无效'), 401);
     }
 
+    // 设置session数据和向后兼容的payload
+    c.set('sessionData', verification.sessionData);
     c.set('jwtPayload', verification.payload);
     await next();
 };
 
-// 应用JWT中间件到所有API路由
-apiRoutes.use('*', jwtMiddleware);
+// 应用Session中间件到所有API路由
+apiRoutes.use('*', sessionMiddleware);
 
 // 获取基础配置
 apiRoutes.get('/config', async (c) => {

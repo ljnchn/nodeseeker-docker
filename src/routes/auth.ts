@@ -31,6 +31,16 @@ authRoutes.get('/check-init', async (c) => {
   }
 })
 
+// 获取客户端信息的辅助函数
+function getClientInfo(c: any): { ipAddress?: string; userAgent?: string } {
+  const ipAddress = c.req.header('x-forwarded-for') || 
+                   c.req.header('x-real-ip') || 
+                   c.env?.CF_CONNECTING_IP || 
+                   '127.0.0.1';
+  const userAgent = c.req.header('user-agent');
+  return { ipAddress, userAgent };
+}
+
 // 用户注册（初始化）
 authRoutes.post('/register', async (c) => {
   try {
@@ -45,14 +55,21 @@ authRoutes.post('/register', async (c) => {
     }
     
     const authService = c.get('authService')
+    const { ipAddress, userAgent } = getClientInfo(c)
+    
     const result = await authService.register({
       username,
       password,
       confirmPassword
-    })
+    }, ipAddress, userAgent)
     
     if (result.success) {
-      return c.json(result)
+      return c.json({
+        success: true,
+        message: result.message,
+        sessionId: result.sessionId,
+        user: result.user
+      })
     } else {
       return c.json(result, 400)
     }
@@ -78,13 +95,20 @@ authRoutes.post('/login', async (c) => {
     }
     
     const authService = c.get('authService')
+    const { ipAddress, userAgent } = getClientInfo(c)
+    
     const result = await authService.login({
       username,
       password
-    })
+    }, ipAddress, userAgent)
     
     if (result.success) {
-      return c.json(result)
+      return c.json({
+        success: true,
+        message: result.message,
+        sessionId: result.sessionId,
+        user: result.user
+      })
     } else {
       return c.json(result, 401)
     }
@@ -96,26 +120,28 @@ authRoutes.post('/login', async (c) => {
   }
 })
 
-// 验证token
+// 验证session
 authRoutes.post('/verify', async (c) => {
   try {
     const body = await c.req.json()
-    const { token } = body
+    const { sessionId } = body
     
-    if (!token) {
+    if (!sessionId) {
       return c.json({
         success: false,
-        message: '请提供token'
+        message: '请提供sessionId'
       }, 400)
     }
     
     const authService = c.get('authService')
-    const result = await authService.verifyToken(token)
+    const { ipAddress } = getClientInfo(c)
+    
+    const result = await authService.verifySession(sessionId, ipAddress)
     
     return c.json({
       success: result.valid,
-      message: result.message || (result.valid ? 'Token有效' : 'Token无效'),
-      data: result.payload
+      message: result.message || (result.valid ? 'Session有效' : 'Session无效'),
+      data: result.sessionData || result.payload
     })
   } catch (error) {
     return c.json({
@@ -125,31 +151,94 @@ authRoutes.post('/verify', async (c) => {
   }
 })
 
-// 刷新token
+// 刷新session
 authRoutes.post('/refresh', async (c) => {
   try {
     const body = await c.req.json()
-    const { token } = body
+    const { sessionId } = body
     
-    if (!token) {
+    if (!sessionId) {
       return c.json({
         success: false,
-        message: '请提供token'
+        message: '请提供sessionId'
       }, 400)
     }
     
     const authService = c.get('authService')
-    const result = await authService.refreshToken(token)
+    const result = await authService.refreshSession(sessionId)
     
     if (result.success) {
-      return c.json(result)
+      return c.json({
+        success: true,
+        message: result.message,
+        sessionId: result.sessionId,
+        user: result.user
+      })
     } else {
       return c.json(result, 401)
     }
   } catch (error) {
     return c.json({
       success: false,
-      message: `刷新token失败: ${error}`
+      message: `刷新session失败: ${error}`
+    }, 500)
+  }
+})
+
+// 登出
+authRoutes.post('/logout', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { sessionId } = body
+    
+    if (!sessionId) {
+      return c.json({
+        success: false,
+        message: '请提供sessionId'
+      }, 400)
+    }
+    
+    const authService = c.get('authService')
+    const result = await authService.logout(sessionId)
+    
+    return c.json(result)
+  } catch (error) {
+    return c.json({
+      success: false,
+      message: `登出失败: ${error}`
+    }, 500)
+  }
+})
+
+// 登出所有设备
+authRoutes.post('/logout-all', async (c) => {
+  try {
+    const authService = c.get('authService')
+    const result = await authService.logoutAllDevices()
+    
+    return c.json(result)
+  } catch (error) {
+    return c.json({
+      success: false,
+      message: `登出所有设备失败: ${error}`
+    }, 500)
+  }
+})
+
+// 获取活跃session列表
+authRoutes.get('/sessions', async (c) => {
+  try {
+    const authService = c.get('authService')
+    const sessions = authService.getUserSessions()
+    
+    return c.json({
+      success: true,
+      data: sessions
+    })
+  } catch (error) {
+    return c.json({
+      success: false,
+      message: `获取session列表失败: ${error}`
     }, 500)
   }
 })
@@ -212,18 +301,20 @@ authRoutes.post('/init', async (c) => {
     }
     
     const authService = c.get('authService')
+    const { ipAddress, userAgent } = getClientInfo(c)
+    
     const result = await authService.register({
       username,
       password,
       confirmPassword
-    })
+    }, ipAddress, userAgent)
     
     if (result.success) {
       return c.json({
         success: true,
         message: result.message,
         data: {
-          token: result.token,
+          sessionId: result.sessionId,
           user: result.user
         }
       })

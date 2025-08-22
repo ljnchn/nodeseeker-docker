@@ -4,13 +4,15 @@ document.addEventListener('DOMContentLoaded', function() {
   const messageDiv = document.getElementById('message');
 
   // 检查是否已经登录
-  const token = localStorage.getItem('token');
-  if (token) {
-    // 验证 token 是否有效
+  const sessionId = localStorage.getItem('sessionId');
+  if (sessionId) {
+    // 验证 session 是否有效
     fetch('/auth/verify', {
+      method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ sessionId })
     })
     .then(response => response.json())
     .then(result => {
@@ -19,8 +21,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     })
     .catch(() => {
-      // Token 无效，清除
-      localStorage.removeItem('token');
+      // Session 无效，清除
+      localStorage.removeItem('sessionId');
     });
   }
 
@@ -68,8 +70,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if (result.success) {
         showMessage('登录成功！正在跳转...', 'success');
         
-        // 保存 token
-        localStorage.setItem('token', result.data.token);
+        // 保存 sessionId
+        localStorage.setItem('sessionId', result.sessionId);
         
         // 跳转到控制台
         setTimeout(() => {

@@ -69,7 +69,26 @@ export interface ApiResponse<T = any> {
   data?: T;
 }
 
-// JWT 载荷接口
+// Session 数据接口
+export interface SessionData {
+  sessionId: string;
+  userId: number;
+  username: string;
+  createdAt: string;
+  lastAccessedAt: string;
+  expiresAt: string;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+// Session 验证结果接口
+export interface SessionVerification {
+  valid: boolean;
+  sessionData?: SessionData;
+  message?: string;
+}
+
+// JWT 载荷接口（保留用于向后兼容）
 export interface JWTPayload {
   userId: number;
   username: string;
@@ -81,6 +100,7 @@ export interface JWTPayload {
 export interface AuthVerification {
   valid: boolean;
   payload?: JWTPayload;
+  sessionData?: SessionData;
   message?: string;
 }
 

@@ -1,7 +1,8 @@
 import { DatabaseService } from './database';
+import { SessionService } from './session';
 import { getEnvConfig } from '../config/env';
 import * as bcrypt from 'bcryptjs';
-import type { BaseConfig, JWTPayload, AuthVerification } from '../types';
+import type { BaseConfig, SessionData, AuthVerification } from '../types';
 
 export interface LoginRequest {
   username: string;
@@ -17,7 +18,8 @@ export interface RegisterRequest {
 export interface AuthResult {
   success: boolean;
   message: string;
-  token?: string;
+  sessionId?: string;
+  sessionData?: SessionData;
   user?: {
     username: string;
     isInitialized: boolean;
@@ -25,48 +27,51 @@ export interface AuthResult {
 }
 
 export class AuthService {
-  // 使用固定 Token，简化认证流程
-  private readonly FIXED_TOKEN = 'nodeseeker-admin-token-2024';
-  private readonly TOKEN_EXPIRY = '7d'; // 保留过期时间概念，但实际不过期
+  private sessionService: SessionService;
 
   constructor(private dbService: DatabaseService) {
-    // 移除对 JWT_SECRET 的依赖
+    this.sessionService = new SessionService(dbService);
   }
 
   /**
-   * 生成固定 Token
+   * 验证session
    */
-  private generateToken(username: string): string {
-    // 返回固定的管理员 token
-    return this.FIXED_TOKEN;
-  }
-
-  /**
-   * 验证固定 Token
-   */
-  async verifyToken(token: string): Promise<AuthVerification> {
+  async verifySession(sessionId: string, ipAddress?: string): Promise<AuthVerification> {
     try {
-      // 简单验证：检查 token 是否为固定值
-      if (token !== this.FIXED_TOKEN) {
-        return { valid: false, message: 'Token 无效' };
+      const verification = this.sessionService.verifySession(sessionId, ipAddress);
+      
+      if (!verification.valid || !verification.sessionData) {
+        return { valid: false, message: verification.message || 'Session无效' };
       }
 
       // 验证用户是否仍然存在
       const config = this.dbService.getBaseConfig();
-      if (!config) {
-        return { valid: false, message: '系统未初始化' };
+      if (!config || config.username !== verification.sessionData.username) {
+        // 用户不存在，销毁session
+        this.sessionService.destroySession(sessionId);
+        return { valid: false, message: '用户不存在' };
       }
 
-      // 返回固定的用户信息
-      const payload: JWTPayload = {
-        userId: 1,
-        username: config.username
+      return { 
+        valid: true, 
+        sessionData: verification.sessionData,
+        // 为了向后兼容，保留payload格式
+        payload: {
+          userId: verification.sessionData.userId,
+          username: verification.sessionData.username
+        }
       };
-
-      return { valid: true, payload };
     } catch (error) {
-      return { valid: false, message: `Token 验证失败: ${error}` };
+      console.error('验证session失败:', error);
+      return { valid: false, message: `Session验证失败: ${error}` };
     }
+  }
+
+  /**
+   * 验证token（向后兼容方法，实际验证session）
+   */
+  async verifyToken(token: string, ipAddress?: string): Promise<AuthVerification> {
+    return this.verifySession(token, ipAddress);
   }
 
   /**
@@ -87,7 +92,7 @@ export class AuthService {
   /**
    * 用户注册（初始化）
    */
-  async register(request: RegisterRequest): Promise<AuthResult> {
+  async register(request: RegisterRequest, ipAddress?: string, userAgent?: string): Promise<AuthResult> {
     try {
       // 检查是否已经初始化
       const isInitialized = this.dbService.isInitialized();
@@ -119,13 +124,19 @@ export class AuthService {
         only_title: 0
       });
 
-      // 生成固定 token
-      const token = this.generateToken(config.username);
+      // 创建session
+      const sessionData = this.sessionService.createSession(
+        1, // 固定用户ID为1（单用户系统）
+        config.username,
+        ipAddress,
+        userAgent
+      );
 
       return {
         success: true,
         message: '系统初始化成功',
-        token,
+        sessionId: sessionData.sessionId,
+        sessionData,
         user: {
           username: config.username,
           isInitialized: true
@@ -143,7 +154,7 @@ export class AuthService {
   /**
    * 用户登录
    */
-  async login(request: LoginRequest): Promise<AuthResult> {
+  async login(request: LoginRequest, ipAddress?: string, userAgent?: string): Promise<AuthResult> {
     try {
       // 获取用户配置
       const config = this.dbService.getBaseConfig();
@@ -171,13 +182,19 @@ export class AuthService {
         };
       }
 
-      // 生成固定 token
-      const token = this.generateToken(config.username);
+      // 创建新session
+      const sessionData = this.sessionService.createSession(
+        1, // 固定用户ID为1（单用户系统）
+        config.username,
+        ipAddress,
+        userAgent
+      );
 
       return {
         success: true,
         message: '登录成功',
-        token,
+        sessionId: sessionData.sessionId,
+        sessionData,
         user: {
           username: config.username,
           isInitialized: true
@@ -193,30 +210,84 @@ export class AuthService {
   }
 
   /**
-   * 刷新 token（返回相同的固定 token）
+   * 刷新session
    */
-  async refreshToken(oldToken: string): Promise<AuthResult> {
-    const verification = await this.verifyToken(oldToken);
+  async refreshSession(sessionId: string): Promise<AuthResult> {
+    const verification = this.sessionService.refreshSession(sessionId);
     
-    if (!verification.valid || !verification.payload) {
+    if (!verification.valid || !verification.sessionData) {
       return {
         success: false,
-        message: verification.message || 'Token 无效'
+        message: verification.message || 'Session无效'
       };
     }
 
-    // 返回相同的固定 token
-    const newToken = this.generateToken(verification.payload.username);
-
     return {
       success: true,
-      message: 'Token 刷新成功',
-      token: newToken,
+      message: 'Session刷新成功',
+      sessionId: verification.sessionData.sessionId,
+      sessionData: verification.sessionData,
       user: {
-        username: verification.payload.username,
+        username: verification.sessionData.username,
         isInitialized: true
       }
     };
+  }
+
+  /**
+   * 刷新token（向后兼容方法）
+   */
+  async refreshToken(oldToken: string): Promise<AuthResult> {
+    return this.refreshSession(oldToken);
+  }
+
+  /**
+   * 登出（销毁session）
+   */
+  async logout(sessionId: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const destroyed = this.sessionService.destroySession(sessionId);
+      
+      return {
+        success: destroyed,
+        message: destroyed ? '登出成功' : 'Session不存在或已过期'
+      };
+    } catch (error) {
+      console.error('登出失败:', error);
+      return {
+        success: false,
+        message: `登出失败: ${error}`
+      };
+    }
+  }
+
+  /**
+   * 登出所有设备
+   */
+  async logoutAllDevices(userId: number = 1): Promise<{ success: boolean; message: string; count: number }> {
+    try {
+      const count = this.sessionService.destroyAllUserSessions(userId);
+      
+      return {
+        success: true,
+        message: `已登出 ${count} 个设备`,
+        count
+      };
+    } catch (error) {
+      console.error('登出所有设备失败:', error);
+      return {
+        success: false,
+        message: `登出所有设备失败: ${error}`,
+        count: 0
+      };
+    }
+  }
+
+  /**
+   * 获取用户的活跃session列表
+   */
+  getUserSessions(userId: number = 1): SessionData[] {
+    return this.sessionService.getUserSessions(userId);
   }
 
   /**

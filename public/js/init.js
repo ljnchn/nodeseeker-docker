@@ -120,8 +120,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if (result.success) {
         showMessage('系统初始化成功！正在跳转...', 'success');
         
-        // 保存 token
-        localStorage.setItem('token', result.data.token);
+        // 保存 sessionId
+        localStorage.setItem('sessionId', result.data.sessionId);
         
         // 跳转到控制台
         setTimeout(() => {
