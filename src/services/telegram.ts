@@ -194,10 +194,13 @@ export class TelegramService {
    */
   async setWebhook(webhookUrl: string): Promise<boolean> {
     try {
+      console.log('正在设置 Webhook:', webhookUrl);
       await this.bot.api.setWebhook(webhookUrl);
+      console.log('Webhook 设置成功:', webhookUrl);
       return true;
     } catch (error) {
       console.error('设置 Webhook 失败:', error);
+      console.error('Webhook URL:', webhookUrl);
       return false;
     }
   }

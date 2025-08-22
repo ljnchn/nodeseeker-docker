@@ -512,10 +512,27 @@ document.addEventListener('DOMContentLoaded', function() {
   // 退出登录按钮
   const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', function() {
+    logoutBtn.addEventListener('click', async function() {
       if (confirm('确定要退出登录吗？')) {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
+        try {
+          // 先调用服务器端注销API
+          const result = await apiRequest('/auth/logout', {
+            method: 'POST',
+            body: JSON.stringify({ sessionId: sessionId })
+          });
+          
+          if (result && result.success) {
+            console.log('服务器端session已清理');
+          } else {
+            console.warn('服务器端session清理失败:', result?.message);
+          }
+        } catch (error) {
+          console.error('注销API调用失败:', error);
+        } finally {
+          // 无论服务器端清理是否成功，都清除本地存储并跳转
+          localStorage.removeItem('sessionId');
+          window.location.href = '/login';
+        }
       }
     });
   }

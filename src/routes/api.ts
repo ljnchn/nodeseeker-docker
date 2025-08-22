@@ -113,15 +113,28 @@ apiRoutes.post('/bot-token', createValidationMiddleware(botTokenSchema), async (
         // 设置 Bot 命令菜单
         await telegramService.setBotCommands();
 
-        // 自动设置 Webhook
-        const webhookUrl = `${c.req.url.split('/api')[0]}/telegram/webhook`
-        const webhookResult = await telegramService.setWebhook(webhookUrl)
+        // 自动设置 Webhook（可选）
+        let webhookResult = true;
+        let webhookUrl = '';
         
-        if (!webhookResult) {
-            return c.json({
-                success: false,
-                message: 'Bot Token 有效，但 Webhook 设置失败'
-            }, 400)
+        try {
+            const baseUrl = c.req.url.split('/api')[0];
+            webhookUrl = `${baseUrl}/telegram/webhook`;
+            console.log('构建的 Webhook URL:', webhookUrl);
+            
+            // 检查是否为HTTPS（Telegram要求）
+            if (!webhookUrl.startsWith('https://') && !webhookUrl.includes('localhost') && !webhookUrl.includes('127.0.0.1')) {
+                console.warn('警告：Telegram Webhook 通常需要 HTTPS URL');
+            }
+            
+            webhookResult = await telegramService.setWebhook(webhookUrl);
+            
+            if (!webhookResult) {
+                console.error('Webhook 设置失败，但继续保存 Bot Token');
+            }
+        } catch (error) {
+            console.error('Webhook 设置异常:', error);
+            webhookResult = false;
         }
 
         // 更新配置
@@ -131,10 +144,19 @@ apiRoutes.post('/bot-token', createValidationMiddleware(botTokenSchema), async (
             return c.json(createErrorResponse('保存 Bot Token 失败'), 500);
         }
 
+        // 构建响应消息
+        let message = 'Bot Token 设置成功，命令菜单已更新';
+        if (webhookResult) {
+            message += '，Webhook 已设置';
+        } else {
+            message += '，但 Webhook 设置失败（请检查网络连接和URL格式）';
+        }
+
         return c.json(createSuccessResponse({
             bot_info: botInfo,
-            webhook_url: webhookUrl,
-            message: 'Bot Token 设置成功，命令菜单已更新，Webhook 已设置'
+            webhook_url: webhookUrl || null,
+            webhook_set: webhookResult,
+            message: message
         }));
     } catch (error) {
         return c.json(createErrorResponse(`设置 Bot Token 失败: ${error}`), 500);
