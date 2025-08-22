@@ -4,6 +4,7 @@ import type { Post, KeywordSub, TelegramUser } from '../types';
 
 export class TelegramService {
   private bot: Bot;
+  private initialized: boolean = false;
 
   constructor(
     private dbService: DatabaseService,
@@ -11,6 +12,30 @@ export class TelegramService {
   ) {
     this.bot = new Bot(botToken);
     this.setupHandlers();
+  }
+
+  /**
+   * 初始化 Bot（获取Bot信息并缓存）
+   */
+  async initialize(): Promise<boolean> {
+    if (this.initialized) {
+      return true;
+    }
+
+    try {
+      const botInfo = await this.bot.api.getMe();
+      if (botInfo) {
+        // 设置 botInfo 到 Bot 实例中
+        this.bot.botInfo = botInfo;
+        this.initialized = true;
+        console.log(`Bot 初始化成功: ${botInfo.username} (${botInfo.id})`);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Bot 初始化失败:', error);
+      return false;
+    }
   }
 
   /**
@@ -166,6 +191,15 @@ export class TelegramService {
   getWebhookCallback() {
     return async (request: Request) => {
       try {
+        // 确保 Bot 已初始化
+        if (!this.initialized) {
+          const initResult = await this.initialize();
+          if (!initResult) {
+            console.error('Bot 初始化失败，无法处理 webhook');
+            return new Response('Bot initialization failed', { status: 500 });
+          }
+        }
+
         const body = await request.json() as any;
         await this.bot.handleUpdate(body);
         return new Response('OK');
@@ -192,16 +226,82 @@ export class TelegramService {
   /**
    * 设置 Webhook
    */
-  async setWebhook(webhookUrl: string): Promise<boolean> {
+  async setWebhook(webhookUrl: string): Promise<{
+    success: boolean;
+    error?: string;
+    errorCode?: number;
+    suggestions?: string[];
+  }> {
     try {
       console.log('正在设置 Webhook:', webhookUrl);
       await this.bot.api.setWebhook(webhookUrl);
       console.log('Webhook 设置成功:', webhookUrl);
-      return true;
-    } catch (error) {
+      return { success: true };
+    } catch (error: any) {
       console.error('设置 Webhook 失败:', error);
       console.error('Webhook URL:', webhookUrl);
-      return false;
+
+      // 解析 Grammy 错误
+      let errorMessage = 'Webhook 设置失败';
+      let errorCode = 0;
+      let suggestions: string[] = [];
+
+      if (error && error.error_code && error.description) {
+        errorCode = error.error_code;
+        errorMessage = error.description;
+
+        // 根据不同错误类型提供建议
+        if (error.description.includes('Failed to resolve host')) {
+          suggestions = [
+            '域名无法解析，请检查：',
+            '1. 域名DNS记录是否正确配置',
+            '2. 域名是否已完成DNS传播（可能需要等待几分钟到几小时）',
+            '3. 尝试使用 dig 或 nslookup 命令验证DNS解析',
+            '4. 确认域名拼写正确且可以从外网访问'
+          ];
+        } else if (error.description.includes('SSL')) {
+          suggestions = [
+            'SSL证书问题，请检查：',
+            '1. 确保使用HTTPS协议',
+            '2. SSL证书是否有效且未过期',
+            '3. 证书链是否完整',
+            '4. 证书是否被信任的CA签发'
+          ];
+        } else if (error.description.includes('Connection')) {
+          suggestions = [
+            '网络连接问题，请检查：',
+            '1. 服务器防火墙设置',
+            '2. 端口是否正确开放（通常是443）',
+            '3. CDN或代理服务配置',
+            '4. 网络连通性'
+          ];
+        } else if (error.description.includes('timeout')) {
+          suggestions = [
+            '连接超时，请检查：',
+            '1. 服务器响应时间',
+            '2. 网络延迟问题',
+            '3. 服务器负载状况',
+            '4. CDN配置是否正确'
+          ];
+        } else {
+          suggestions = [
+            '请检查以下项目：',
+            '1. URL格式是否正确（必须是HTTPS）',
+            '2. 域名是否可以从外网访问',
+            '3. 端口和路径配置是否正确',
+            '4. 服务器是否正常运行'
+          ];
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      return {
+        success: false,
+        error: errorMessage,
+        errorCode,
+        suggestions
+      };
     }
   }
 
@@ -210,7 +310,14 @@ export class TelegramService {
    */
   async getBotInfo() {
     try {
-      return await this.bot.api.getMe();
+      const botInfo = await this.bot.api.getMe();
+      // 同时进行初始化，设置 botInfo 到实例中
+      if (botInfo && !this.initialized) {
+        this.bot.botInfo = botInfo;
+        this.initialized = true;
+        console.log(`Bot 初始化成功: ${botInfo.username} (${botInfo.id})`);
+      }
+      return botInfo;
     } catch (error) {
       console.error('获取 Bot 信息失败:', error);
       return null;

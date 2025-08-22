@@ -46,6 +46,29 @@ export const DashboardPage: FC = () => {
           margin-bottom: 30px;
           border-left: 4px solid #2196f3;
         }
+        .message {
+          line-height: 1.5;
+        }
+        .message.success {
+          background: #d4edda;
+          color: #155724;
+          border: 1px solid #c3e6cb;
+        }
+        .message.error {
+          background: #f8d7da;
+          color: #721c24;
+          border: 1px solid #f5c6cb;
+        }
+        .message.warning {
+          background: #fff3cd;
+          color: #856404;
+          border: 1px solid #ffeaa7;
+        }
+        .message.info {
+          background: #d1ecf1;
+          color: #0c5460;
+          border: 1px solid #bee5eb;
+        }
         @media (max-width: 768px) {
           .dashboard-container {
             padding: 10px !important;
@@ -172,7 +195,7 @@ export const DashboardPage: FC = () => {
                     <label for="botToken" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333;">Bot Token</label>
                     <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                       <input 
-                        type="password" 
+                        type="text" 
                         id="botToken" 
                         name="botToken" 
                         placeholder="请输入从 @BotFather 获取的 Bot Token"

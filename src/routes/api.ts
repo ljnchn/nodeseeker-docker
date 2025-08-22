@@ -177,7 +177,7 @@ apiRoutes.post('/bot-token', createValidationMiddleware(botTokenSchema), async (
         await telegramService.setBotCommands();
 
         // 设置 Webhook
-        let webhookResult = true;
+        let webhookResult = { success: true, error: '', suggestions: [] };
         let finalWebhookUrl = '';
         
         try {
@@ -193,12 +193,16 @@ apiRoutes.post('/bot-token', createValidationMiddleware(botTokenSchema), async (
             
             webhookResult = await telegramService.setWebhook(finalWebhookUrl);
             
-            if (!webhookResult) {
-                console.error('Webhook 设置失败，但继续保存 Bot Token');
+            if (!webhookResult.success) {
+                console.error('Webhook 设置失败:', webhookResult.error);
             }
         } catch (error) {
             console.error('Webhook 设置异常:', error);
-            webhookResult = false;
+            webhookResult = { 
+                success: false, 
+                error: `Webhook 设置异常: ${error}`,
+                suggestions: ['检查网络连接和服务器状态', '尝试稍后重试']
+            };
         }
 
         // 更新配置
@@ -210,16 +214,18 @@ apiRoutes.post('/bot-token', createValidationMiddleware(botTokenSchema), async (
 
         // 构建响应消息
         let message = 'Bot Token 设置成功，命令菜单已更新';
-        if (webhookResult) {
+        if (webhookResult.success) {
             message += '，Webhook 已设置';
         } else {
-            message += '，但 Webhook 设置失败（请检查URL格式和网络连接）';
+            message += '，但 Webhook 设置失败';
         }
 
         return c.json(createSuccessResponse({
             bot_info: botInfo,
             webhook_url: finalWebhookUrl || null,
-            webhook_set: webhookResult,
+            webhook_set: webhookResult.success,
+            webhook_error: webhookResult.error,
+            webhook_suggestions: webhookResult.suggestions,
             message: message
         }));
     } catch (error) {

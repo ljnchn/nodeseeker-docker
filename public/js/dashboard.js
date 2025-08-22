@@ -49,6 +49,30 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 3000);
   }
 
+  // 显示详细错误消息（支持多行和建议）
+  function showDetailedMessage(title, details, type = 'info') {
+    const messageDiv = document.getElementById('message');
+    
+    let content = `<strong>${title}</strong>`;
+    if (details && Array.isArray(details) && details.length > 0) {
+      content += '<br><br>详细信息：';
+      details.forEach(detail => {
+        content += `<br>• ${detail}`;
+      });
+    } else if (details) {
+      content += `<br><br>${details}`;
+    }
+    
+    messageDiv.innerHTML = content;
+    messageDiv.className = `message ${type}`;
+    messageDiv.style.display = 'block';
+    
+    // 10秒后自动隐藏（详细消息需要更长时间阅读）
+    setTimeout(() => {
+      messageDiv.style.display = 'none';
+    }, 10000);
+  }
+
   // 标签页切换
   function initTabs() {
     const tabButtons = document.querySelectorAll('.tab-btn');
@@ -106,7 +130,11 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // 更新 Bot Token 状态
       const botTokenStatus = document.getElementById('botTokenStatus');
+      const botToken = document.getElementById('botToken');
       if (config.bot_token) {
+        botToken.value = config.bot_token;
+        botTokenStatus.textContent = '已配置';
+        botTokenStatus.style.background = '#4caf50';
         botTokenStatus.textContent = '已配置';
         botTokenStatus.style.background = '#4caf50';
         
@@ -318,13 +346,28 @@ document.addEventListener('DOMContentLoaded', function() {
         requestData.webhook_url = webhookUrl.trim();
       }
       
+      showMessage('正在设置 Bot Token...', 'info');
+      
       const result = await apiRequest('/api/bot-token', {
         method: 'POST',
         body: JSON.stringify(requestData)
       });
       
       if (result && result.success) {
-        showMessage('Bot Token 设置成功', 'success');
+        // 检查 webhook 设置状态
+        if (result.data.webhook_set) {
+          showMessage('Bot Token 和 Webhook 设置成功', 'success');
+        } else if (result.data.webhook_error && result.data.webhook_suggestions) {
+          // 显示详细的 webhook 错误信息
+          showDetailedMessage(
+            'Bot Token 设置成功，但 Webhook 设置失败',
+            result.data.webhook_suggestions,
+            'warning'
+          );
+        } else {
+          showMessage('Bot Token 设置成功，但 Webhook 设置失败', 'warning');
+        }
+        
         await loadConfig();
         // Bot 信息显示更新后，更新按钮绑定
         await setupTelegramButtons();
