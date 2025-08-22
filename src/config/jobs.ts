@@ -36,7 +36,7 @@ export const getJobsConfig = (): JobsConfig => {
     },
     rss: {
       url: process.env.RSS_URL || 'https://rss.nodeseek.com/',
-      timeout: parseInt(process.env.RSS_TIMEOUT || '10000'),
+      timeout: parseInt(process.env.RSS_TIMEOUT || '30000'), // 增加到30秒
       userAgent: process.env.RSS_USER_AGENT || 'NodeSeeker-Bot/1.0',
     }
   };

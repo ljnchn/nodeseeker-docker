@@ -83,32 +83,55 @@ export class RSSService {
    * 抓取并解析 RSS 数据
    */
   async fetchAndParseRSS(): Promise<RSSItem[]> {
+    let controller: AbortController | undefined;
+    let timeoutId: NodeJS.Timeout | undefined;
+    
     try {
       console.log('开始抓取 RSS 数据...');
+      console.log(`RSS URL: ${this.RSS_URL}`);
+      console.log(`超时设置: ${this.TIMEOUT}ms`);
       
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT);
+      controller = new AbortController();
+      timeoutId = setTimeout(() => {
+        console.log('RSS 请求超时，正在终止...');
+        controller?.abort();
+      }, this.TIMEOUT);
 
       const response = await fetch(this.RSS_URL, {
         signal: controller.signal,
         headers: {
-          'User-Agent': this.USER_AGENT,
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
           'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
           'Accept-Encoding': 'gzip, deflate, br',
-          'Referer': 'https://www.nodeseek.com/',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'none',
+          'Sec-Fetch-User': '?1',
+          'Sec-Ch-Ua': '"Microsoft Edge";v="139", "Chromium";v="139", "Not=A?Brand";v="8"',
+          'Sec-Ch-Ua-Mobile': '?0',
+          'Sec-Ch-Ua-Platform': '"Windows"',
+          'DNT': '1',
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache'
         }
       });
 
-      clearTimeout(timeoutId);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = undefined;
+      }
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
+      console.log('RSS 响应接收成功，开始解析...');
       const xmlText = await response.text();
+      console.log(`接收到 XML 数据，长度: ${xmlText.length} 字符`);
+      
       const items = this.parseRSSXML(xmlText);
       
       if (!items || items.length === 0) {
@@ -119,6 +142,21 @@ export class RSSService {
       console.log(`成功抓取到 ${items.length} 条 RSS 数据`);
       return items;
     } catch (error) {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      
+      // 处理不同类型的错误
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          console.error(`RSS 请求超时 (${this.TIMEOUT}ms)，可能是网络连接慢或服务器响应慢`);
+          throw new Error(`RSS 请求超时，请检查网络连接或增加超时时间`);
+        } else if (error.message.includes('fetch')) {
+          console.error('RSS 网络请求失败:', error.message);
+          throw new Error(`RSS 网络请求失败: ${error.message}`);
+        }
+      }
+      
       console.error('RSS 抓取失败:', error);
       throw new Error(`RSS 抓取失败: ${error}`);
     }
@@ -201,86 +239,104 @@ export class RSSService {
    * 处理新的 RSS 数据 - 优化版本，批量查询减少数据库访问
    */
   async processNewRSSData(): Promise<RSSProcessResult> {
-    try {
-      const rssItems = await this.fetchAndParseRSS();
-      
-      let processed = 0;
-      let newPosts = 0;
-      let errors = 0;
+    const maxRetries = 3;
+    let lastError: Error | null = null;
 
-      // 第一步：批量解析所有RSS项目
-      const parsedPosts: ParsedPost[] = [];
-      const postIds: number[] = [];
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`开始第 ${attempt} 次尝试获取 RSS 数据...`);
+        
+        const rssItems = await this.fetchAndParseRSS();
+        
+        let processed = 0;
+        let newPosts = 0;
+        let errors = 0;
 
-      for (const item of rssItems) {
-        try {
-          processed++;
-          
-          const parsedPost = this.cleanAndFormatData(item);
-          if (!parsedPost) {
+        // 第一步：批量解析所有RSS项目
+        const parsedPosts: ParsedPost[] = [];
+        const postIds: number[] = [];
+
+        for (const item of rssItems) {
+          try {
+            processed++;
+            
+            const parsedPost = this.cleanAndFormatData(item);
+            if (!parsedPost) {
+              errors++;
+              continue;
+            }
+
+            parsedPosts.push(parsedPost);
+            postIds.push(parsedPost.post_id);
+            
+          } catch (error) {
             errors++;
-            continue;
+            console.error('解析单条 RSS 数据失败:', error);
           }
+        }
 
-          parsedPosts.push(parsedPost);
-          postIds.push(parsedPost.post_id);
-          
-        } catch (error) {
-          errors++;
-          console.error('解析单条 RSS 数据失败:', error);
+        // 第二步：批量查询已存在的文章
+        const existingPosts = this.dbService.getPostsByPostIds(postIds);
+        console.log(`批量查询完成: 找到 ${existingPosts.size} 个已存在的文章`);
+
+        // 第三步：筛选出需要创建的新文章
+        const newPostsToCreate = parsedPosts.filter(parsedPost => {
+          if (existingPosts.has(parsedPost.post_id)) {
+            console.log(`文章已存在: ${parsedPost.post_id}`);
+            return false;
+          }
+          return true;
+        });
+
+        // 第四步：批量创建新文章
+        if (newPostsToCreate.length > 0) {
+          try {
+            const postsWithDefaults = newPostsToCreate.map(post => ({
+              ...post,
+              push_status: 0 // 默认未推送
+            }));
+
+            const createdCount = this.dbService.batchCreatePosts(postsWithDefaults);
+            newPosts = createdCount;
+
+            console.log(`批量创建完成: 成功创建 ${createdCount} 篇新文章`);
+            
+            // 记录创建的文章详情
+            newPostsToCreate.forEach(post => {
+              console.log(`新增文章: ${post.title} (ID: ${post.post_id})`);
+            });
+            
+          } catch (error) {
+            errors += newPostsToCreate.length;
+            console.error('批量创建文章失败:', error);
+          }
+        } else {
+          console.log('没有新文章需要创建');
+        }
+
+        console.log(`RSS 处理完成: 处理 ${processed} 条，新增 ${newPosts} 条，错误 ${errors} 条`);
+        
+        return {
+          new: newPosts,
+          updated: 0, // RSS 服务不更新现有文章
+          skipped: processed - newPosts - errors
+        };
+
+      } catch (error) {
+        lastError = error as Error;
+        console.error(`第 ${attempt} 次尝试失败:`, error);
+        
+        if (attempt < maxRetries) {
+          const delayMs = attempt * 2000; // 递增延迟：2s, 4s, 6s
+          console.log(`等待 ${delayMs}ms 后重试...`);
+          await new Promise(resolve => setTimeout(resolve, delayMs));
         }
       }
-
-      // 第二步：批量查询已存在的文章
-      const existingPosts = this.dbService.getPostsByPostIds(postIds);
-      console.log(`批量查询完成: 找到 ${existingPosts.size} 个已存在的文章`);
-
-      // 第三步：筛选出需要创建的新文章
-      const newPostsToCreate = parsedPosts.filter(parsedPost => {
-        if (existingPosts.has(parsedPost.post_id)) {
-          console.log(`文章已存在: ${parsedPost.post_id}`);
-          return false;
-        }
-        return true;
-      });
-
-      // 第四步：批量创建新文章
-      if (newPostsToCreate.length > 0) {
-        try {
-          const postsWithDefaults = newPostsToCreate.map(post => ({
-            ...post,
-            push_status: 0 // 默认未推送
-          }));
-
-          const createdCount = this.dbService.batchCreatePosts(postsWithDefaults);
-          newPosts = createdCount;
-
-          console.log(`批量创建完成: 成功创建 ${createdCount} 篇新文章`);
-          
-          // 记录创建的文章详情
-          newPostsToCreate.forEach(post => {
-            console.log(`新增文章: ${post.title} (ID: ${post.post_id})`);
-          });
-          
-        } catch (error) {
-          errors += newPostsToCreate.length;
-          console.error('批量创建文章失败:', error);
-        }
-      } else {
-        console.log('没有新文章需要创建');
-      }
-
-      console.log(`RSS 处理完成: 处理 ${processed} 条，新增 ${newPosts} 条，错误 ${errors} 条`);
-      
-      return {
-        new: newPosts,
-        updated: 0, // RSS 服务不更新现有文章
-        skipped: processed - newPosts - errors
-      };
-    } catch (error) {
-      console.error('处理 RSS 数据失败:', error);
-      throw error;
     }
+
+    // 所有重试都失败了
+    console.error(`RSS 处理失败，已尝试 ${maxRetries} 次，最后错误:`, lastError);
+    throw lastError || new Error('RSS 处理失败，已达到最大重试次数');
   }
 
   /**
@@ -321,7 +377,20 @@ export class RSSService {
         method: 'HEAD',
         signal: controller.signal,
         headers: {
-          'User-Agent': this.USER_AGENT
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+          'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'none',
+          'Sec-Fetch-User': '?1',
+          'Sec-Ch-Ua': '"Microsoft Edge";v="139", "Chromium";v="139", "Not=A?Brand";v="8"',
+          'Sec-Ch-Ua-Mobile': '?0',
+          'Sec-Ch-Ua-Platform': '"Windows"',
+          'DNT': '1'
         }
       });
 

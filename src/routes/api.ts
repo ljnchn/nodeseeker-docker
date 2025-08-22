@@ -326,3 +326,138 @@ apiRoutes.get('/match-stats', async (c) => {
         return c.json(createErrorResponse(`获取匹配统计失败: ${error}`), 500);
     }
 });
+
+// 获取 Telegram Bot 状态
+apiRoutes.get('/telegram/status', async (c) => {
+    try {
+        const dbService = c.get('dbService');
+        const config = dbService.getBaseConfig();
+
+        const statusData = {
+            configured: !!config?.bot_token,
+            connected: false,
+            bound: !!config?.chat_id,
+            bot_info: null,
+            config: {
+                has_bot_token: !!config?.bot_token,
+                has_chat_id: !!config?.chat_id,
+                bound_user_name: config?.bound_user_name || null,
+                bound_user_username: config?.bound_user_username || null,
+                stop_push: config?.stop_push === 1,
+                last_check_time: new Date().toISOString()
+            }
+        };
+
+        if (!config?.bot_token) {
+            return c.json(createSuccessResponse(statusData, 'Bot Token 未配置'));
+        }
+
+        try {
+            const telegramService = new TelegramService(dbService, config.bot_token);
+            const botInfo = await telegramService.getBotInfo();
+            
+            if (botInfo) {
+                statusData.connected = true;
+                statusData.bot_info = botInfo;
+                return c.json(createSuccessResponse(statusData, 'Bot 状态正常'));
+            } else {
+                return c.json(createSuccessResponse(statusData, 'Bot Token 无效或连接失败'));
+            }
+        } catch (error) {
+            return c.json(createSuccessResponse(statusData, `Bot 连接失败: ${error}`));
+        }
+    } catch (error) {
+        return c.json(createErrorResponse(`获取 Bot 状态失败: ${error}`), 500);
+    }
+});
+
+// 测试 Telegram 连接
+apiRoutes.post('/telegram/test', async (c) => {
+    try {
+        const dbService = c.get('dbService');
+        const config = dbService.getBaseConfig();
+
+        if (!config?.bot_token) {
+            return c.json(createErrorResponse('Bot Token 未配置'), 400);
+        }
+
+        const telegramService = new TelegramService(dbService, config.bot_token);
+        
+        // 获取 Bot 信息
+        const botInfo = await telegramService.getBotInfo();
+        if (!botInfo) {
+            return c.json(createErrorResponse('Bot 连接失败，Token 可能无效'), 400);
+        }
+
+        // 如果有绑定的 chat_id，发送测试消息
+        if (config.chat_id) {
+            const testMessage = `🤖 **NodeSeek RSS Bot 测试消息**\n\n⏰ **时间:** ${new Date().toLocaleString('zh-CN')}\n✅ Bot 连接正常`;
+            const sendResult = await telegramService.sendMessage(config.chat_id, testMessage);
+            
+            return c.json(createSuccessResponse({
+                bot_info: botInfo,
+                message_sent: sendResult
+            }, sendResult ? 'Telegram 连接测试成功，消息已发送' : 'Bot 连接正常，但消息发送失败'));
+        } else {
+            return c.json(createSuccessResponse({
+                bot_info: botInfo,
+                message_sent: false
+            }, 'Bot 连接正常，但未绑定用户'));
+        }
+    } catch (error) {
+        return c.json(createErrorResponse(`测试连接失败: ${error}`), 500);
+    }
+});
+
+// 解除用户绑定
+apiRoutes.post('/telegram/unbind', async (c) => {
+    try {
+        const dbService = c.get('dbService');
+        
+        const config = dbService.updateBaseConfig({
+            chat_id: '',
+            bound_user_name: undefined,
+            bound_user_username: undefined
+        });
+
+        if (!config) {
+            return c.json(createErrorResponse('解除绑定失败'), 500);
+        }
+
+        return c.json(createSuccessResponse(null, '用户绑定已解除'));
+    } catch (error) {
+        return c.json(createErrorResponse(`解除绑定失败: ${error}`), 500);
+    }
+});
+
+// 发送测试消息
+apiRoutes.post('/telegram/send-test', createValidationMiddleware(z.object({
+    message: z.string().optional()
+})), async (c) => {
+    try {
+        const { message } = c.get('validatedData');
+        const dbService = c.get('dbService');
+        const config = dbService.getBaseConfig();
+
+        if (!config?.bot_token) {
+            return c.json(createErrorResponse('Bot Token 未配置'), 400);
+        }
+
+        if (!config.chat_id) {
+            return c.json(createErrorResponse('用户未绑定'), 400);
+        }
+
+        const telegramService = new TelegramService(dbService, config.bot_token);
+        
+        const testMessage = message || `🧪 **测试消息**\n\n⏰ **时间:** ${new Date().toLocaleString('zh-CN')}`;
+        const result = await telegramService.sendMessage(config.chat_id, testMessage);
+
+        if (result) {
+            return c.json(createSuccessResponse(null, '测试消息发送成功'));
+        } else {
+            return c.json(createErrorResponse('消息发送失败'), 400);
+        }
+    } catch (error) {
+        return c.json(createErrorResponse(`发送测试消息失败: ${error}`), 500);
+    }
+});

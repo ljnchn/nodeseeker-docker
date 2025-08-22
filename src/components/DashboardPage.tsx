@@ -197,6 +197,56 @@ export const DashboardPage: FC = () => {
                     <div><strong>名称:</strong> <span id="botName">-</span></div>
                     <div><strong>状态:</strong> <span style="color: #4caf50;">✅ 已配置</span></div>
                   </div>
+                  
+                  <div style="margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button id="testBotBtn" style="padding: 8px 16px; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                      🧪 测试连接
+                    </button>
+                    <button id="refreshBotStatusBtn" style="padding: 8px 16px; background: #ff9800; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                      🔄 刷新状态
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 用户绑定管理区域 */}
+              <div class="config-section">
+                <h3 style="font-size: 16px; margin-bottom: 16px; color: #333; display: flex; align-items: center; gap: 8px;">
+                  👤 用户绑定管理
+                  <span id="bindingStatus" style="font-size: 12px; padding: 4px 8px; border-radius: 12px; background: #dc3545; color: white;">未绑定</span>
+                </h3>
+                
+                <div id="bindingInfo" style="display: none; padding: 16px; background: white; border-radius: 6px; border: 1px solid #e0e0e0; margin-bottom: 16px;">
+                  <h4 style="font-size: 14px; margin-bottom: 12px; color: #333;">当前绑定信息</h4>
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; font-size: 14px;">
+                    <div><strong>姓名:</strong> <span id="boundUserName">-</span></div>
+                    <div><strong>用户名:</strong> <span id="boundUsername">-</span></div>
+                    <div><strong>Chat ID:</strong> <span id="boundChatId">-</span></div>
+                    <div><strong>绑定时间:</strong> <span id="bindingTime">-</span></div>
+                  </div>
+                  
+                  <div style="margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button id="sendTestMsgBtn" style="padding: 8px 16px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                      📤 发送测试消息
+                    </button>
+                    <button id="unbindUserBtn" style="padding: 8px 16px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                      🚫 解除绑定
+                    </button>
+                  </div>
+                </div>
+                
+                <div id="bindingInstructions" style="padding: 16px; background: #f8f9fa; border-radius: 6px; border: 1px solid #e0e0e0;">
+                  <h4 style="font-size: 14px; margin-bottom: 12px; color: #333;">🔗 如何绑定用户</h4>
+                  <ol style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.6;">
+                    <li>确保已配置并验证 Bot Token</li>
+                    <li>在 Telegram 中搜索您的 Bot（使用上面显示的用户名）</li>
+                    <li>向 Bot 发送 <code style="background: #e1e1e1; padding: 2px 4px; border-radius: 3px;">/start</code> 命令</li>
+                    <li>Bot 会自动绑定您的账户并显示欢迎信息</li>
+                    <li>绑定成功后，这里会显示您的用户信息</li>
+                  </ol>
+                  <p style="margin: 12px 0 0 0; font-size: 12px; color: #666;">
+                    💡 每次只能绑定一个用户，如需更换请先解除当前绑定
+                  </p>
                 </div>
               </div>
 

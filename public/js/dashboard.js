@@ -110,14 +110,17 @@ document.addEventListener('DOMContentLoaded', function() {
         botTokenStatus.textContent = '已配置';
         botTokenStatus.style.background = '#4caf50';
         
-        // 显示 Bot 信息
-        const botInfoDisplay = document.getElementById('botInfoDisplay');
-        if (botInfoDisplay) {
-          botInfoDisplay.style.display = 'block';
-        }
+        // 显示 Bot 信息并获取详细状态
+        await loadTelegramStatus();
       } else {
         botTokenStatus.textContent = '未配置';
         botTokenStatus.style.background = '#dc3545';
+        
+        // 隐藏 Bot 信息和绑定信息
+        const botInfoDisplay = document.getElementById('botInfoDisplay');
+        const bindingInfo = document.getElementById('bindingInfo');
+        if (botInfoDisplay) botInfoDisplay.style.display = 'none';
+        if (bindingInfo) bindingInfo.style.display = 'none';
       }
       
       // 更新推送设置
@@ -125,6 +128,64 @@ document.addEventListener('DOMContentLoaded', function() {
       const onlyTitleCheckbox = document.getElementById('onlyTitle');
       if (stopPushCheckbox) stopPushCheckbox.checked = config.stop_push === 1;
       if (onlyTitleCheckbox) onlyTitleCheckbox.checked = config.only_title === 1;
+    }
+  }
+
+  // 加载 Telegram 状态
+  async function loadTelegramStatus() {
+    const result = await apiRequest('/api/telegram/status');
+    if (result && result.success) {
+      const status = result.data;
+      
+      // 更新 Bot 状态显示
+      const botStatus = document.getElementById('botStatus');
+      if (status.connected) {
+        botStatus.textContent = '正常运行';
+        botStatus.style.color = '#4caf50';
+      } else {
+        botStatus.textContent = 'Token无效';
+        botStatus.style.color = '#f44336';
+      }
+      
+      // 显示/隐藏 Bot 信息
+      const botInfoDisplay = document.getElementById('botInfoDisplay');
+      if (status.configured && status.connected && status.bot_info) {
+        botInfoDisplay.style.display = 'block';
+        
+        // 更新 Bot 信息
+        document.getElementById('botId').textContent = status.bot_info.id;
+        document.getElementById('botUsername').textContent = '@' + status.bot_info.username;
+        document.getElementById('botName').textContent = status.bot_info.first_name;
+      } else {
+        botInfoDisplay.style.display = 'none';
+      }
+      
+      // 更新用户绑定状态
+      const bindingStatus = document.getElementById('bindingStatus');
+      const bindingInfo = document.getElementById('bindingInfo');
+      const bindingInstructions = document.getElementById('bindingInstructions');
+      
+      if (status.bound && status.config.has_chat_id) {
+        bindingStatus.textContent = '已绑定';
+        bindingStatus.style.background = '#4caf50';
+        
+        // 显示绑定信息
+        bindingInfo.style.display = 'block';
+        bindingInstructions.style.display = 'none';
+        
+        // 更新绑定信息
+        document.getElementById('boundUserName').textContent = status.config.bound_user_name || '未知';
+        document.getElementById('boundUsername').textContent = status.config.bound_user_username ? '@' + status.config.bound_user_username : '无';
+        document.getElementById('boundChatId').textContent = status.config.has_chat_id ? '已设置' : '未设置';
+        document.getElementById('bindingTime').textContent = status.config.last_check_time ? new Date(status.config.last_check_time).toLocaleString() : '未知';
+      } else {
+        bindingStatus.textContent = '未绑定';
+        bindingStatus.style.background = '#dc3545';
+        
+        // 隐藏绑定信息，显示说明
+        bindingInfo.style.display = 'none';
+        bindingInstructions.style.display = 'block';
+      }
     }
   }
 
@@ -253,10 +314,83 @@ document.addEventListener('DOMContentLoaded', function() {
       if (result && result.success) {
         showMessage('Bot Token 设置成功', 'success');
         await loadConfig();
+        // Bot 信息显示更新后，更新按钮绑定
+        await setupTelegramButtons();
       } else {
         showMessage(result?.message || 'Bot Token 设置失败', 'error');
       }
     });
+  }
+
+  // 设置 Telegram 相关按钮事件
+  async function setupTelegramButtons() {
+    // 测试连接按钮
+    const testBotBtn = document.getElementById('testBotBtn');
+    if (testBotBtn) {
+      testBotBtn.onclick = async function() {
+        showMessage('正在测试连接...', 'info');
+        
+        const result = await apiRequest('/api/telegram/test', {
+          method: 'POST'
+        });
+        
+        if (result && result.success) {
+          showMessage(result.message || 'Bot 连接测试成功', 'success');
+        } else {
+          showMessage(result?.message || 'Bot 连接测试失败', 'error');
+        }
+      };
+    }
+
+    // 刷新状态按钮
+    const refreshBotStatusBtn = document.getElementById('refreshBotStatusBtn');
+    if (refreshBotStatusBtn) {
+      refreshBotStatusBtn.onclick = async function() {
+        showMessage('正在刷新状态...', 'info');
+        await loadTelegramStatus();
+        showMessage('状态已刷新', 'success');
+      };
+    }
+
+    // 发送测试消息按钮
+    const sendTestMsgBtn = document.getElementById('sendTestMsgBtn');
+    if (sendTestMsgBtn) {
+      sendTestMsgBtn.onclick = async function() {
+        const message = prompt('请输入测试消息内容（可选）：');
+        
+        const result = await apiRequest('/api/telegram/send-test', {
+          method: 'POST',
+          body: JSON.stringify({ message: message || undefined })
+        });
+        
+        if (result && result.success) {
+          showMessage('测试消息发送成功', 'success');
+        } else {
+          showMessage(result?.message || '测试消息发送失败', 'error');
+        }
+      };
+    }
+
+    // 解除绑定按钮
+    const unbindUserBtn = document.getElementById('unbindUserBtn');
+    if (unbindUserBtn) {
+      unbindUserBtn.onclick = async function() {
+        if (!confirm('确定要解除用户绑定吗？解除后将无法接收推送消息。')) {
+          return;
+        }
+        
+        const result = await apiRequest('/api/telegram/unbind', {
+          method: 'POST'
+        });
+        
+        if (result && result.success) {
+          showMessage('用户绑定已解除', 'success');
+          await loadTelegramStatus();
+        } else {
+          showMessage(result?.message || '解除绑定失败', 'error');
+        }
+      };
+    }
   }
 
   // 推送设置表单提交
@@ -384,4 +518,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initTabs();
   updateStatusCards();
   loadConfig();
+  
+  // 延迟设置 Telegram 按钮，等待 DOM 更新
+  setTimeout(setupTelegramButtons, 500);
 });

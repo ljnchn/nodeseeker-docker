@@ -12,10 +12,10 @@ const envSchema = z.object({
   
   // RSS
   RSS_URL: z.string().url().default('https://rss.nodeseek.com/'),
-  RSS_TIMEOUT: z.string().transform(Number).default('10000'),
+  RSS_TIMEOUT: z.string().transform(Number).default('30000'),  // 增加到30秒
   RSS_USER_AGENT: z.string().default('NodeSeeker-Bot/1.0'),
   RSS_CHECK_ENABLED: z.string().transform(val => val !== 'false').default('true'),
-  RSS_CRON_EXPRESSION: z.string().default('*/1 * * * *'),
+  RSS_CRON_EXPRESSION: z.string().default('*/1 * * * *'),  // 每分钟执行一次
   
   // Data Cleanup
   DATA_CLEANUP_ENABLED: z.string().transform(val => val !== 'false').default('true'),
@@ -38,9 +38,8 @@ export type EnvConfig = z.infer<typeof envSchema>;
 let cachedConfig: EnvConfig | null = null;
 
 export async function loadEnvConfig(): Promise<EnvConfig> {
-  if (cachedConfig) {
-    return cachedConfig;
-  }
+  // 强制重新加载配置
+  cachedConfig = null;
 
   try {
     // 尝试加载 .env 文件
