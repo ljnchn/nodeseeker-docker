@@ -16,6 +16,69 @@ import {
     idParamSchema
 } from '../utils/validation';
 import type { ContextVariables } from '../types';
+import { getEnvConfig } from '../config/env';
+
+/**
+ * 智能构建 Webhook URL，考虑 CDN 代理情况
+ */
+function buildWebhookUrl(c: any): string {
+    const envConfig = getEnvConfig();
+    
+    // 优先使用环境变量配置的 Webhook URL
+    if (envConfig.TELEGRAM_WEBHOOK_URL) {
+        console.log('使用环境变量配置的 Webhook URL:', envConfig.TELEGRAM_WEBHOOK_URL);
+        return envConfig.TELEGRAM_WEBHOOK_URL;
+    }
+    
+    // 获取各种可能的协议指示器
+    const proto = c.req.header('x-forwarded-proto') || 
+                  c.req.header('cf-visitor') || 
+                  c.req.header('x-forwarded-ssl');
+    
+    // Cloudflare 特殊处理
+    const cfVisitor = c.req.header('cf-visitor');
+    let isHttps = false;
+    
+    if (cfVisitor) {
+        try {
+            const visitor = JSON.parse(cfVisitor);
+            isHttps = visitor.scheme === 'https';
+        } catch (e) {
+            // 如果解析失败，使用其他方法
+            console.warn('解析 cf-visitor 头失败:', e);
+        }
+    }
+    
+    // 多种HTTPS检测方式
+    if (!isHttps) {
+        isHttps = proto === 'https' ||
+                  c.req.header('x-forwarded-ssl') === 'on' ||
+                  c.req.header('x-forwarded-port') === '443' ||
+                  c.req.url.startsWith('https://');
+    }
+    
+    // 获取主机名
+    const host = c.req.header('x-forwarded-host') || 
+                 c.req.header('host') || 
+                 new URL(c.req.url).host;
+    
+    // 构建完整URL
+    const protocol = isHttps ? 'https' : 'http';
+    const webhookUrl = `${protocol}://${host}/telegram/webhook`;
+    
+    console.log('URL构建详情:', {
+        'cf-visitor': cfVisitor,
+        'x-forwarded-proto': c.req.header('x-forwarded-proto'),
+        'x-forwarded-ssl': c.req.header('x-forwarded-ssl'),
+        'x-forwarded-port': c.req.header('x-forwarded-port'),
+        'x-forwarded-host': c.req.header('x-forwarded-host'),
+        'host': host,
+        'detected-https': isHttps,
+        'final-url': webhookUrl
+    });
+    
+    return webhookUrl;
+}
 
 type Variables = ContextVariables & {
     authService: AuthService;
@@ -98,7 +161,7 @@ apiRoutes.put('/config', createValidationMiddleware(baseConfigUpdateSchema), asy
 // 设置 Bot Token
 apiRoutes.post('/bot-token', createValidationMiddleware(botTokenSchema), async (c) => {
     try {
-        const { bot_token } = c.get('validatedData');
+        const { bot_token, webhook_url } = c.get('validatedData');
         const dbService = c.get('dbService');
 
         // 创建 Telegram 服务实例来验证 token
@@ -113,21 +176,22 @@ apiRoutes.post('/bot-token', createValidationMiddleware(botTokenSchema), async (
         // 设置 Bot 命令菜单
         await telegramService.setBotCommands();
 
-        // 自动设置 Webhook（可选）
+        // 设置 Webhook
         let webhookResult = true;
-        let webhookUrl = '';
+        let finalWebhookUrl = '';
         
         try {
-            const baseUrl = c.req.url.split('/api')[0];
-            webhookUrl = `${baseUrl}/telegram/webhook`;
-            console.log('构建的 Webhook URL:', webhookUrl);
-            
-            // 检查是否为HTTPS（Telegram要求）
-            if (!webhookUrl.startsWith('https://') && !webhookUrl.includes('localhost') && !webhookUrl.includes('127.0.0.1')) {
-                console.warn('警告：Telegram Webhook 通常需要 HTTPS URL');
+            if (webhook_url && webhook_url.trim()) {
+                // 使用用户提供的 webhook URL
+                finalWebhookUrl = webhook_url.trim();
+                console.log('使用用户提供的 Webhook URL:', finalWebhookUrl);
+            } else {
+                // 智能构建 Webhook URL
+                finalWebhookUrl = buildWebhookUrl(c);
+                console.log('自动构建的 Webhook URL:', finalWebhookUrl);
             }
             
-            webhookResult = await telegramService.setWebhook(webhookUrl);
+            webhookResult = await telegramService.setWebhook(finalWebhookUrl);
             
             if (!webhookResult) {
                 console.error('Webhook 设置失败，但继续保存 Bot Token');
@@ -149,12 +213,12 @@ apiRoutes.post('/bot-token', createValidationMiddleware(botTokenSchema), async (
         if (webhookResult) {
             message += '，Webhook 已设置';
         } else {
-            message += '，但 Webhook 设置失败（请检查网络连接和URL格式）';
+            message += '，但 Webhook 设置失败（请检查URL格式和网络连接）';
         }
 
         return c.json(createSuccessResponse({
             bot_info: botInfo,
-            webhook_url: webhookUrl || null,
+            webhook_url: finalWebhookUrl || null,
             webhook_set: webhookResult,
             message: message
         }));

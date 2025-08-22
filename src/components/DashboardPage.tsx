@@ -182,10 +182,25 @@ export const DashboardPage: FC = () => {
                         💾 保存并验证
                       </button>
                     </div>
+                  </div>
+                  
+                  <div>
+                    <label for="webhookUrl" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333;">Webhook URL</label>
+                    <input 
+                      type="text" 
+                      id="webhookUrl" 
+                      name="webhookUrl" 
+                      placeholder="自动检测或手动输入 Webhook URL"
+                      style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"
+                    />
                     <p style="font-size: 12px; color: #666; margin-top: 4px;">
-                      💡 保存后将自动验证 Token 有效性并设置命令菜单
+                      💡 Telegram 需要 HTTPS URL。留空则自动检测当前域名
                     </p>
                   </div>
+                  
+                  <p style="font-size: 12px; color: #666; margin: 0;">
+                    💡 保存后将自动验证 Token 有效性、设置命令菜单和 Webhook
+                  </p>
                 </form>
 
                 {/* Bot 信息显示区域 */}

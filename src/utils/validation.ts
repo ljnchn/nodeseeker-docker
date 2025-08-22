@@ -82,6 +82,7 @@ export const botTokenSchema = z.object({
         /^\d+:[A-Za-z0-9_-]+$/,
         'Bot Token格式不正确'
     ),
+    webhook_url: z.string().url('Webhook URL 格式不正确').optional(),
 });
 
 // 分页参数验证 Schema

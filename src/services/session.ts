@@ -7,39 +7,7 @@ export class SessionService {
   private readonly MAX_SESSIONS_PER_USER = 5; // 每个用户最多5个活跃session
   
   constructor(private dbService: DatabaseService) {
-    this.initializeSessionTable();
-  }
-
-  /**
-   * 初始化session表
-   */
-  private initializeSessionTable(): void {
-    try {
-      // 创建sessions表
-      this.dbService.db.exec(`
-        CREATE TABLE IF NOT EXISTS sessions (
-          session_id TEXT PRIMARY KEY,
-          user_id INTEGER NOT NULL,
-          username TEXT NOT NULL,
-          created_at TEXT NOT NULL,
-          last_accessed_at TEXT NOT NULL,
-          expires_at TEXT NOT NULL,
-          ip_address TEXT,
-          user_agent TEXT
-        )
-      `);
-
-      // 创建索引以提高查询性能
-      this.dbService.db.exec(`
-        CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
-        CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
-      `);
-
-      console.log('Session表初始化完成');
-    } catch (error) {
-      console.error('初始化session表失败:', error);
-      throw error;
-    }
+    // session表现在通过数据库迁移创建，不需要在这里初始化
   }
 
   /**

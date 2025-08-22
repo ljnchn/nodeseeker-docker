@@ -306,15 +306,21 @@ document.addEventListener('DOMContentLoaded', function() {
       
       const formData = new FormData(botTokenForm);
       const botToken = formData.get('botToken');
+      const webhookUrl = formData.get('webhookUrl');
       
       if (!botToken) {
         showMessage('请输入 Bot Token', 'error');
         return;
       }
       
+      const requestData = { bot_token: botToken };
+      if (webhookUrl && webhookUrl.trim()) {
+        requestData.webhook_url = webhookUrl.trim();
+      }
+      
       const result = await apiRequest('/api/bot-token', {
         method: 'POST',
-        body: JSON.stringify({ bot_token: botToken })
+        body: JSON.stringify(requestData)
       });
       
       if (result && result.success) {
@@ -541,6 +547,14 @@ document.addEventListener('DOMContentLoaded', function() {
   initTabs();
   updateStatusCards();
   loadConfig();
+  
+  // 自动填充 webhook URL
+  const webhookUrlInput = document.getElementById('webhookUrl');
+  if (webhookUrlInput && !webhookUrlInput.value) {
+    const currentUrl = new URL(window.location.href);
+    const webhookUrl = `${currentUrl.protocol}//${currentUrl.host}/telegram/webhook`;
+    webhookUrlInput.value = webhookUrl;
+  }
   
   // 延迟设置 Telegram 按钮，等待 DOM 更新
   setTimeout(setupTelegramButtons, 500);

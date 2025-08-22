@@ -13,6 +13,23 @@ CREATE TABLE IF NOT EXISTS base_config (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- session表
+CREATE TABLE IF NOT EXISTS sessions (
+  session_id TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  username TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  last_accessed_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  ip_address TEXT,
+  user_agent TEXT
+);
+
+-- 为sessions表创建索引
+CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
+CREATE INDEX IF NOT EXISTS idx_sessions_last_accessed ON sessions(last_accessed_at);
+
 -- posts 表
 CREATE TABLE IF NOT EXISTS posts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
