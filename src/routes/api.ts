@@ -113,6 +113,17 @@ apiRoutes.post('/bot-token', createValidationMiddleware(botTokenSchema), async (
         // 设置 Bot 命令菜单
         await telegramService.setBotCommands();
 
+        // 自动设置 Webhook
+        const webhookUrl = `${c.req.url.split('/api')[0]}/telegram/webhook`
+        const webhookResult = await telegramService.setWebhook(webhookUrl)
+        
+        if (!webhookResult) {
+            return c.json({
+                success: false,
+                message: 'Bot Token 有效，但 Webhook 设置失败'
+            }, 400)
+        }
+
         // 更新配置
         const config = dbService.updateBaseConfig({ bot_token });
 
@@ -122,7 +133,8 @@ apiRoutes.post('/bot-token', createValidationMiddleware(botTokenSchema), async (
 
         return c.json(createSuccessResponse({
             bot_info: botInfo,
-            message: 'Bot Token 设置成功，命令菜单已更新'
+            webhook_url: webhookUrl,
+            message: 'Bot Token 设置成功，命令菜单已更新，Webhook 已设置'
         }));
     } catch (error) {
         return c.json(createErrorResponse(`设置 Bot Token 失败: ${error}`), 500);
@@ -358,7 +370,8 @@ apiRoutes.get('/telegram/status', async (c) => {
             
             if (botInfo) {
                 statusData.connected = true;
-                statusData.bot_info = botInfo;
+                // 这里需要类型断言，确保类型兼容
+                statusData.bot_info = botInfo as any;
                 return c.json(createSuccessResponse(statusData, 'Bot 状态正常'));
             } else {
                 return c.json(createSuccessResponse(statusData, 'Bot Token 无效或连接失败'));

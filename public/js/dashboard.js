@@ -156,6 +156,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('botId').textContent = status.bot_info.id;
         document.getElementById('botUsername').textContent = '@' + status.bot_info.username;
         document.getElementById('botName').textContent = status.bot_info.first_name;
+        
+        // 重新绑定按钮事件（因为按钮现在可见了）
+        await setupTelegramButtons();
       } else {
         botInfoDisplay.style.display = 'none';
       }
@@ -178,6 +181,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('boundUsername').textContent = status.config.bound_user_username ? '@' + status.config.bound_user_username : '无';
         document.getElementById('boundChatId').textContent = status.config.has_chat_id ? '已设置' : '未设置';
         document.getElementById('bindingTime').textContent = status.config.last_check_time ? new Date(status.config.last_check_time).toLocaleString() : '未知';
+        
+        // 重新绑定按钮事件（因为按钮现在可见了）
+        await setupTelegramButtons();
       } else {
         bindingStatus.textContent = '未绑定';
         bindingStatus.style.background = '#dc3545';
