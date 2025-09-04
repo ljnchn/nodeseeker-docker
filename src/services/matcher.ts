@@ -61,6 +61,54 @@ export class MatcherService {
   }
 
   /**
+   * 检测关键字是否为正则表达式格式
+   */
+  private isRegexKeyword(keyword: string): { isRegex: boolean; pattern?: string; flags?: string } {
+    if (!keyword || keyword.trim().length === 0) {
+      return { isRegex: false };
+    }
+
+    // 检测 /pattern/flags 格式（如 /pattern/i, /pattern/gi 等）
+    if (keyword.startsWith('/')) {
+      const lastSlashIndex = keyword.lastIndexOf('/');
+      if (lastSlashIndex > 0) {
+        const pattern = keyword.slice(1, lastSlashIndex);
+        const flags = keyword.slice(lastSlashIndex + 1);
+        return { isRegex: true, pattern, flags };
+      }
+    }
+
+    // 检测 regex: 前缀格式
+    if (keyword.toLowerCase().startsWith('regex:')) {
+      return { isRegex: true, pattern: keyword.slice(6), flags: 'i' };
+    }
+
+    return { isRegex: false };
+  }
+
+  /**
+   * 执行匹配检查（字符串或正则）
+   */
+  private performMatch(text: string, keyword: string): boolean {
+    const regexInfo = this.isRegexKeyword(keyword);
+    
+    if (regexInfo.isRegex && regexInfo.pattern) {
+      try {
+        const flags = regexInfo.flags || 'i'; // 默认不区分大小写
+        const regex = new RegExp(regexInfo.pattern, flags);
+        return regex.test(text);
+      } catch (error) {
+        console.warn(`正则表达式语法错误，回退到字符串匹配: ${keyword}`, error);
+        // 回退到字符串匹配
+        return text.toLowerCase().includes(keyword.toLowerCase());
+      }
+    } else {
+      // 标准字符串匹配
+      return text.toLowerCase().includes(keyword.toLowerCase());
+    }
+  }
+
+  /**
    * 匹配单个文章与单个订阅
    */
   private matchPostWithSubscription(post: Post & {
@@ -140,35 +188,36 @@ export class MatcherService {
     let totalMatchedKeywords = 0;
 
     for (const keyword of keywords) {
-      const lowerKeyword = keyword?.toLowerCase().trim() || '';
+      if (!keyword) continue;
+      
       let keywordMatched = false;
       
       // 检查标题匹配
-      if (titleText.includes(lowerKeyword)) {
-        matchDetails.titleMatches.push(keyword || '');
+      if (this.performMatch(titleText, keyword)) {
+        matchDetails.titleMatches.push(keyword);
         keywordMatched = true;
       }
       
       // 检查内容匹配（如果不是仅标题模式）
-      if (!keywordMatched && !config.only_title && contentText.includes(lowerKeyword)) {
-        matchDetails.contentMatches.push(keyword || '');
+      if (!keywordMatched && !config.only_title && this.performMatch(contentText, keyword)) {
+        matchDetails.contentMatches.push(keyword);
         keywordMatched = true;
       }
       
       // 检查作者匹配（如果没有指定具体的creator过滤条件）
-      if (!keywordMatched && !subscription.creator && creatorText.includes(lowerKeyword)) {
-        matchDetails.authorMatches.push(keyword || '');
+      if (!keywordMatched && !subscription.creator && this.performMatch(creatorText, keyword)) {
+        matchDetails.authorMatches.push(keyword);
         keywordMatched = true;
       }
       
       // 检查分类匹配（如果没有指定具体的category过滤条件）
-      if (!keywordMatched && !subscription.category && categoryText.includes(lowerKeyword)) {
-        matchDetails.categoryMatches.push(keyword || '');
+      if (!keywordMatched && !subscription.category && this.performMatch(categoryText, keyword)) {
+        matchDetails.categoryMatches.push(keyword);
         keywordMatched = true;
       }
 
       if (keywordMatched) {
-        matchedKeywords.push(keyword || '');
+        matchedKeywords.push(keyword);
         totalMatchedKeywords++;
       }
     }
