@@ -83,9 +83,7 @@ jobs:
           tags: |
             type=ref,event=branch
             type=ref,event=pr
-            type=semver,pattern={{version}},prefix=v
-            type=semver,pattern={{major}}.{{minor}},prefix=v
-            type=semver,pattern={{major}},prefix=v
+            type=match,pattern=v(.*),group=1
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Extract metadata for Docker Hub
@@ -95,10 +93,8 @@ jobs:
           images: ${{ env.DOCKERHUB_IMAGE_NAME }}
           tags: |
             type=ref,event=branch
-            type=ref,event=pr  
-            type=semver,pattern={{version}},prefix=v
-            type=semver,pattern={{major}}.{{minor}},prefix=v
-            type=semver,pattern={{major}},prefix=v
+            type=ref,event=pr
+            type=match,pattern=v(.*),group=1
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Debug metadata outputs
