@@ -2,7 +2,7 @@
 
 [![Docker Build](https://github.com/ljnchn/NodeSeeker-docker/actions/workflows/docker-build.yml/badge.svg)](https://github.com/ljnchn/NodeSeeker-docker/actions/workflows/docker-build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Docker Image](https://img.shields.io/docker/v/ljnchn/nodeseeker-docker?label=Docker)](https://github.com/ljnchn/NodeSeeker-docker/pkgs/container/nodeseeker-docker)
+[![Docker Hub](https://img.shields.io/docker/v/ersichub/nodeseeker?label=Docker%20Hub)](https://hub.docker.com/r/ersichub/nodeseeker)
 [![Bun](https://img.shields.io/badge/Bun-1.0+-ff69b4.svg)](https://bun.sh/)
 
 基于 Bun + Hono.js + SQLite 的高性能 NodeSeek RSS 监控和 Telegram 推送系统。
@@ -11,6 +11,7 @@
 
 - 🔄 **自动 RSS 抓取** - 定时抓取 NodeSeek 社区 RSS 数据
 - 🎯 **智能关键词匹配** - 支持多关键词组合匹配，按创建者和分类过滤
+- 🔍 **正则表达式匹配** - 支持 `/pattern/flags` 和 `regex:pattern` 格式的正则匹配
 - 📱 **Telegram Bot 推送** - 实时推送匹配文章到 Telegram
 - 🌐 **RESTful API** - 完整的 API 接口支持
 - ⚡ **高性能架构** - 基于 Bun 运行时的极致性能
@@ -24,14 +25,26 @@
 
 ```bash
 # 1. 拉取镜像
-docker pull ghcr.io/ljnchn/nodeseeker-docker:latest
+docker pull ersichub/nodeseeker:latest
 
 # 2. 运行容器（无需设置 JWT_SECRET）
 docker run -d \
   --name nodeseeker \
   -p 3010:3010 \
   -v nodeseeker_data:/usr/src/app/data \
-  ghcr.io/ljnchn/nodeseeker-docker:latest
+  ersichub/nodeseeker:latest
+```
+
+### 使用特定版本
+
+```bash
+# 使用 v0.01 版本（包含正则匹配功能）
+docker pull ersichub/nodeseeker:v0.01
+docker run -d \
+  --name nodeseeker \
+  -p 3010:3010 \
+  -v nodeseeker_data:/usr/src/app/data \
+  ersichub/nodeseeker:v0.01
 ```
 
 ### Docker Compose 部署
@@ -102,6 +115,25 @@ TELEGRAM_BOT_TOKEN=your-telegram-bot-token
 - `/del 订阅ID` - 删除订阅
 - `/post` - 查看最近文章
 - `/stop` / `/resume` - 停止/恢复推送
+
+### 🔍 关键词匹配格式
+
+#### 普通字符串匹配
+- `JavaScript` - 匹配包含 "JavaScript" 的内容
+
+#### 正则表达式匹配
+- `/javascript/i` - 不区分大小写匹配 "javascript"
+- `/\d{4}年/` - 匹配4位数字后跟"年"字的内容
+- `/^React/` - 匹配以 "React" 开头的内容
+- `regex:新特性|特性` - 使用 "regex:" 前缀，匹配 "新特性" 或 "特性"
+
+#### 匹配示例
+```bash
+# 添加订阅示例
+/add /javascript/i React    # 混合使用正则和字符串
+/add regex:AI|人工智能 深度学习  # 使用 regex: 前缀
+/add /\d+\.?\d*GB/ 内存      # 匹配内存规格
+```
 
 ## 🔌 API 接口
 
