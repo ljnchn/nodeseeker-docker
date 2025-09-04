@@ -83,9 +83,9 @@ jobs:
           tags: |
             type=ref,event=branch
             type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=semver,pattern={{version}},prefix=v
+            type=semver,pattern={{major}}.{{minor}},prefix=v
+            type=semver,pattern={{major}},prefix=v
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Extract metadata for Docker Hub
@@ -95,11 +95,17 @@ jobs:
           images: ${{ env.DOCKERHUB_IMAGE_NAME }}
           tags: |
             type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=ref,event=pr  
+            type=semver,pattern={{version}},prefix=v
+            type=semver,pattern={{major}}.{{minor}},prefix=v
+            type=semver,pattern={{major}},prefix=v
             type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Debug metadata outputs
+        run: |
+          echo "GHCR tags: ${{ steps.meta-ghcr.outputs.tags }}"
+          echo "Docker Hub tags: ${{ steps.meta-dockerhub.outputs.tags }}"
+          echo "GHCR labels: ${{ steps.meta-ghcr.outputs.labels }}"
 
       - name: Build and push to GitHub Container Registry
         uses: docker/build-push-action@v5
