@@ -261,20 +261,39 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // 加载文章列表
-  async function loadPosts() {
-    const result = await apiRequest('/api/posts?limit=20');
+  // 加载文章列表（支持分页和搜索）
+  let currentPage = 1;
+  let currentFilters = {};
+  
+  async function loadPosts(page = 1, filters = {}) {
+    currentPage = page;
+    currentFilters = filters;
+    
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: '20',
+      ...Object.fromEntries(Object.entries(filters).filter(([_, v]) => v !== '' && v !== undefined))
+    });
+    
+    const result = await apiRequest(`/api/posts?${params}`);
     if (result && result.success) {
-      const posts = result.data.posts;
+      const { posts, total, page: currentPageNum, totalPages } = result.data;
       const postsList = document.getElementById('postsList');
+      
+      // 更新统计信息
+      const postsStats = document.getElementById('postsStats');
+      const postsStatsText = document.getElementById('postsStatsText');
+      postsStatsText.textContent = `找到 ${total} 条记录，当前显示第 ${currentPageNum} 页，共 ${totalPages} 页`;
+      postsStats.style.display = 'block';
       
       if (posts.length === 0) {
         postsList.innerHTML = `
           <div style="text-align: center; padding: 60px 20px; color: #999;">
-            📰 暂无文章数据<br>
-            <small>点击"更新RSS"按钮获取最新文章</small>
+            📰 ${Object.keys(filters).length > 0 ? '没有找到符合条件的文章' : '暂无文章数据'}<br>
+            <small>${Object.keys(filters).length > 0 ? '试试调整搜索条件' : '点击"更新RSS"按钮获取最新文章'}</small>
           </div>
         `;
+        document.getElementById('pagination').style.display = 'none';
       } else {
         postsList.innerHTML = posts.map(post => {
           const statusText = post.push_status === 0 ? '未推送' : post.push_status === 1 ? '已推送' : '无需推送';
@@ -296,8 +315,100 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
           `;
         }).join('');
+        
+        // 更新分页控件
+        updatePagination(currentPageNum, totalPages, total);
       }
     }
+  }
+
+  // 更新分页控件
+  function updatePagination(currentPageNum, totalPages, total) {
+    const pagination = document.getElementById('pagination');
+    const paginationInfo = document.getElementById('paginationInfo');
+    const prevBtn = document.getElementById('prevPageBtn');
+    const nextBtn = document.getElementById('nextPageBtn');
+    const pageNumbers = document.getElementById('pageNumbers');
+    
+    // 更新信息文本
+    paginationInfo.textContent = `第 ${currentPageNum} 页，共 ${total} 条记录`;
+    
+    // 更新按钮状态
+    prevBtn.disabled = currentPageNum <= 1;
+    nextBtn.disabled = currentPageNum >= totalPages;
+    
+    // 生成页码按钮
+    pageNumbers.innerHTML = '';
+    if (totalPages <= 7) {
+      // 总页数少，显示所有页码
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.appendChild(createPageButton(i, i === currentPageNum));
+      }
+    } else {
+      // 总页数多，显示省略号逻辑
+      pageNumbers.appendChild(createPageButton(1, currentPageNum === 1));
+      
+      if (currentPageNum > 3) {
+        pageNumbers.appendChild(createEllipsis());
+      }
+      
+      const start = Math.max(2, currentPageNum - 1);
+      const end = Math.min(totalPages - 1, currentPageNum + 1);
+      
+      for (let i = start; i <= end; i++) {
+        pageNumbers.appendChild(createPageButton(i, i === currentPageNum));
+      }
+      
+      if (currentPageNum < totalPages - 2) {
+        pageNumbers.appendChild(createEllipsis());
+      }
+      
+      if (totalPages > 1) {
+        pageNumbers.appendChild(createPageButton(totalPages, currentPageNum === totalPages));
+      }
+    }
+    
+    pagination.style.display = 'flex';
+  }
+  
+  // 创建页码按钮
+  function createPageButton(pageNum, isActive) {
+    const button = document.createElement('button');
+    button.textContent = pageNum;
+    button.style.cssText = `
+      padding: 8px 12px; 
+      border: 1px solid #ddd; 
+      border-radius: 4px; 
+      cursor: pointer; 
+      font-size: 14px;
+      background: ${isActive ? '#2196f3' : '#f5f5f5'};
+      color: ${isActive ? 'white' : '#333'};
+    `;
+    if (!isActive) {
+      button.addEventListener('click', () => loadPosts(pageNum, currentFilters));
+    }
+    return button;
+  }
+  
+  // 创建省略号
+  function createEllipsis() {
+    const span = document.createElement('span');
+    span.textContent = '...';
+    span.style.cssText = 'padding: 8px 4px; color: #999; font-size: 14px;';
+    return span;
+  }
+
+  // 防抖函数
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
   }
 
   // 加载统计信息
@@ -583,6 +694,82 @@ document.addEventListener('DOMContentLoaded', function() {
           window.location.href = '/login';
         }
       }
+    });
+  }
+
+  // 搜索表单事件处理
+  const postsFilterForm = document.getElementById('postsFilterForm');
+  if (postsFilterForm) {
+    // 防抖搜索
+    const debouncedSearch = debounce(performSearch, 500);
+    
+    postsFilterForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      performSearch();
+    });
+    
+    // 实时搜索（输入时触发）
+    const searchInputs = postsFilterForm.querySelectorAll('input, select');
+    searchInputs.forEach(input => {
+      input.addEventListener('input', debouncedSearch);
+    });
+    
+    function performSearch() {
+      const formData = new FormData(postsFilterForm);
+      const filters = {
+        search: formData.get('searchTitle')?.trim() || '',
+        pushStatus: formData.get('filterStatus') || '',
+        creator: formData.get('filterCreator')?.trim() || '',
+        category: formData.get('filterCategory')?.trim() || ''
+      };
+      
+      // 过滤空值
+      Object.keys(filters).forEach(key => {
+        if (filters[key] === '') {
+          delete filters[key];
+        }
+      });
+      
+      loadPosts(1, filters);
+    }
+  }
+  
+  // 清空筛选按钮
+  const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+  if (clearFiltersBtn) {
+    clearFiltersBtn.addEventListener('click', function() {
+      document.getElementById('searchTitle').value = '';
+      document.getElementById('filterStatus').value = '';
+      document.getElementById('filterCreator').value = '';
+      document.getElementById('filterCategory').value = '';
+      loadPosts(1, {});
+    });
+  }
+  
+  // 分页按钮事件
+  const prevPageBtn = document.getElementById('prevPageBtn');
+  const nextPageBtn = document.getElementById('nextPageBtn');
+  
+  if (prevPageBtn) {
+    prevPageBtn.addEventListener('click', function() {
+      if (currentPage > 1) {
+        loadPosts(currentPage - 1, currentFilters);
+      }
+    });
+  }
+  
+  if (nextPageBtn) {
+    nextPageBtn.addEventListener('click', function() {
+      loadPosts(currentPage + 1, currentFilters);
+    });
+  }
+
+  // 刷新文章列表按钮
+  const refreshPostsBtn = document.getElementById('refreshPostsBtn');
+  if (refreshPostsBtn) {
+    refreshPostsBtn.addEventListener('click', async function() {
+      await loadPosts(currentPage, currentFilters);
+      showMessage('文章列表已刷新', 'success');
     });
   }
 

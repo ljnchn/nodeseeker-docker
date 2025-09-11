@@ -312,7 +312,8 @@ apiRoutes.get('/posts', createQueryValidationMiddleware(paginationSchema), async
             {
                 pushStatus: query.pushStatus,
                 creator: query.creator,
-                category: query.category
+                category: query.category,
+                search: query.search
             }
         );
 

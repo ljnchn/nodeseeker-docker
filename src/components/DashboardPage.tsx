@@ -364,9 +364,68 @@ export const DashboardPage: FC = () => {
                 </div>
               </div>
               
+              {/* 搜索和过滤器 */}
+              <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #2196f3;">
+                <h3 style="font-size: 16px; margin-bottom: 16px; color: #333;">🔍 搜索和筛选</h3>
+                <form id="postsFilterForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
+                  <div>
+                    <label for="searchTitle" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333; font-size: 14px;">标题搜索</label>
+                    <input type="text" id="searchTitle" placeholder="输入标题关键字..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                  </div>
+                  <div>
+                    <label for="filterStatus" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333; font-size: 14px;">推送状态</label>
+                    <select id="filterStatus" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                      <option value="">全部状态</option>
+                      <option value="0">未推送</option>
+                      <option value="1">已推送</option>
+                      <option value="2">无需推送</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="filterCreator" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333; font-size: 14px;">作者筛选</label>
+                    <input type="text" id="filterCreator" placeholder="输入作者名..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                  </div>
+                  <div>
+                    <label for="filterCategory" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333; font-size: 14px;">分类筛选</label>
+                    <input type="text" id="filterCategory" placeholder="输入分类名..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                  </div>
+                  <div style="display: flex; gap: 8px;">
+                    <button type="submit" style="padding: 10px 20px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                      搜索
+                    </button>
+                    <button type="button" id="clearFiltersBtn" style="padding: 10px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                      清空
+                    </button>
+                  </div>
+                </form>
+              </div>
+              
+              {/* 统计信息 */}
+              <div id="postsStats" style="background: #e3f2fd; padding: 12px 16px; border-radius: 4px; margin-bottom: 16px; font-size: 14px; color: #1976d2; display: none;">
+                <span id="postsStatsText">正在加载...</span>
+              </div>
+              
               <div id="postsList" style="min-height: 200px;">
                 <div style="text-align: center; padding: 60px 20px; color: #999;">
                   加载中...
+                </div>
+              </div>
+              
+              {/* 分页控件 */}
+              <div id="pagination" style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; flex-wrap: wrap; gap: 16px; display: none;">
+                <div style="font-size: 14px; color: #666;">
+                  <span id="paginationInfo">第 1 页，共 0 条记录</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <button id="prevPageBtn" style="padding: 8px 12px; background: #f5f5f5; color: #333; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 14px;" disabled>
+                    上一页
+                  </button>
+                  <div id="pageNumbers" style="display: flex; gap: 4px;">
+                    <!-- 页码按钮将在这里动态生成 -->
+                  </div>
+                  <button id="nextPageBtn" style="padding: 8px 12px; background: #f5f5f5; color: #333; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 14px;" disabled>
+                    下一页
+                  </button>
                 </div>
               </div>
             </div>

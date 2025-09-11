@@ -92,6 +92,7 @@ export const paginationSchema = z.object({
     pushStatus: z.coerce.number().int().min(0).max(2).optional(),
     creator: z.string().max(100).optional(),
     category: z.string().max(100).optional(),
+    search: z.string().max(200).optional(),
 });
 
 // ID 参数验证 Schema

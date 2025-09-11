@@ -309,6 +309,7 @@ export class DatabaseService {
       pushStatus?: number;
       creator?: string;
       category?: string;
+      search?: string;
     }
   ): {
     posts: Post[];
@@ -339,6 +340,11 @@ export class DatabaseService {
       if (filters.category) {
         conditions.push('category LIKE ?');
         params.push(`%${filters.category}%`);
+      }
+      
+      if (filters.search) {
+        conditions.push('title LIKE ?');
+        params.push(`%${filters.search}%`);
       }
     }
     
