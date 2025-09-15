@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
-import { TelegramService } from '../services/telegram';
+import { TelegramWebhookService } from '../services/telegram/webhook';
+import { TelegramPushService } from '../services/telegram/push';
 import { createSuccessResponse, createErrorResponse } from '../utils/helpers';
 import type { ContextVariables } from '../types';
 
@@ -19,7 +20,7 @@ telegramRoutes.post('/webhook', async (c) => {
     }
     
     // 创建 Telegram 服务实例
-    const telegramService = new TelegramService(dbService, config.bot_token);
+    const telegramService = new TelegramWebhookService(dbService, config.bot_token);
     
     // 获取 webhook 处理器并处理请求
     const webhookHandler = telegramService.getWebhookCallback();
@@ -48,7 +49,7 @@ telegramRoutes.post('/set-webhook', async (c) => {
       return c.json(createErrorResponse('未配置 Bot Token'), 400);
     }
     
-    const telegramService = new TelegramService(dbService, config.bot_token);
+    const telegramService = new TelegramWebhookService(dbService, config.bot_token);
     const success = await telegramService.setWebhook(webhookUrl);
     
     if (success) {
@@ -71,7 +72,7 @@ telegramRoutes.get('/bot-info', async (c) => {
       return c.json(createErrorResponse('未配置 Bot Token'), 400);
     }
     
-    const telegramService = new TelegramService(dbService, config.bot_token);
+    const telegramService = new TelegramWebhookService(dbService, config.bot_token);
     const botInfo = await telegramService.getBotInfo();
     
     if (botInfo) {
@@ -101,7 +102,7 @@ telegramRoutes.post('/test-message', async (c) => {
       return c.json(createErrorResponse('未配置 Bot Token 或 Chat ID'), 400);
     }
     
-    const telegramService = new TelegramService(dbService, config.bot_token);
+    const telegramService = new TelegramWebhookService(dbService, config.bot_token);
     const success = await telegramService.sendMessage(config.chat_id, message);
     
     if (success) {

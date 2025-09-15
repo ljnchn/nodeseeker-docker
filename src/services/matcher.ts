@@ -1,5 +1,5 @@
 import { DatabaseService } from './database';
-import { TelegramService } from './telegram';
+import { TelegramPushService } from './telegram/push';
 import type { Post, KeywordSub, BaseConfig, PushResult } from '../types';
 
 export interface MatchResult {
@@ -18,7 +18,7 @@ export interface MatchResult {
 export class MatcherService {
   constructor(
     private dbService: DatabaseService,
-    private telegramService: TelegramService
+    private telegramService: TelegramPushService
   ) {}
 
   /**

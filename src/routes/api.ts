@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { DatabaseService } from '../services/database';
 import { AuthService } from '../services/auth';
 import { RSSService } from '../services/rss';
-import { TelegramService } from '../services/telegram';
+import { TelegramWebhookService } from '../services/telegram/webhook';
+import { TelegramPushService } from '../services/telegram/push';
 import { MatcherService } from '../services/matcher';
 import { createValidationMiddleware, createQueryValidationMiddleware, createParamValidationMiddleware } from '../utils/validation';
 import { createSuccessResponse, createErrorResponse } from '../utils/helpers';
@@ -165,7 +166,7 @@ apiRoutes.post('/bot-token', createValidationMiddleware(botTokenSchema), async (
         const dbService = c.get('dbService');
 
         // 创建 Telegram 服务实例来验证 token
-        const telegramService = new TelegramService(dbService, bot_token);
+        const telegramService = new TelegramWebhookService(dbService, bot_token);
 
         // 验证 Bot Token
         const botInfo = await telegramService.getBotInfo();
@@ -357,7 +358,7 @@ apiRoutes.post('/posts/:postId/push/:subId',
                 return c.json(createErrorResponse('未配置 Telegram Bot Token'), 400);
             }
 
-            const telegramService = new TelegramService(dbService, config.bot_token);
+            const telegramService = new TelegramPushService(dbService, config.bot_token);
             const matcherService = new MatcherService(dbService, telegramService);
 
             const result = await matcherService.manualPushPost(postId, subId);
@@ -421,7 +422,7 @@ apiRoutes.get('/match-stats', async (c) => {
             return c.json(createErrorResponse('未配置 Telegram Bot Token'), 400);
         }
 
-        const telegramService = new TelegramService(dbService, config.bot_token);
+        const telegramService = new TelegramPushService(dbService, config.bot_token);
         const matcherService = new MatcherService(dbService, telegramService);
 
         const stats = matcherService.getMatchStats();
@@ -458,7 +459,7 @@ apiRoutes.get('/telegram/status', async (c) => {
         }
 
         try {
-            const telegramService = new TelegramService(dbService, config.bot_token);
+            const telegramService = new TelegramWebhookService(dbService, config.bot_token);
             const botInfo = await telegramService.getBotInfo();
             
             if (botInfo) {
@@ -487,7 +488,7 @@ apiRoutes.post('/telegram/test', async (c) => {
             return c.json(createErrorResponse('Bot Token 未配置'), 400);
         }
 
-        const telegramService = new TelegramService(dbService, config.bot_token);
+        const telegramService = new TelegramWebhookService(dbService, config.bot_token);
         
         // 获取 Bot 信息
         const botInfo = await telegramService.getBotInfo();
@@ -553,7 +554,7 @@ apiRoutes.post('/telegram/send-test', createValidationMiddleware(z.object({
             return c.json(createErrorResponse('用户未绑定'), 400);
         }
 
-        const telegramService = new TelegramService(dbService, config.bot_token);
+        const telegramService = new TelegramPushService(dbService, config.bot_token);
         
         const testMessage = message || `🧪 **测试消息**\n\n⏰ **时间:** ${new Date().toLocaleString('zh-CN')}`;
         const result = await telegramService.sendMessage(config.chat_id, testMessage);

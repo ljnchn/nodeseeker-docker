@@ -1,7 +1,7 @@
 import * as cron from 'node-cron';
 import { DatabaseService } from './database';
 import { RSSService } from './rss';
-import { TelegramService } from './telegram';
+import { TelegramPushService } from './telegram/push';
 import { MatcherService } from './matcher';
 import { getEnvConfig } from '../config/env';
 
@@ -107,7 +107,7 @@ export class SchedulerService {
             }
 
             // 创建服务实例
-            const telegramService = new TelegramService(this.dbService, config.bot_token);
+            const telegramService = new TelegramPushService(this.dbService, config.bot_token);
             const matcherService = new MatcherService(this.dbService, telegramService);
 
 

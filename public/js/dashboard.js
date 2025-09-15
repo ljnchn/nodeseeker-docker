@@ -128,27 +128,16 @@ document.addEventListener('DOMContentLoaded', function() {
     if (result && result.success) {
       const config = result.data;
       
-      // 更新 Bot Token 状态
-      const botTokenStatus = document.getElementById('botTokenStatus');
+      // 更新推送服务配置
       const botToken = document.getElementById('botToken');
-      if (config.bot_token) {
+      const userChatId = document.getElementById('userChatId');
+      
+      if (config.bot_token && botToken) {
         botToken.value = config.bot_token;
-        botTokenStatus.textContent = '已配置';
-        botTokenStatus.style.background = '#4caf50';
-        botTokenStatus.textContent = '已配置';
-        botTokenStatus.style.background = '#4caf50';
-        
-        // 显示 Bot 信息并获取详细状态
-        await loadTelegramStatus();
-      } else {
-        botTokenStatus.textContent = '未配置';
-        botTokenStatus.style.background = '#dc3545';
-        
-        // 隐藏 Bot 信息和绑定信息
-        const botInfoDisplay = document.getElementById('botInfoDisplay');
-        const bindingInfo = document.getElementById('bindingInfo');
-        if (botInfoDisplay) botInfoDisplay.style.display = 'none';
-        if (bindingInfo) bindingInfo.style.display = 'none';
+      }
+      
+      if (config.chat_id && userChatId) {
+        userChatId.value = config.chat_id;
       }
       
       // 更新推送设置
@@ -156,69 +145,133 @@ document.addEventListener('DOMContentLoaded', function() {
       const onlyTitleCheckbox = document.getElementById('onlyTitle');
       if (stopPushCheckbox) stopPushCheckbox.checked = config.stop_push === 1;
       if (onlyTitleCheckbox) onlyTitleCheckbox.checked = config.only_title === 1;
+      
+      // 加载 Telegram 状态
+      await loadTelegramStatus();
     }
   }
 
   // 加载 Telegram 状态
   async function loadTelegramStatus() {
-    const result = await apiRequest('/api/telegram/status');
-    if (result && result.success) {
-      const status = result.data;
+    // 并发加载推送服务和 Webhook 服务状态
+    const [pushResult, webhookResult] = await Promise.allSettled([
+      apiRequest('/api/push/status'),
+      apiRequest('/api/webhook/status')
+    ]);
+    
+    // 处理推送服务状态
+    let pushStatus = { configured: false, connected: false, bot_info: null, can_send: false };
+    if (pushResult.status === 'fulfilled' && pushResult.value?.success) {
+      pushStatus = pushResult.value.data;
+    }
+    
+    // 处理 Webhook 服务状态
+    let webhookStatus = { configured: false, connected: false, bot_info: null, bound: false, config: {} };
+    if (webhookResult.status === 'fulfilled' && webhookResult.value?.success) {
+      webhookStatus = webhookResult.value.data;
+    }
+    
+    // 更新推送服务状态显示
+    const pushServiceStatus = document.getElementById('pushServiceStatus');
+    if (pushServiceStatus) {
+      if (pushStatus.configured && pushStatus.connected) {
+        pushServiceStatus.textContent = '正常运行';
+        pushServiceStatus.style.background = '#4caf50';
+      } else if (pushStatus.configured) {
+        pushServiceStatus.textContent = 'Token无效';
+        pushServiceStatus.style.background = '#f44336';
+      } else {
+        pushServiceStatus.textContent = '未配置';
+        pushServiceStatus.style.background = '#dc3545';
+      }
+    }
+    
+    // 更新交互服务状态显示
+    const webhookServiceStatus = document.getElementById('webhookServiceStatus');
+    if (webhookServiceStatus) {
+      if (webhookStatus.configured && webhookStatus.connected && webhookStatus.webhook_set) {
+        webhookServiceStatus.textContent = '正常运行';
+        webhookServiceStatus.style.background = '#4caf50';
+      } else if (webhookStatus.configured && webhookStatus.connected && !webhookStatus.webhook_set) {
+        webhookServiceStatus.textContent = '未设置Webhook';
+        webhookServiceStatus.style.background = '#ff9800';
+      } else if (webhookStatus.configured) {
+        webhookServiceStatus.textContent = '连接异常';
+        webhookServiceStatus.style.background = '#f44336';
+      } else {
+        webhookServiceStatus.textContent = '未启用';
+        webhookServiceStatus.style.background = '#dc3545';
+      }
+    }
+    
+    // 更新推送服务信息显示
+    const pushServiceInfo = document.getElementById('pushServiceInfo');
+    if (pushServiceInfo && pushStatus.configured && pushStatus.bot_info) {
+      pushServiceInfo.style.display = 'block';
       
-      // 更新 Bot 状态显示
-      const botStatus = document.getElementById('botStatus');
-      if (status.connected) {
+      // 更新推送服务信息
+      const pushBotId = document.getElementById('pushBotId');
+      const pushBotUsername = document.getElementById('pushBotUsername');
+      const pushBotName = document.getElementById('pushBotName');
+      const pushChatId = document.getElementById('pushChatId');
+      
+      if (pushBotId) pushBotId.textContent = pushStatus.bot_info.id;
+      if (pushBotUsername) pushBotUsername.textContent = '@' + pushStatus.bot_info.username;
+      if (pushBotName) pushBotName.textContent = pushStatus.bot_info.first_name;
+      if (pushChatId) pushChatId.textContent = pushStatus.config.has_chat_id ? '已设置' : '未设置';
+    } else if (pushServiceInfo) {
+      pushServiceInfo.style.display = 'none';
+    }
+    
+    // 更新交互服务信息显示
+    const webhookServiceInfo = document.getElementById('webhookServiceInfo');
+    if (webhookServiceInfo && webhookStatus.configured) {
+      webhookServiceInfo.style.display = 'block';
+      
+      // 更新交互服务信息
+      const webhookStatus_elem = document.getElementById('webhookStatus');
+      const userBindingStatus = document.getElementById('userBindingStatus');
+      const boundUserInfo = document.getElementById('boundUserInfo');
+      const bindingTime2 = document.getElementById('bindingTime2');
+      
+      if (webhookStatus_elem) {
+        webhookStatus_elem.textContent = webhookStatus.webhook_set ? '已设置' : '未设置';
+      }
+      if (userBindingStatus) {
+        userBindingStatus.textContent = webhookStatus.bound ? '已绑定' : '未绑定';
+      }
+      if (boundUserInfo) {
+        if (webhookStatus.bound && webhookStatus.config.bound_user_name) {
+          boundUserInfo.textContent = `${webhookStatus.config.bound_user_name}${webhookStatus.config.bound_user_username ? ' (@' + webhookStatus.config.bound_user_username + ')' : ''}`;
+        } else {
+          boundUserInfo.textContent = '无';
+        }
+      }
+      if (bindingTime2) {
+        bindingTime2.textContent = webhookStatus.config.last_check_time ? new Date(webhookStatus.config.last_check_time).toLocaleString() : '未知';
+      }
+    } else if (webhookServiceInfo) {
+      webhookServiceInfo.style.display = 'none';
+    }
+    
+    // 更新 Bot 状态显示（综合两个服务的状态）
+    const botStatus = document.getElementById('botStatus');
+    if (botStatus) {
+      const bothConfigured = pushStatus.configured && webhookStatus.configured;
+      const bothConnected = pushStatus.connected && webhookStatus.connected;
+      
+      if (bothConfigured && bothConnected) {
         botStatus.textContent = '正常运行';
         botStatus.style.color = '#4caf50';
-      } else {
+      } else if (bothConfigured && (pushStatus.connected || webhookStatus.connected)) {
+        botStatus.textContent = '部分正常';
+        botStatus.style.color = '#ff9800';
+      } else if (pushStatus.configured || webhookStatus.configured) {
         botStatus.textContent = 'Token无效';
         botStatus.style.color = '#f44336';
-      }
-      
-      // 显示/隐藏 Bot 信息
-      const botInfoDisplay = document.getElementById('botInfoDisplay');
-      if (status.configured && status.connected && status.bot_info) {
-        botInfoDisplay.style.display = 'block';
-        
-        // 更新 Bot 信息
-        document.getElementById('botId').textContent = status.bot_info.id;
-        document.getElementById('botUsername').textContent = '@' + status.bot_info.username;
-        document.getElementById('botName').textContent = status.bot_info.first_name;
-        
-        // 重新绑定按钮事件（因为按钮现在可见了）
-        await setupTelegramButtons();
       } else {
-        botInfoDisplay.style.display = 'none';
-      }
-      
-      // 更新用户绑定状态
-      const bindingStatus = document.getElementById('bindingStatus');
-      const bindingInfo = document.getElementById('bindingInfo');
-      const bindingInstructions = document.getElementById('bindingInstructions');
-      
-      if (status.bound && status.config.has_chat_id) {
-        bindingStatus.textContent = '已绑定';
-        bindingStatus.style.background = '#4caf50';
-        
-        // 显示绑定信息
-        bindingInfo.style.display = 'block';
-        bindingInstructions.style.display = 'none';
-        
-        // 更新绑定信息
-        document.getElementById('boundUserName').textContent = status.config.bound_user_name || '未知';
-        document.getElementById('boundUsername').textContent = status.config.bound_user_username ? '@' + status.config.bound_user_username : '无';
-        document.getElementById('boundChatId').textContent = status.config.has_chat_id ? '已设置' : '未设置';
-        document.getElementById('bindingTime').textContent = status.config.last_check_time ? new Date(status.config.last_check_time).toLocaleString() : '未知';
-        
-        // 重新绑定按钮事件（因为按钮现在可见了）
-        await setupTelegramButtons();
-      } else {
-        bindingStatus.textContent = '未绑定';
-        bindingStatus.style.background = '#dc3545';
-        
-        // 隐藏绑定信息，显示说明
-        bindingInfo.style.display = 'none';
-        bindingInstructions.style.display = 'block';
+        botStatus.textContent = '未配置';
+        botStatus.style.color = '#999';
       }
     }
   }
@@ -244,7 +297,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <h4 style="margin: 0; flex: 1; color: #333; font-size: 15px;">
                 订阅 #${sub.id}
               </h4>
-              <button onclick="deleteSubscription(${sub.id})" style="padding: 4px 8px; font-size: 12px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">
+              <button onclick="deleteSubscription(${sub.id})" class="btn-danger btn-mini">
                 删除
               </button>
             </div>
@@ -375,15 +428,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function createPageButton(pageNum, isActive) {
     const button = document.createElement('button');
     button.textContent = pageNum;
-    button.style.cssText = `
-      padding: 8px 12px; 
-      border: 1px solid #ddd; 
-      border-radius: 4px; 
-      cursor: pointer; 
-      font-size: 14px;
-      background: ${isActive ? '#2196f3' : '#f5f5f5'};
-      color: ${isActive ? 'white' : '#333'};
-    `;
+    button.className = isActive ? 'btn-primary btn-small' : 'btn-pagination';
     if (!isActive) {
       button.addEventListener('click', () => loadPosts(pageNum, currentFilters));
     }
@@ -437,116 +482,195 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // Bot Token 表单提交
-  const botTokenForm = document.getElementById('botTokenForm');
-  if (botTokenForm) {
-    botTokenForm.addEventListener('submit', async function(e) {
+  // 推送服务表单提交
+  const pushServiceForm = document.getElementById('pushServiceForm');
+  if (pushServiceForm) {
+    pushServiceForm.addEventListener('submit', async function(e) {
       e.preventDefault();
       
-      const formData = new FormData(botTokenForm);
+      const formData = new FormData(pushServiceForm);
       const botToken = formData.get('botToken');
-      const webhookUrl = formData.get('webhookUrl');
       
       if (!botToken) {
         showMessage('请输入 Bot Token', 'error');
         return;
       }
       
-      const requestData = { bot_token: botToken };
-      if (webhookUrl && webhookUrl.trim()) {
-        requestData.webhook_url = webhookUrl.trim();
-      }
+      showMessage('正在设置推送服务...', 'info');
       
-      showMessage('正在设置 Bot Token...', 'info');
-      
-      const result = await apiRequest('/api/bot-token', {
+      const result = await apiRequest('/api/push/setup', {
         method: 'POST',
-        body: JSON.stringify(requestData)
+        body: JSON.stringify({ bot_token: botToken })
       });
       
       if (result && result.success) {
-        // 检查 webhook 设置状态
-        if (result.data.webhook_set) {
-          showMessage('Bot Token 和 Webhook 设置成功', 'success');
-        } else if (result.data.webhook_error && result.data.webhook_suggestions) {
-          // 显示详细的 webhook 错误信息
-          showDetailedMessage(
-            'Bot Token 设置成功，但 Webhook 设置失败',
-            result.data.webhook_suggestions,
-            'warning'
-          );
-        } else {
-          showMessage('Bot Token 设置成功，但 Webhook 设置失败', 'warning');
-        }
-        
+        showMessage('推送服务设置成功', 'success');
         await loadConfig();
-        // Bot 信息显示更新后，更新按钮绑定
-        await setupTelegramButtons();
+        await loadTelegramStatus();
       } else {
-        showMessage(result?.message || 'Bot Token 设置失败', 'error');
+        showMessage(result?.message || '推送服务设置失败', 'error');
+      }
+    });
+  }
+
+  // Chat ID 设置按钮
+  const setChatIdBtn = document.getElementById('setChatIdBtn');
+  if (setChatIdBtn) {
+    setChatIdBtn.addEventListener('click', async function() {
+      const userChatId = document.getElementById('userChatId').value.trim();
+      
+      if (!userChatId) {
+        showMessage('请输入 Chat ID', 'error');
+        return;
+      }
+      
+      showMessage('正在设置 Chat ID...', 'info');
+      
+      const result = await apiRequest('/api/push/set-chat-id', {
+        method: 'POST',
+        body: JSON.stringify({ chat_id: userChatId })
+      });
+      
+      if (result && result.success) {
+        showMessage('Chat ID 设置成功，正在发送测试消息...', 'info');
+        await loadTelegramStatus();
+        
+        // 自动发送测试消息
+        const testResult = await apiRequest('/api/push/test-send', {
+          method: 'POST',
+          body: JSON.stringify({ message: '🎉 Chat ID 设置成功！这是一条测试消息，确认推送功能正常工作。' })
+        });
+        
+        if (testResult && testResult.success) {
+          showMessage('Chat ID 设置成功，测试消息已发送', 'success');
+        } else {
+          showMessage('Chat ID 设置成功，但测试消息发送失败：' + (testResult?.message || '未知错误'), 'warning');
+        }
+      } else {
+        showMessage(result?.message || 'Chat ID 设置失败', 'error');
+      }
+    });
+  }
+
+  // 交互服务表单提交
+  const webhookServiceForm = document.getElementById('webhookServiceForm');
+  if (webhookServiceForm) {
+    webhookServiceForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(webhookServiceForm);
+      const webhookUrl = formData.get('webhookUrl');
+      
+      if (!webhookUrl || !webhookUrl.trim()) {
+        showMessage('请输入 Webhook URL', 'error');
+        return;
+      }
+      
+      showMessage('正在设置交互服务...', 'info');
+      
+      const result = await apiRequest('/api/webhook/setup', {
+        method: 'POST',
+        body: JSON.stringify({ webhook_url: webhookUrl.trim() })
+      });
+      
+      if (result && result.success) {
+        showMessage('交互服务设置成功', 'success');
+        await loadTelegramStatus();
+      } else if (result && result.data && result.data.suggestions) {
+        showDetailedMessage(
+          '交互服务设置失败',
+          result.data.suggestions,
+          'error'
+        );
+      } else {
+        showMessage(result?.message || '交互服务设置失败', 'error');
       }
     });
   }
 
   // 设置 Telegram 相关按钮事件
   async function setupTelegramButtons() {
-    // 测试连接按钮
-    const testBotBtn = document.getElementById('testBotBtn');
-    if (testBotBtn) {
-      testBotBtn.onclick = async function() {
-        showMessage('正在测试连接...', 'info');
+    // 推送服务测试按钮
+    const testPushBtn = document.getElementById('testPushBtn');
+    if (testPushBtn) {
+      testPushBtn.onclick = async function() {
+        showMessage('正在发送测试推送...', 'info');
         
-        const result = await apiRequest('/api/telegram/test', {
+        const result = await apiRequest('/api/push/test-send', {
+          method: 'POST',
+          body: JSON.stringify({ message: '这是一条测试推送消息' })
+        });
+        
+        if (result && result.success) {
+          showMessage('测试推送发送成功', 'success');
+        } else {
+          showMessage(result?.message || '测试推送发送失败', 'error');
+        }
+      };
+    }
+
+    // 推送服务状态刷新按钮
+    const refreshPushStatusBtn = document.getElementById('refreshPushStatusBtn');
+    if (refreshPushStatusBtn) {
+      refreshPushStatusBtn.onclick = async function() {
+        showMessage('正在刷新推送服务状态...', 'info');
+        await loadTelegramStatus();
+        showMessage('推送服务状态已刷新', 'success');
+      };
+    }
+
+    // 交互服务测试按钮
+    const testWebhookBtn = document.getElementById('testWebhookBtn');
+    if (testWebhookBtn) {
+      testWebhookBtn.onclick = async function() {
+        showMessage('正在测试交互服务连接...', 'info');
+        
+        const result = await apiRequest('/api/webhook/test-connection', {
           method: 'POST'
         });
         
         if (result && result.success) {
-          showMessage(result.message || 'Bot 连接测试成功', 'success');
+          showMessage('交互服务连接测试成功', 'success');
         } else {
-          showMessage(result?.message || 'Bot 连接测试失败', 'error');
+          showMessage(result?.message || '交互服务连接测试失败', 'error');
         }
       };
     }
 
-    // 刷新状态按钮
-    const refreshBotStatusBtn = document.getElementById('refreshBotStatusBtn');
-    if (refreshBotStatusBtn) {
-      refreshBotStatusBtn.onclick = async function() {
-        showMessage('正在刷新状态...', 'info');
-        await loadTelegramStatus();
-        showMessage('状态已刷新', 'success');
-      };
-    }
-
-    // 发送测试消息按钮
-    const sendTestMsgBtn = document.getElementById('sendTestMsgBtn');
-    if (sendTestMsgBtn) {
-      sendTestMsgBtn.onclick = async function() {
-        const message = prompt('请输入测试消息内容（可选）：');
-        
-        const result = await apiRequest('/api/telegram/send-test', {
-          method: 'POST',
-          body: JSON.stringify({ message: message || undefined })
-        });
-        
-        if (result && result.success) {
-          showMessage('测试消息发送成功', 'success');
-        } else {
-          showMessage(result?.message || '测试消息发送失败', 'error');
-        }
-      };
-    }
-
-    // 解除绑定按钮
-    const unbindUserBtn = document.getElementById('unbindUserBtn');
-    if (unbindUserBtn) {
-      unbindUserBtn.onclick = async function() {
-        if (!confirm('确定要解除用户绑定吗？解除后将无法接收推送消息。')) {
+    // 清除 Webhook 按钮
+    const clearWebhookBtn = document.getElementById('clearWebhookBtn');
+    if (clearWebhookBtn) {
+      clearWebhookBtn.onclick = async function() {
+        if (!confirm('确定要清除 Webhook 设置吗？这将禁用交互服务功能。')) {
           return;
         }
         
-        const result = await apiRequest('/api/telegram/unbind', {
+        showMessage('正在清除 Webhook...', 'info');
+        
+        const result = await apiRequest('/api/webhook/clear-webhook', {
           method: 'POST'
+        });
+        
+        if (result && result.success) {
+          showMessage('Webhook 清除成功', 'success');
+          await loadTelegramStatus();
+        } else {
+          showMessage(result?.message || 'Webhook 清除失败', 'error');
+        }
+      };
+    }
+
+    // 解除绑定按钮（交互服务）
+    const unbindUserBtn2 = document.getElementById('unbindUserBtn2');
+    if (unbindUserBtn2) {
+      unbindUserBtn2.onclick = async function() {
+        if (!confirm('确定要解除用户绑定吗？解除后将无法使用交互功能。')) {
+          return;
+        }
+        
+        const result = await apiRequest('/api/webhook/manage-binding', {
+          method: 'POST',
+          body: JSON.stringify({ action: 'unbind' })
         });
         
         if (result && result.success) {
@@ -555,6 +679,92 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
           showMessage(result?.message || '解除绑定失败', 'error');
         }
+      };
+    }
+
+    // 统一清空设置按钮
+    const clearAllSettingsBtn = document.getElementById('clearAllSettingsBtn');
+    if (clearAllSettingsBtn) {
+      clearAllSettingsBtn.onclick = async function() {
+        // 第一层确认
+        if (!confirm('⚠️ 警告：此操作将清空所有 Bot 设置，包括：\n\n• Bot Token\n• 用户绑定信息\n• Webhook 设置\n\n确定要继续吗？')) {
+          return;
+        }
+        
+        // 第二层确认 - 输入确认文本
+        const confirmText = prompt('为了确认您真的要清空所有设置，请输入以下文本：\n\nCLEAR BOT SETTINGS\n\n请准确输入（区分大小写）：');
+        
+        if (!confirmText) {
+          showMessage('操作已取消', 'info');
+          return;
+        }
+        
+        if (confirmText !== 'CLEAR BOT SETTINGS') {
+          showMessage('确认文本不正确，操作已取消', 'error');
+          return;
+        }
+        
+        // 第三层确认 - 最终确认
+        if (!confirm('🚨 最后确认：\n\n您输入的确认文本正确。\n\n此操作不可撤销，将立即清空所有 Bot 设置。\n\n确定要执行吗？')) {
+          showMessage('操作已取消', 'info');
+          return;
+        }
+        
+        showMessage('正在清空所有 Bot 设置...', 'info');
+        
+        const result = await apiRequest('/api/webhook/clear-settings', {
+          method: 'POST',
+          body: JSON.stringify({
+            confirmText: 'CLEAR BOT SETTINGS',
+            clearBot: true,
+            clearBinding: true,
+            clearWebhook: true
+          })
+        });
+        
+        if (result && result.success) {
+          showDetailedMessage(
+            'Bot 设置清空成功',
+            [
+              result.data.summary,
+              '',
+              '清空详情：',
+              `• Bot Token: ${result.data.details.bot_token_cleared ? '✅ 已清空' : '❌ 未清空'}`,
+              `• 用户绑定: ${result.data.details.user_binding_cleared ? '✅ 已清空' : '❌ 未清空'}`,
+              `• Webhook: ${result.data.details.webhook_cleared ? '✅ 已清空' : '❌ 未清空'}`,
+              '',
+              result.data.details.has_errors ? '⚠️ 部分操作出现错误，请查看详细日志' : '✅ 所有操作成功完成'
+            ],
+            'success'
+          );
+          
+          // 刷新页面状态
+          await loadConfig();
+          await loadTelegramStatus();
+          
+          // 清空表单
+          document.getElementById('botToken').value = '';
+          document.getElementById('userChatId').value = '';
+          document.getElementById('webhookUrl').value = '';
+        } else {
+          showDetailedMessage(
+            'Bot 设置清空失败',
+            result?.data?.details?.errors || [result?.message || '未知错误'],
+            'error'
+          );
+        }
+      };
+    }
+
+    // 刷新所有状态按钮
+    const refreshAllStatusBtn = document.getElementById('refreshAllStatusBtn');
+    if (refreshAllStatusBtn) {
+      refreshAllStatusBtn.onclick = async function() {
+        showMessage('正在刷新所有状态...', 'info');
+        await loadConfig();
+        await loadTelegramStatus();
+        await updateStatusCards();
+        showMessage('所有状态已刷新', 'success');
       };
     }
   }
