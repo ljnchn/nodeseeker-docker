@@ -764,14 +764,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // 刷新文章列表按钮
-  const refreshPostsBtn = document.getElementById('refreshPostsBtn');
-  if (refreshPostsBtn) {
-    refreshPostsBtn.addEventListener('click', async function() {
-      await loadPosts(currentPage, currentFilters);
-      showMessage('文章列表已刷新', 'success');
-    });
-  }
 
   // 初始化
   initTabs();

@@ -370,11 +370,11 @@ export const DashboardPage: FC = () => {
                 <form id="postsFilterForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
                   <div>
                     <label for="searchTitle" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333; font-size: 14px;">标题搜索</label>
-                    <input type="text" id="searchTitle" placeholder="输入标题关键字..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                    <input type="text" id="searchTitle" name="searchTitle" placeholder="输入标题关键字..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" />
                   </div>
                   <div>
                     <label for="filterStatus" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333; font-size: 14px;">推送状态</label>
-                    <select id="filterStatus" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                    <select id="filterStatus" name="filterStatus" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
                       <option value="">全部状态</option>
                       <option value="0">未推送</option>
                       <option value="1">已推送</option>
@@ -383,11 +383,11 @@ export const DashboardPage: FC = () => {
                   </div>
                   <div>
                     <label for="filterCreator" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333; font-size: 14px;">作者筛选</label>
-                    <input type="text" id="filterCreator" placeholder="输入作者名..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                    <input type="text" id="filterCreator" name="filterCreator" placeholder="输入作者名..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" />
                   </div>
                   <div>
                     <label for="filterCategory" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333; font-size: 14px;">分类筛选</label>
-                    <input type="text" id="filterCategory" placeholder="输入分类名..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                    <input type="text" id="filterCategory" name="filterCategory" placeholder="输入分类名..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" />
                   </div>
                   <div style="display: flex; gap: 8px;">
                     <button type="submit" style="padding: 10px 20px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
@@ -421,7 +421,6 @@ export const DashboardPage: FC = () => {
                     上一页
                   </button>
                   <div id="pageNumbers" style="display: flex; gap: 4px;">
-                    <!-- 页码按钮将在这里动态生成 -->
                   </div>
                   <button id="nextPageBtn" style="padding: 8px 12px; background: #f5f5f5; color: #333; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 14px;" disabled>
                     下一页
