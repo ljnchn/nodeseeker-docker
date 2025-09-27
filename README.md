@@ -5,7 +5,7 @@
 [![Docker Hub](https://img.shields.io/docker/v/ersichub/nodeseeker?label=Docker%20Hub)](https://hub.docker.com/r/ersichub/nodeseeker)
 [![Bun](https://img.shields.io/badge/Bun-1.0+-ff69b4.svg)](https://bun.sh/)
 
-基于 Bun + Hono.js + SQLite 的高性能 NodeSeek RSS 监控和 Telegram 推送系统。
+基于 Bun + Hono.js + SQLite 的高性能NodeSeeker和 Telegram 推送系统。
 
 ## ✨ 功能特性
 

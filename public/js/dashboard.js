@@ -543,6 +543,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (testResult && testResult.success) {
           showMessage('Chat ID 设置成功，测试消息已发送', 'success');
+
+          // 延迟3秒后弹出确认对话框
+          setTimeout(() => {
+            const userConfirmed = confirm('📱 您是否收到了测试消息？\n\n✅ 收到了 - 点击"确定"\n❌ 没收到 - 点击"取消"，可以检查Bot设置或重新尝试');
+
+            if (userConfirmed) {
+              showMessage('🎉 太棒了！推送功能已正常配置', 'success');
+            } else {
+              showMessage('⚠️ 如果没有收到消息，请检查：\n1. Bot Token是否正确\n2. Chat ID是否正确\n3. 是否已向Bot发送过消息', 'warning');
+            }
+          }, 3000);
         } else {
           showMessage('Chat ID 设置成功，但测试消息发送失败：' + (testResult?.message || '未知错误'), 'warning');
         }

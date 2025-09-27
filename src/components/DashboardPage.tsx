@@ -261,7 +261,7 @@ export const DashboardPage: FC = () => {
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" class="page-header">
             <div>
               <h1 style="font-size: 28px; font-weight: bold; color: #333; margin-bottom: 8px;">
-                📡 NodeSeek RSS 监控控制台
+                📡NodeSeeker控制台
               </h1>
               <p style="color: #666; font-size: 16px;">
                 智能文章监控与推送系统
@@ -382,7 +382,7 @@ export const DashboardPage: FC = () => {
                   </div>
 
                   <div>
-                    <label for="userChatId" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333;">用户 Chat ID（可选）</label>
+                    <label for="userChatId" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333;">设置用户 Chat ID</label>
                     <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                       <input
                         type="text"

@@ -8,7 +8,7 @@ interface ErrorPageProps {
 export const ErrorPage: FC<ErrorPageProps> = ({ message }) => {
   return (
     <Layout 
-      title="错误 - NodeSeek RSS 监控"
+      title="错误 -NodeSeeker"
       description="NodeSeeker错误页面"
     >
       <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); padding: 20px;">

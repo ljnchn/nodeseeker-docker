@@ -419,7 +419,7 @@ export class TelegramService {
 
     const userInfo = userFullName || '未知用户';
     const welcomeText = `
-🎉 **欢迎使用 NodeSeek RSS 监控机器人！**
+🎉 **欢迎使用NodeSeeker机器人！**
 
 👤 **用户信息：** ${userInfo}${username ? ` (@${username})` : ''}
 🆔 **Chat ID：** ${chatId}
