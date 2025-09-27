@@ -6,6 +6,7 @@
     "build": "bun build src/server.ts --outdir dist --target bun",
     "start": "bun run dist/server.js",
     "db:migrate": "bun run src/database/run-migrations.ts",
+    "db:reset": "bun run src/database/reset-database.ts",
     "test": "bun test"
   },
   "dependencies": {
