@@ -930,7 +930,7 @@ document.addEventListener('DOMContentLoaded', function() {
         search: formData.get('searchTitle')?.trim() || '',
         pushStatus: formData.get('filterStatus') || '',
         creator: formData.get('filterCreator')?.trim() || '',
-        category: formData.get('filterCategory')?.trim() || ''
+        category: formData.get('filterCategory') || ''
       };
       
       // 过滤空值

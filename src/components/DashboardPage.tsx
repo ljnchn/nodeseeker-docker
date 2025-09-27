@@ -543,6 +543,28 @@ export const DashboardPage: FC = () => {
                     <label for="keyword3" style="display: block; margin-bottom: 6px; font-weight: 500; color: #333;">关键词3</label>
                     <input type="text" id="keyword3" name="keyword3" placeholder="输入关键词" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
                   </div>
+                  <div>
+                    <label for="creator" style="display: block; margin-bottom: 6px; font-weight: 500; color: #333;">作者</label>
+                    <input type="text" id="creator" name="creator" placeholder="输入作者名" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
+                  </div>
+                  <div>
+                    <label for="category" style="display: block; margin-bottom: 6px; font-weight: 500; color: #333;">分类</label>
+                    <select id="category" name="category" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: white;">
+                      <option value="">选择分类</option>
+                      <option value="daily">日常</option>
+                      <option value="tech">技术</option>
+                      <option value="info">情报</option>
+                      <option value="review">测评</option>
+                      <option value="trade">交易</option>
+                      <option value="carpool">拼车</option>
+                      <option value="promotion">推广</option>
+                      <option value="life">生活</option>
+                      <option value="dev">Dev</option>
+                      <option value="expose">曝光</option>
+                      <option value="inside">内版</option>
+                      <option value="sandbox">沙盒</option>
+                    </select>
+                  </div>
                 </div>
                 <button type="submit" class="btn-success btn-small" style="margin-top: 16px;">
                   ➕ 添加订阅
@@ -579,6 +601,10 @@ export const DashboardPage: FC = () => {
                     <input type="text" id="searchTitle" name="searchTitle" placeholder="输入标题关键字..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" />
                   </div>
                   <div>
+                    <label for="filterCreator" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333; font-size: 14px;">作者筛选</label>
+                    <input type="text" id="filterCreator" name="filterCreator" placeholder="输入作者名..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" />
+                  </div>
+                  <div>
                     <label for="filterStatus" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333; font-size: 14px;">推送状态</label>
                     <select id="filterStatus" name="filterStatus" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
                       <option value="">全部状态</option>
@@ -588,12 +614,22 @@ export const DashboardPage: FC = () => {
                     </select>
                   </div>
                   <div>
-                    <label for="filterCreator" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333; font-size: 14px;">作者筛选</label>
-                    <input type="text" id="filterCreator" name="filterCreator" placeholder="输入作者名..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" />
-                  </div>
-                  <div>
                     <label for="filterCategory" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333; font-size: 14px;">分类筛选</label>
-                    <input type="text" id="filterCategory" name="filterCategory" placeholder="输入分类名..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" />
+                    <select id="filterCategory" name="filterCategory" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; background: white;">
+                      <option value="">全部分类</option>
+                      <option value="daily">日常</option>
+                      <option value="tech">技术</option>
+                      <option value="info">情报</option>
+                      <option value="review">测评</option>
+                      <option value="trade">交易</option>
+                      <option value="carpool">拼车</option>
+                      <option value="promotion">推广</option>
+                      <option value="life">生活</option>
+                      <option value="dev">Dev</option>
+                      <option value="expose">曝光</option>
+                      <option value="inside">内版</option>
+                      <option value="sandbox">沙盒</option>
+                    </select>
                   </div>
                   <div style="display: flex; gap: 8px;">
                     <button type="submit" class="btn-success btn-small">
