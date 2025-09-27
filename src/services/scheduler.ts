@@ -7,7 +7,6 @@ import { getEnvConfig } from '../config/env';
 
 export class SchedulerService {
     private rssTask?: cron.ScheduledTask;
-    private cleanupTask?: cron.ScheduledTask;
     private dbService: DatabaseService;
 
     constructor(dbService: DatabaseService) {
@@ -27,11 +26,6 @@ export class SchedulerService {
             this.startRSSTask(config.RSS_CRON_EXPRESSION);
         }
 
-        // 数据清理任务
-        if (config.DATA_CLEANUP_ENABLED) {
-            this.startCleanupTask(config.CLEANUP_CRON_EXPRESSION);
-        }
-
         console.log('✅ 定时任务服务启动完成');
     }
 
@@ -44,11 +38,6 @@ export class SchedulerService {
         if (this.rssTask) {
             this.rssTask.stop();
             this.rssTask = undefined;
-        }
-
-        if (this.cleanupTask) {
-            this.cleanupTask.stop();
-            this.cleanupTask = undefined;
         }
 
         console.log('✅ 定时任务服务已停止');
@@ -67,18 +56,6 @@ export class SchedulerService {
         });
     }
 
-    /**
-     * 启动数据清理任务
-     */
-    private startCleanupTask(cronExpression: string): void {
-        console.log(`🧹 启动数据清理任务，执行频率: ${cronExpression}`);
-
-        this.cleanupTask = cron.schedule(cronExpression, async () => {
-            await this.executeCleanupTask();
-        }, {
-            timezone: 'Asia/Shanghai'
-        });
-    }
 
     /**
      * 执行 RSS 抓取和推送任务
@@ -129,24 +106,6 @@ export class SchedulerService {
         }
     }
 
-    /**
-     * 执行数据清理任务
-     */
-    private async executeCleanupTask(): Promise<void> {
-        const startTime = Date.now();
-        console.log(`🧹 开始执行数据清理任务 - ${new Date().toISOString()}`);
-
-        try {
-            const result = this.dbService.cleanupOldPosts();
-
-            const duration = Date.now() - startTime;
-            console.log(`✅ 数据清理任务完成，删除了 ${result.deletedCount} 条记录，耗时: ${duration}ms`);
-
-        } catch (error) {
-            const duration = Date.now() - startTime;
-            console.error(`❌ 数据清理任务失败，耗时: ${duration}ms`, error);
-        }
-    }
 
     /**
      * 手动执行 RSS 任务
@@ -167,24 +126,6 @@ export class SchedulerService {
         }
     }
 
-    /**
-     * 手动执行清理任务
-     */
-    async manualCleanupTask(): Promise<{ success: boolean; message: string; data?: any }> {
-        try {
-            console.log('🔧 手动执行数据清理任务');
-            await this.executeCleanupTask();
-            return {
-                success: true,
-                message: '数据清理任务执行成功'
-            };
-        } catch (error) {
-            return {
-                success: false,
-                message: `数据清理任务执行失败: ${error}`
-            };
-        }
-    }
 
     /**
      * 获取任务状态
@@ -193,16 +134,10 @@ export class SchedulerService {
         rssTask: {
             running: boolean;
         };
-        cleanupTask: {
-            running: boolean;
-        };
     } {
         return {
             rssTask: {
                 running: this.rssTask ? true : false
-            },
-            cleanupTask: {
-                running: this.cleanupTask ? true : false
             }
         };
     }
@@ -222,18 +157,4 @@ export class SchedulerService {
         }
     }
 
-    /**
-     * 重启清理任务
-     */
-    restartCleanupTask(): void {
-        if (this.cleanupTask) {
-            this.cleanupTask.stop();
-        }
-
-        const config = getEnvConfig();
-        if (config.DATA_CLEANUP_ENABLED) {
-            this.startCleanupTask(config.CLEANUP_CRON_EXPRESSION);
-            console.log('🔄 数据清理任务已重启');
-        }
-    }
 }

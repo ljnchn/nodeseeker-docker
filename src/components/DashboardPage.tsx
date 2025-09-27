@@ -5,7 +5,7 @@ export const DashboardPage: FC = () => {
   return (
     <Layout
       title="NodeSeek RSS 监控 - 控制台"
-      description="NodeSeek RSS 监控系统管理控制台"
+      description="NodeSeeker管理控制台"
       scriptSrc="/js/dashboard.js"
     >
       <style>

@@ -16,12 +16,7 @@ const envSchema = z.object({
   RSS_USER_AGENT: z.string().default('NodeSeeker-Bot/1.0'),
   RSS_CHECK_ENABLED: z.string().transform(val => val !== 'false').default('true'),
   RSS_CRON_EXPRESSION: z.string().default('*/1 * * * *'),  // 每分钟执行一次
-  
-  // Data Cleanup
-  DATA_CLEANUP_ENABLED: z.string().transform(val => val !== 'false').default('true'),
-  CLEANUP_CRON_EXPRESSION: z.string().default('0 2 * * *'),
-  DATA_RETENTION_DAYS: z.string().transform(Number).default('30'),
-  
+
   // Telegram (Optional)
   TELEGRAM_BOT_TOKEN: z.string().optional(),
   TELEGRAM_WEBHOOK_URL: z.string().url().optional(),

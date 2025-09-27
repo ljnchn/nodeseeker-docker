@@ -198,7 +198,7 @@ async function startServer() {
     // 初始化数据库
     await initializeDatabase();
     
-    console.log(`🚀 NodeSeeker 服务器启动成功`);
+    console.log(`NodeSeeker 服务器启动成功`);
     console.log(`📍 地址: http://${config.HOST}:${config.PORT}`);
     console.log(`🌍 环境: ${config.NODE_ENV}`);
     console.log(`💾 数据库: ${config.DATABASE_PATH}`);

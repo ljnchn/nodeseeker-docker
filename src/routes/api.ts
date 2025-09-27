@@ -386,17 +386,6 @@ apiRoutes.get('/stats', async (c) => {
     }
 });
 
-// 数据清理
-apiRoutes.post('/cleanup', async (c) => {
-    try {
-        const dbService = c.get('dbService');
-        const result = dbService.cleanupOldPosts();
-
-        return c.json(createSuccessResponse(result, `清理完成，删除了 ${result.deletedCount} 条记录`));
-    } catch (error) {
-        return c.json(createErrorResponse(`数据清理失败: ${error}`), 500);
-    }
-});
 
 // 验证 RSS 源
 apiRoutes.get('/rss/validate', async (c) => {

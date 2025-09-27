@@ -262,9 +262,6 @@ export interface EnvVars {
   RSS_USER_AGENT: string;
   RSS_CHECK_ENABLED: boolean;
   RSS_CRON_EXPRESSION: string;
-  DATA_CLEANUP_ENABLED: boolean;
-  CLEANUP_CRON_EXPRESSION: string;
-  DATA_RETENTION_DAYS: number;
   TELEGRAM_BOT_TOKEN?: string;
   TELEGRAM_WEBHOOK_URL?: string;
   CORS_ORIGINS: string;

@@ -5,7 +5,7 @@ export const LoginPage: FC = () => {
   return (
     <Layout 
       title="NodeSeek RSS 监控 - 登录"
-      description="NodeSeek RSS 监控系统用户登录页面"
+      description="NodeSeeker用户登录页面"
       scriptSrc="/js/login.js"
     >
       <style>
@@ -52,7 +52,7 @@ export const LoginPage: FC = () => {
               🔐 用户登录
             </h1>
             <p style="color: #666; font-size: 14px;" class="login-subtitle">
-              NodeSeek RSS 监控系统
+              NodeSeeker
             </p>
           </div>
           

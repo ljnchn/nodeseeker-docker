@@ -3,11 +3,6 @@ export interface JobsConfig {
     enabled: boolean;
     cronExpression: string;
   };
-  dataCleanup: {
-    enabled: boolean;
-    cronExpression: string;
-    retentionDays: number;
-  };
   telegram: {
     botToken?: string;
     webhookUrl?: string;
@@ -24,11 +19,6 @@ export const getJobsConfig = (): JobsConfig => {
     rssCheck: {
       enabled: process.env.RSS_CHECK_ENABLED !== 'false',
       cronExpression: process.env.RSS_CRON_EXPRESSION || '*/1 * * * *', // 每分钟
-    },
-    dataCleanup: {
-      enabled: process.env.DATA_CLEANUP_ENABLED !== 'false',
-      cronExpression: process.env.CLEANUP_CRON_EXPRESSION || '0 2 * * *', // 每天凌晨2点
-      retentionDays: parseInt(process.env.DATA_RETENTION_DAYS || '30'),
     },
     telegram: {
       botToken: process.env.TELEGRAM_BOT_TOKEN,

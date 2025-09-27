@@ -323,8 +323,6 @@ export class DatabaseService {
     const conditions: string[] = [];
     const params: any[] = [];
     
-    // 始终查询最近24小时的数据
-    conditions.push("created_at >= datetime('now', '-24 hours')");
 
     if (filters) {
       if (filters.pushStatus !== undefined && filters.pushStatus !== null && filters.pushStatus.toString() !== '') {
@@ -517,15 +515,14 @@ export class DatabaseService {
     }
   }
 
-  // 统计查询方法（使用 COUNT 提高效率和缓存）- 改为查询最近24小时数据
+  // 统计查询方法（使用 COUNT 提高效率和缓存）
   getPostsCount(): number {
     const cacheKey = this.getCacheKey('getPostsCount', []);
     const cached = this.getFromCache<number>(cacheKey);
     if (cached !== null) return cached;
 
     const stmt = this.db.query(`
-      SELECT COUNT(*) as count FROM posts 
-      WHERE created_at >= datetime('now', '-24 hours')
+      SELECT COUNT(*) as count FROM posts
     `);
     const result = stmt.get() as { count: number };
     const count = result?.count || 0;
@@ -539,8 +536,8 @@ export class DatabaseService {
     if (cached !== null) return cached;
 
     const stmt = this.db.query(`
-      SELECT COUNT(*) as count FROM posts 
-      WHERE push_status = ? AND created_at >= datetime('now', '-24 hours')
+      SELECT COUNT(*) as count FROM posts
+      WHERE push_status = ?
     `);
     const result = stmt.get(pushStatus) as { count: number };
     const count = result?.count || 0;
@@ -564,10 +561,9 @@ export class DatabaseService {
     const cacheKey = this.getCacheKey('getTodayPostsCount', []);
     const cached = this.getFromCache<number>(cacheKey);
     if (cached !== null) return cached;
-    
+
     const stmt = this.db.query(`
-      SELECT COUNT(*) as count FROM posts 
-      WHERE created_at >= datetime('now', '-24 hours')
+      SELECT COUNT(*) as count FROM posts
     `);
     const result = stmt.get() as { count: number };
     const count = result?.count || 0;
@@ -579,10 +575,10 @@ export class DatabaseService {
     const cacheKey = this.getCacheKey('getTodayMessagesCount', []);
     const cached = this.getFromCache<number>(cacheKey);
     if (cached !== null) return cached;
-    
+
     const stmt = this.db.query(`
-      SELECT COUNT(*) as count FROM posts 
-      WHERE push_status = 1 AND push_date >= datetime('now', '-24 hours')
+      SELECT COUNT(*) as count FROM posts
+      WHERE push_status = 1
     `);
     const result = stmt.get() as { count: number };
     const count = result?.count || 0;
@@ -659,46 +655,6 @@ export class DatabaseService {
     }
   }
 
-  /**
-   * 清理24小时以外的所有post数据
-   */
-  cleanupOldPosts(): { deletedCount: number } {
-    try {
-      console.log('开始清理24小时前的post数据...');
-      
-      // 先查询要删除的记录数量
-      const countStmt = this.db.query(`
-        SELECT COUNT(*) as count FROM posts 
-        WHERE created_at < datetime('now', '-24 hours')
-      `);
-      const countResult = countStmt.get() as { count: number };
-      const deletedCount = countResult?.count || 0;
-      
-      if (deletedCount === 0) {
-        console.log('没有需要清理的过期post数据');
-        return { deletedCount: 0 };
-      }
-      
-      // 执行删除操作
-      const deleteStmt = this.db.query(`
-        DELETE FROM posts 
-        WHERE created_at < datetime('now', '-24 hours')
-      `);
-      deleteStmt.run();
-      
-      // 清理相关缓存
-      this.clearCacheByPattern('posts');
-      this.clearCacheByPattern('getPostsCount');
-      this.clearCacheByPattern('getComprehensiveStats');
-      
-      console.log(`成功清理了 ${deletedCount} 条过期的post数据`);
-      
-      return { deletedCount };
-    } catch (error) {
-      console.error('清理过期post数据失败:', error);
-      throw error;
-    }
-  }
 
   // 关闭数据库连接
   close(): void {
