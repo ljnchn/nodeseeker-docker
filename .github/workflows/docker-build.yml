@@ -19,6 +19,7 @@ env:
 
 jobs:
   lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -34,6 +35,7 @@ jobs:
           fi
 
   test:
+    name: Test & Build (Bun)
     runs-on: ubuntu-latest
     needs: lint
     steps:
@@ -77,8 +79,11 @@ jobs:
             build
             .next
             out
+            public
+          if-no-files-found: warn
 
   docker:
+    name: Build and Push Docker Images
     runs-on: ubuntu-latest
     needs: test
     permissions:
@@ -94,6 +99,30 @@ jobs:
         with:
           name: build-output
           path: ./build-output
+
+      - name: Expose build output into expected paths (if present)
+        run: |
+          # Copy common build dirs into repository root so Dockerfile can COPY them reliably.
+          if [ -d "./build-output/dist" ]; then
+            rm -rf ./dist || true
+            cp -r ./build-output/dist ./dist
+          fi
+          if [ -d "./build-output/build" ]; then
+            rm -rf ./build || true
+            cp -r ./build-output/build ./build
+          fi
+          if [ -d "./build-output/.next" ]; then
+            rm -rf ./.next || true
+            cp -r ./build-output/.next ./.next
+          fi
+          if [ -d "./build-output/out" ]; then
+            rm -rf ./out || true
+            cp -r ./build-output/out ./out
+          fi
+          if [ -d "./build-output/public" ]; then
+            rm -rf ./public || true
+            cp -r ./build-output/public ./public
+          fi
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -122,7 +151,8 @@ jobs:
           tags: |
             type=ref,event=branch
             type=match,pattern=v(.*),group=1
-            type=raw,value=dev,enable={{is_default_branch == false && github.ref == 'refs/heads/develop'}}
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/develop' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Extract metadata for Docker Hub
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
@@ -133,7 +163,7 @@ jobs:
           tags: |
             type=ref,event=branch
             type=match,pattern=v(.*),group=1
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Build and push to GHCR
         id: build-ghcr
@@ -161,6 +191,7 @@ jobs:
           cache-to: type=registry,ref=${{ env.DOCKERHUB_IMAGE_NAME }}:cache,mode=max
 
   release:
+    name: Create Release & Attach Docker Info
     runs-on: ubuntu-latest
     needs: docker
     if: startsWith(github.ref, 'refs/tags/v')
@@ -171,27 +202,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Create GitHub Release with Changelog
+      - name: Create GitHub Release (generate changelog via release-please)
         uses: googleapis/release-please-action@v4
         with:
           release-type: node
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Append Docker image info
+      - name: Compose release notes with Docker image info
         run: |
-          echo "\n### Docker Images" >> release_notes.md
-          echo "- GHCR: ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE_NAME }}:${GITHUB_REF#refs/tags/}" >> release_notes.md
-          echo "- Docker Hub: ${{ env.DOCKERHUB_IMAGE_NAME }}:${GITHUB_REF#refs/tags/}" >> release_notes.md
-          echo "\n**Digests:**" >> release_notes.md
+          TAG=${GITHUB_REF#refs/tags/}
+          echo "### Docker Images" > release_notes.md
+          echo "- GHCR: ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE_NAME }}:${TAG}" >> release_notes.md
+          echo "- Docker Hub: ${{ env.DOCKERHUB_IMAGE_NAME }}:${TAG}" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "**Digests:**" >> release_notes.md
           echo "- GHCR: ${{ steps.build-ghcr.outputs.digest }}" >> release_notes.md
           if [ -n "${{ steps.build-dockerhub.outputs.digest }}" ]; then
             echo "- Docker Hub: ${{ steps.build-dockerhub.outputs.digest }}" >> release_notes.md
           fi
 
-      - name: Update GitHub Release Notes
+      - name: Update / Create Release with notes
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_name }}
           body_path: release_notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
