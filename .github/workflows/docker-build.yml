@@ -187,8 +187,7 @@ jobs:
           push: true
           tags: ${{ steps.meta-dockerhub.outputs.tags }}
           labels: ${{ steps.meta-dockerhub.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.DOCKERHUB_IMAGE_NAME }}:cache
-          cache-to: type=registry,ref=${{ env.DOCKERHUB_IMAGE_NAME }}:cache,mode=max
+
 
   release:
     name: Create Release & Attach Docker Info
