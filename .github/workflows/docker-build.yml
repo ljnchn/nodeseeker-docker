@@ -14,7 +14,7 @@ on:
 env:
   GHCR_REGISTRY: ghcr.io
   DOCKERHUB_REGISTRY: docker.io
-  GHCR_IMAGE_NAME: ${{ github.repository }}
+  GHCR_IMAGE_NAME: ${{ toLower(github.repository) }}
   DOCKERHUB_IMAGE_NAME: ersichub/nodeseeker
 
 jobs:
