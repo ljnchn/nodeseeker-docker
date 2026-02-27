@@ -377,7 +377,6 @@ document.addEventListener("DOMContentLoaded", function () {
   function initFilters() {
     const searchInput = document.getElementById("searchInput");
     const clearSearchBtn = document.getElementById("clearSearchBtn");
-    const subscribedOnlyToggle = document.getElementById("subscribedOnlyToggle");
     const subscribedOnlyChip = document.getElementById("subscribedOnlyChip");
     const filterToggleBtn = document.getElementById("filterToggleBtn");
     const filterPanel = document.getElementById("filterPanel");
@@ -410,7 +409,6 @@ document.addEventListener("DOMContentLoaded", function () {
     // 只看订阅 toggle
     subscribedOnlyChip?.addEventListener("click", () => {
       const isActive = subscribedOnlyChip.classList.toggle("active");
-      subscribedOnlyToggle.checked = isActive;
 
       if (isActive) {
         currentFilters.pushStatus = "1";
@@ -490,11 +488,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const result = await apiRequest("/api/stats");
     if (result?.success) {
       const data = result.data;
-      // 首页统计（如果存在）
-      const subEl = document.getElementById("statSubscriptions");
-      const postsEl = document.getElementById("statTotalPosts");
-      if (subEl) subEl.textContent = data.total_subscriptions || 0;
-      if (postsEl) postsEl.textContent = data.total_posts || 0;
+      // 统计抽屉
+      const el = (id) => document.getElementById(id);
+      if (el("drawerStatSubscriptions")) el("drawerStatSubscriptions").textContent = data.total_subscriptions || 0;
+      if (el("drawerStatTodayPushed")) el("drawerStatTodayPushed").textContent = data.today_pushed || 0;
+      if (el("drawerStatTotalPosts")) el("drawerStatTotalPosts").textContent = data.total_posts || 0;
+      if (el("drawerStatPushed")) el("drawerStatPushed").textContent = data.pushed_posts || 0;
     }
   }
 

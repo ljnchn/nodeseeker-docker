@@ -50,6 +50,7 @@
 
 /* 暗色主题 */
 [data-theme="dark"] {
+    color-scheme: dark;
     --bg-primary: #000000;
     --bg-secondary: rgba(28, 28, 30, 0.8);
     --bg-card: #1c1c1e;
