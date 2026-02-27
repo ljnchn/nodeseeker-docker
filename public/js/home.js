@@ -281,14 +281,12 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function createPostElement(post) {
-    // 无需推送的文章不显示状态 tag
-    const showStatus = post.push_status !== 2;
+    // push_status: 0=待处理, 1=已匹配订阅, 2=未匹配
+    const showStatus = post.push_status === 1;
     const statusClass =
-      post.push_status === 0 ? "unpushed" : post.push_status === 1 ? "pushed" : "skipped";
-    const statusText =
-      post.push_status === 0 ? "待处理" : post.push_status === 1 ? "已订阅" : "无需推送";
-    const statusColor =
-      post.push_status === 1 ? "tag-green" : post.push_status === 0 ? "tag-orange" : "tag-gray";
+      post.push_status === 1 ? "matched" : "";
+    const statusText = "已匹配";
+    const statusColor = "tag-green";
 
     const el = document.createElement("div");
     el.className = `post-card ${statusClass}`;

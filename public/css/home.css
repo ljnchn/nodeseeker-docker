@@ -478,15 +478,7 @@
   border-bottom: none;
 }
 
-.post-card.unpushed {
-  border-left: none;
-}
-
-.post-card.pushed {
-  border-left: none;
-}
-
-.post-card.skipped {
+.post-card.matched {
   border-left: none;
 }
 

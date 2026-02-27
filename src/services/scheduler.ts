@@ -95,23 +95,22 @@ export class SchedulerService {
             const rssResult = await rssService.processNewRSSData();
             console.log(`📊 RSS 抓取完成: 新增 ${rssResult.new} 篇文章，跳过 ${rssResult.skipped} 篇`);
 
-            if (!config.bot_token) {
-                console.log('⚠️ 未配置 Bot Token，跳过任务');
-                return;
-            }
+            // 2. 处理待处理的文章（匹配订阅 + 推送 Telegram）
+            const unpushedCount = this.dbService.getPostsCountByStatus(0);
+            if (unpushedCount > 0) {
+                let telegramService: TelegramPushService | null = null;
+                if (config.bot_token) {
+                    try {
+                        telegramService = new TelegramPushService(this.dbService, config.bot_token);
+                    } catch (e) {
+                        console.warn('Telegram 服务初始化失败，将仅执行匹配');
+                    }
+                }
+                const matcherService = new MatcherService(this.dbService, telegramService);
 
-            // 创建服务实例
-            const telegramService = new TelegramPushService(this.dbService, config.bot_token);
-            const matcherService = new MatcherService(this.dbService, telegramService);
-
-
-            // 2. 处理未推送的文章
-            if (rssResult.new > 0) {
-                console.log('📤 开始处理推送...');
+                console.log(`📤 开始处理 ${unpushedCount} 篇待处理文章...`);
                 const pushResult = await matcherService.processUnpushedPosts();
-                console.log(`📊 推送完成: 推送 ${pushResult.pushed} 篇，跳过 ${pushResult.skipped} 篇，失败 ${pushResult.failed} 篇`);
-            } else {
-                console.log('📝 没有新文章，跳过推送处理');
+                console.log(`📊 处理完成: 已匹配 ${pushResult.pushed} 篇，未匹配 ${pushResult.skipped} 篇，失败 ${pushResult.failed} 篇`);
             }
 
             const duration = Date.now() - startTime;

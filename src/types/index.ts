@@ -24,7 +24,7 @@ export interface Post {
   memo: string;
   category: string;
   creator: string;
-  push_status: number; // 0 未推送 1 已推送 2 无需推送
+  push_status: number; // 0 待处理 1 已匹配订阅 2 未匹配
   sub_id?: number;
   pub_date: string;
   push_date?: string;
