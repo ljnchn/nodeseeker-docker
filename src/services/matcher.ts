@@ -290,6 +290,27 @@ export class MatcherService {
       skipped: 0
     };
 
+    // 如果没有订阅，直接把所有未推送文章标记为无需推送
+    if (subscriptions.length === 0) {
+      console.log('没有订阅词，将所有未推送文章标记为无需推送');
+      const batchUpdates = unpushedPosts.map(post => ({
+        postId: post.post_id,
+        pushStatus: 2 // 无需推送
+      }));
+      
+      if (batchUpdates.length > 0) {
+        try {
+          this.dbService.batchUpdatePostPushStatus(batchUpdates);
+          console.log(`批量更新完成: ${batchUpdates.length} 条记录标记为无需推送`);
+          result.skipped = batchUpdates.length;
+        } catch (error) {
+          console.error('批量更新状态失败:', error);
+          result.failed = batchUpdates.length;
+        }
+      }
+      return result;
+    }
+
     // 收集所有需要批量更新的操作
     const batchUpdates: Array<{
       postId: number;

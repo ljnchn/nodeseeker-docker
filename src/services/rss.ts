@@ -335,9 +335,17 @@ export class RSSService {
         // 第四步：批量创建新文章
         if (newPostsToCreate.length > 0) {
           try {
+            // 检查是否有订阅（关键词订阅）
+            const subscriptions = this.dbService.getAllKeywordSubs();
+            const hasSubscriptions = subscriptions.length > 0;
+            
+            if (!hasSubscriptions) {
+              console.log('没有订阅词，新文章将直接标记为无需推送');
+            }
+            
             const postsWithDefaults = newPostsToCreate.map((post) => ({
               ...post,
-              push_status: 0, // 默认未推送（等待匹配）
+              push_status: hasSubscriptions ? 0 : 2, // 有订阅则未推送，无订阅则无需推送
             }));
 
             const createdCount =

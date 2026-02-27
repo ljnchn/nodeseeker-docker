@@ -725,6 +725,53 @@
   font-weight: 500;
 }
 
+/* 订阅管理表单 */
+.sub-form {
+  background: var(--bg-primary);
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sub-form-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.sub-form-row-action {
+  justify-content: flex-start;
+  padding-top: 4px;
+}
+
+.sub-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.sub-form-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.sub-keywords-inputs {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.sub-keywords-inputs .input-field {
+  flex: 1;
+  min-width: 0;
+}
+
 /* 订阅列表 */
 .subscriptions-list {
   display: flex;
@@ -735,23 +782,103 @@
 .subscription-item {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  padding: 14px;
+  padding: 12px 14px;
   background: var(--bg-primary);
   border-radius: 8px;
   border: 1px solid var(--border-color);
+}
+
+.subscription-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
 }
 
 .subscription-keywords {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
-  flex: 1;
 }
 
 .subscription-filters {
   display: flex;
   gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.subscription-filters span::before {
+  content: "·";
+  margin-right: 4px;
+  color: var(--text-muted);
+}
+
+.subscription-filters span:first-child::before {
+  content: none;
+}
+
+/* 统计信息抽屉 */
+.stats-grid-simple {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.stat-card-simple {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 16px;
+  background: var(--bg-primary);
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.stat-card-simple .stat-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.stat-card-simple .stat-value {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.stat-card-simple .stat-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* 响应式调整 */
+@media (max-width: 480px) {
+  .sub-form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .sub-keywords-inputs {
+    flex-direction: column;
+  }
+  
+  .sub-form-row-action .btn {
+    width: 100%;
+  }
+  
+  .subscription-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .stats-grid-simple {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* 骨架屏 */

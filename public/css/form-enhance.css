@@ -15,8 +15,8 @@
 .form-label {
   display: block;
   margin-bottom: 6px;
-  font-weight: 500;
-  color: var(--text-secondary);
+  font-weight: 600;
+  color: var(--text-primary);
   font-size: 13px;
   line-height: 1.4;
 }
@@ -258,18 +258,24 @@ select.input-field {
   flex-shrink: 0;
 }
 
+.checkbox-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .checkbox-label,
 .radio-label {
   font-size: 14px;
   color: var(--text-primary);
   font-weight: 500;
+  line-height: 1.4;
 }
 
 .checkbox-description,
 .radio-description {
   font-size: 12px;
   color: var(--text-muted);
-  margin-top: 2px;
   line-height: 1.4;
 }
 

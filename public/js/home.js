@@ -286,7 +286,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const statusClass =
       post.push_status === 0 ? "unpushed" : post.push_status === 1 ? "pushed" : "skipped";
     const statusText =
-      post.push_status === 0 ? "未订阅" : post.push_status === 1 ? "已订阅" : "无需推送";
+      post.push_status === 0 ? "待处理" : post.push_status === 1 ? "已订阅" : "无需推送";
     const statusColor =
       post.push_status === 1 ? "tag-green" : post.push_status === 0 ? "tag-orange" : "tag-gray";
 
@@ -473,9 +473,12 @@ document.addEventListener("DOMContentLoaded", function () {
   async function updateStats() {
     const result = await apiRequest("/api/stats");
     if (result?.success) {
-      document.getElementById("statSubscriptions").textContent = result.data.total_subscriptions;
-      document.getElementById("statTotalPosts").textContent = result.data.total_posts;
-      document.getElementById("statTodayMessages").textContent = result.data.today_messages;
+      const data = result.data;
+      // 首页统计（如果存在）
+      const subEl = document.getElementById("statSubscriptions");
+      const postsEl = document.getElementById("statTotalPosts");
+      if (subEl) subEl.textContent = data.total_subscriptions || 0;
+      if (postsEl) postsEl.textContent = data.total_posts || 0;
     }
   }
 
@@ -683,24 +686,43 @@ document.addEventListener("DOMContentLoaded", function () {
   function initSettingsDropdown() {
     const settingsBtn = document.getElementById("settingsBtn");
     const dropdown = settingsBtn?.closest(".dropdown");
+    const menu = dropdown?.querySelector(".dropdown-menu");
+    let closeTimeout;
 
-    // 切换下拉菜单
-    settingsBtn?.addEventListener("click", (e) => {
-      e.stopPropagation();
-      dropdown?.classList.toggle("open");
-    });
+    if (!settingsBtn || !dropdown || !menu) return;
+
+    // 显示菜单
+    const showMenu = () => {
+      clearTimeout(closeTimeout);
+      dropdown.classList.add("open");
+    };
+
+    // 延迟关闭菜单
+    const hideMenu = () => {
+      closeTimeout = setTimeout(() => {
+        dropdown.classList.remove("open");
+      }, 150);
+    };
+
+    // 鼠标悬停显示
+    settingsBtn.addEventListener("mouseenter", showMenu);
+    menu.addEventListener("mouseenter", showMenu);
+
+    // 鼠标移出延迟关闭
+    settingsBtn.addEventListener("mouseleave", hideMenu);
+    menu.addEventListener("mouseleave", hideMenu);
 
     // 点击外部关闭
     document.addEventListener("click", () => {
-      dropdown?.classList.remove("open");
+      dropdown.classList.remove("open");
     });
 
     // 下拉菜单项点击
-    dropdown?.querySelectorAll(".dropdown-item[data-drawer]").forEach((item) => {
+    dropdown.querySelectorAll(".dropdown-item[data-drawer]").forEach((item) => {
       item.addEventListener("click", (e) => {
         e.stopPropagation();
         const drawerName = item.dataset.drawer;
-        dropdown?.classList.remove("open");
+        dropdown.classList.remove("open");
 
         // 加载对应数据并打开抽屉
         if (drawerName === "subscriptions") {

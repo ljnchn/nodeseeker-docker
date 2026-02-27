@@ -380,7 +380,7 @@ export const DashboardPage: FC = () => {
                   <form id="pushSettingsForm" class="form-stack">
                     <div class="checkbox-wrapper">
                       <input type="checkbox" id="stopPush" name="stopPush" />
-                      <div>
+                      <div class="checkbox-content">
                         <div class="checkbox-label">停止推送</div>
                         <div class="checkbox-description">暂停所有 Telegram 消息推送</div>
                       </div>
@@ -388,7 +388,7 @@ export const DashboardPage: FC = () => {
 
                     <div class="checkbox-wrapper">
                       <input type="checkbox" id="onlyTitle" name="onlyTitle" />
-                      <div>
+                      <div class="checkbox-content">
                         <div class="checkbox-label">只匹配标题</div>
                         <div class="checkbox-description">仅在文章标题中搜索关键词</div>
                       </div>
