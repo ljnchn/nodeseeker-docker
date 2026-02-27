@@ -322,6 +322,7 @@ export class DatabaseService {
     limit: number = 30, 
     filters?: {
       pushStatus?: number;
+      pushStatusNot?: number;
       creator?: string;
       category?: string;
       search?: string;
@@ -343,6 +344,11 @@ export class DatabaseService {
       if (filters.pushStatus !== undefined && filters.pushStatus !== null && filters.pushStatus.toString() !== '') {
         conditions.push('push_status = ?');
         params.push(filters.pushStatus);
+      }
+      
+      if (filters.pushStatusNot !== undefined && filters.pushStatusNot !== null && filters.pushStatusNot.toString() !== '') {
+        conditions.push('push_status != ?');
+        params.push(filters.pushStatusNot);
       }
       
       if (filters.creator) {

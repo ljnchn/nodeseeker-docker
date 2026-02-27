@@ -1,305 +1,305 @@
 /* ============================================
-   表单输入框优化
+   表单样式 - 简洁优化版
    ============================================ */
 
 /* 表单组 */
 .form-group {
-    margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .form-group:last-child {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 
-/* 标签 */
+/* 标签 - 简洁设计 */
 .form-label {
-    display: block;
-    margin-bottom: 10px;
-    font-weight: 700;
-    color: var(--text-primary);
-    font-size: 15px;
-    letter-spacing: 0.5px;
-    line-height: 1.4;
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .form-label-required::after {
-    content: " *";
-    color: var(--danger);
-}
-
-[data-theme="dark"] .form-label {
-    color: #ffffff;
-    text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
+  content: " *";
+  color: var(--danger);
 }
 
 /* 输入框 */
 .input-field {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 14px;
-    background: var(--bg-card);
-    color: var(--text-primary);
-    transition: all 0.2s ease;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  transition: all 0.15s ease;
 }
 
 .input-field:hover {
-    border-color: var(--text-muted);
+  border-color: var(--text-muted);
 }
 
 .input-field:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.1);
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-alpha);
 }
 
 .input-field::placeholder {
-    color: var(--text-muted);
-}
-
-[data-theme="dark"] .input-field::placeholder {
-    color: #8b949e;
-    opacity: 0.8;
+  color: var(--text-muted);
+  opacity: 0.7;
 }
 
 .input-field:disabled {
-    background: var(--bg-secondary);
-    cursor: not-allowed;
-    opacity: 0.7;
+  background: var(--bg-secondary);
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* 输入框带图标 */
 .input-with-icon {
-    position: relative;
+  position: relative;
 }
 
 .input-with-icon .input-field {
-    padding-left: 44px;
+  padding-left: 40px;
 }
 
 .input-with-icon .input-icon {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-    font-size: 18px;
-    transition: color 0.2s;
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 16px;
+  transition: color 0.2s;
 }
 
 .input-with-icon .input-field:focus + .input-icon {
-    color: var(--primary);
+  color: var(--primary);
 }
 
 /* 验证状态 */
 .input-field.error {
-    border-color: var(--danger);
-    background-color: rgba(244, 67, 54, 0.03);
+  border-color: var(--danger);
+  background-color: var(--danger-alpha);
 }
 
 .input-field.error:focus {
-    box-shadow: 0 0 0 4px rgba(244, 67, 54, 0.1);
+  box-shadow: 0 0 0 3px var(--danger-alpha);
 }
 
 .input-field.success {
-    border-color: var(--success);
+  border-color: var(--success);
 }
 
 .input-field.success:focus {
-    box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.1);
+  box-shadow: 0 0 0 3px var(--success-alpha);
 }
 
 /* 验证消息 */
 .form-error {
-    font-size: 12px;
-    color: var(--danger);
-    margin-top: 6px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+  font-size: 12px;
+  color: var(--danger);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .form-success {
-    font-size: 12px;
-    color: var(--success);
-    margin-top: 6px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+  font-size: 12px;
+  color: var(--success);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 /* 帮助文本 */
 .form-help {
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-top: 6px;
-    line-height: 1.5;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+.form-help code {
+  background: var(--bg-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 11px;
 }
 
 /* 输入框组 */
 .input-group {
-    display: flex;
-    gap: 0;
+  display: flex;
+  gap: 0;
 }
 
 .input-group .input-field {
-    border-radius: 0;
-    border-right-width: 1px;
+  border-radius: 0;
+  flex: 1;
 }
 
 .input-group .input-field:first-child {
-    border-radius: 8px 0 0 8px;
+  border-radius: 8px 0 0 8px;
 }
 
 .input-group .input-field:last-child {
-    border-radius: 0 8px 8px 0;
-    border-right-width: 2px;
+  border-radius: 0 8px 8px 0;
 }
 
 .input-group .btn {
-    border-radius: 0 8px 8px 0;
+  border-radius: 0 8px 8px 0;
+  border-left: none;
 }
 
 /* Select 下拉框 */
 select.input-field {
-    cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 16px center;
-    padding-right: 40px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
 }
 
 [data-theme="dark"] select.input-field {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23aaa' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
 }
 
 /* Switch 开关 */
 .switch {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
 }
 
 .switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-    position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
 }
 
 .switch-slider {
-    position: relative;
-    width: 48px;
-    height: 24px;
-    background-color: var(--border-color);
-    border-radius: 24px;
-    transition: 0.3s;
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background-color: var(--border-color);
+  border-radius: 24px;
+  transition: 0.2s;
 }
 
 .switch-slider::before {
-    content: "";
-    position: absolute;
-    height: 20px;
-    width: 20px;
-    left: 2px;
-    bottom: 2px;
-    background-color: white;
-    border-radius: 50%;
-    transition: 0.3s;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  top: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .switch input:checked + .switch-slider {
-    background-color: var(--primary);
+  background-color: var(--primary);
 }
 
 .switch input:checked + .switch-slider::before {
-    transform: translateX(24px);
+  transform: translateX(20px);
 }
 
 .switch-label {
-    font-size: 14px;
-    color: var(--text-primary);
-    font-weight: 500;
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
 }
 
 .switch-description {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
 }
 
 /* Checkbox 和 Radio */
 .checkbox-wrapper,
 .radio-wrapper {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    cursor: pointer;
-    padding: 12px;
-    border-radius: 8px;
-    transition: background-color 0.2s;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 8px;
+  transition: background-color 0.15s;
 }
 
 .checkbox-wrapper:hover,
 .radio-wrapper:hover {
-    background: var(--bg-hover);
+  background: var(--bg-hover);
 }
 
 .checkbox-wrapper input,
 .radio-wrapper input {
-    width: 18px;
-    height: 18px;
-    margin-top: 2px;
-    cursor: pointer;
-    accent-color: var(--primary);
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: var(--primary);
+  flex-shrink: 0;
 }
 
 .checkbox-label,
 .radio-label {
-    font-size: 14px;
-    color: var(--text-primary);
-    font-weight: 500;
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
 }
 
 .checkbox-description,
 .radio-description {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  line-height: 1.4;
 }
 
 /* 表单卡片 */
 .form-card {
-    background: var(--bg-secondary);
-    padding: 24px;
-    border-radius: 10px;
-    margin-bottom: 24px;
+  background: var(--bg-secondary);
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
 }
 
 /* 表单网格 */
 .form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
 }
 
 /* 表单堆叠布局 */
 .form-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 /* 表单操作按钮组 */
 .form-group-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    grid-column: 1 / -1;
-    margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  grid-column: 1 / -1;
+  margin-top: 4px;
 }

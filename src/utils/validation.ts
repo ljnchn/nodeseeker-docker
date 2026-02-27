@@ -93,6 +93,7 @@ export const paginationSchema = z.object({
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(100).default(30),
     pushStatus: z.coerce.number().int().min(0).max(2).optional(),
+    pushStatusNot: z.coerce.number().int().min(0).max(2).optional(),
     creator: z.string().max(100).optional(),
     category: z.string().max(100).optional(),
     search: z.string().max(200).optional(),

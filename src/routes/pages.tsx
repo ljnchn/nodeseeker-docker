@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { DatabaseService } from '../services/database';
 import { AuthService } from '../services/auth';
-import { InitPage, LoginPage, DashboardPage, ErrorPage } from '../components';
+import { InitPage, LoginPage, DashboardPage, HomePage, ErrorPage } from '../components';
 import type { ContextVariables } from '../types';
 
 type Variables = ContextVariables & {
@@ -10,17 +10,10 @@ type Variables = ContextVariables & {
 
 export const pageRoutes = new Hono<{ Variables: Variables }>();
 
-// 首页 - 根据初始化状态重定向
+// 首页 - 已登录用户显示帖子列表，未登录会由前端重定向
 pageRoutes.get('/', async (c) => {
   try {
-    const authService = c.get('authService');
-    const initStatus = authService.checkInitialization();
-    
-    if (initStatus.initialized) {
-      return c.html(<LoginPage />);
-    } else {
-      return c.html(<InitPage />);
-    }
+    return c.html(<HomePage />);
   } catch (error) {
     return c.html(<ErrorPage message={`加载页面失败: ${error}`} />);
   }
@@ -47,7 +40,7 @@ pageRoutes.get('/login', async (c) => {
   return c.html(<LoginPage />);
 });
 
-// 主页面
+// 兼容旧版控制台路由（重定向到首页）
 pageRoutes.get('/dashboard', async (c) => {
-  return c.html(<DashboardPage />);
+  return c.redirect('/');
 });

@@ -13,17 +13,17 @@ export const DashboardPage: FC = () => {
           {/* 页面头部 */}
           <header class="dashboard-header">
             <div class="header-brand">
-              <h1>📡 NodeSeeker控制台</h1>
-              <p>智能文章监控与推送系统</p>
+              <h1>NodeSeeker</h1>
+              <p>RSS 文章监控与推送系统</p>
             </div>
             <div class="header-actions">
-              <button id="themeToggle" class="theme-toggle" title="切换主题">
-                🌓
+              <button id="themeToggle" class="icon-btn" title="切换主题">
+                <svg viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
+                </svg>
               </button>
-              <span class="user-status">管理员已登录</span>
-              <button id="logoutBtn" class="btn btn-danger btn-sm">
-                退出登录
-              </button>
+              <span class="user-status">管理员</span>
+              <button id="logoutBtn" class="btn btn-sm">退出</button>
             </div>
           </header>
 
@@ -37,10 +37,7 @@ export const DashboardPage: FC = () => {
                 <span class="stat-title">Bot 状态</span>
                 <span class="stat-icon">🤖</span>
               </div>
-              <div class="stat-value" id="botStatus">
-                检查中...
-              </div>
-              <p class="stat-desc">Telegram Bot 连接状态</p>
+              <div class="stat-value" id="botStatus">检查中...</div>
             </div>
 
             <div class="stat-card stat-card-blue">
@@ -48,10 +45,7 @@ export const DashboardPage: FC = () => {
                 <span class="stat-title">活跃订阅</span>
                 <span class="stat-icon">📝</span>
               </div>
-              <div class="stat-value" id="activeSubscriptions">
-                0
-              </div>
-              <p class="stat-desc">正在监控的关键词订阅</p>
+              <div class="stat-value" id="activeSubscriptions">0</div>
             </div>
 
             <div class="stat-card stat-card-orange">
@@ -59,10 +53,7 @@ export const DashboardPage: FC = () => {
                 <span class="stat-title">24小时推送</span>
                 <span class="stat-icon">📬</span>
               </div>
-              <div class="stat-value" id="todayMessages">
-                0
-              </div>
-              <p class="stat-desc">最近24小时发送的消息数量</p>
+              <div class="stat-value" id="todayMessages">0</div>
             </div>
 
             <div class="stat-card stat-card-purple">
@@ -70,10 +61,7 @@ export const DashboardPage: FC = () => {
                 <span class="stat-title">总文章数</span>
                 <span class="stat-icon">📰</span>
               </div>
-              <div class="stat-value" id="totalPosts">
-                0
-              </div>
-              <p class="stat-desc">系统中的文章总数</p>
+              <div class="stat-value" id="totalPosts">0</div>
             </div>
           </div>
 
@@ -101,22 +89,16 @@ export const DashboardPage: FC = () => {
             <div class="tabs-content">
               {/* 基础设置内容 */}
               <div id="config" class="tab-panel active">
-                <h2 class="section-title">📡 RSS 源配置</h2>
-
                 {/* RSS 源配置 */}
                 <section class="config-section">
                   <h3 class="config-section-title">
-                    📡 RSS 抓取设置
-                    <span class="status-badge active" id="rssServiceStatus">
-                      运行中
-                    </span>
+                    RSS 抓取设置
+                    <span class="status-badge active" id="rssServiceStatus">运行中</span>
                   </h3>
 
                   <form id="rssConfigForm" class="form-stack">
                     <div class="form-group">
-                      <label for="rssUrl" class="form-label">
-                        RSS 源地址
-                      </label>
+                      <label for="rssUrl" class="form-label">RSS 源地址</label>
                       <div class="input-group">
                         <input
                           type="url"
@@ -125,23 +107,13 @@ export const DashboardPage: FC = () => {
                           placeholder="https://rss.nodeseek.com/"
                           class="input-field"
                         />
-                        <button
-                          type="button"
-                          id="testRssConnectionBtn"
-                          class="btn btn-secondary"
-                        >
-                          🔗 测试连接
-                        </button>
+                        <button type="button" id="testRssConnectionBtn" class="btn">测试</button>
                       </div>
-                      <p class="help-text">
-                        💡 支持标准的 RSS/Atom 格式，默认使用 NodeSeek 官方 RSS
-                      </p>
+                      <p class="help-text">支持标准的 RSS/Atom 格式</p>
                     </div>
 
                     <div class="form-group">
-                      <label for="rssInterval" class="form-label">
-                        抓取间隔（秒）
-                      </label>
+                      <label for="rssInterval" class="form-label">抓取间隔（秒）</label>
                       <input
                         type="number"
                         id="rssInterval"
@@ -150,40 +122,26 @@ export const DashboardPage: FC = () => {
                         max="3600"
                         placeholder="60"
                         class="input-field"
-                        style={{ width: "200px" }}
+                        style={{ width: "160px" }}
                       />
-                      <p class="help-text">
-                        💡 最小 10 秒，建议 60 秒以上，避免对源站造成压力
-                      </p>
+                      <p class="help-text">最小 10 秒，建议 60 秒以上</p>
                     </div>
 
                     <div class="form-group">
-                      <label for="rssProxy" class="form-label">
-                        代理地址（可选）
-                      </label>
+                      <label for="rssProxy" class="form-label">代理地址（可选）</label>
                       <input
                         type="text"
                         id="rssProxy"
                         name="rssProxy"
-                        placeholder="http://127.0.0.1:7890 或 http://user:pass@host:port"
+                        placeholder="http://127.0.0.1:7890"
                         class="input-field"
                       />
-                      <p class="help-text">
-                        💡 如需代理访问 RSS 源，请填写 HTTP/HTTPS 代理地址，留空则不使用代理
-                      </p>
+                      <p class="help-text">HTTP/HTTPS 代理，留空则不使用代理</p>
                     </div>
 
                     <div class="action-bar">
-                      <button type="submit" class="btn btn-primary">
-                        💾 保存配置
-                      </button>
-                      <button
-                        type="button"
-                        id="restartRssTaskBtn"
-                        class="btn btn-warning"
-                      >
-                        🔄 重启任务
-                      </button>
+                      <button type="submit" class="btn btn-primary">保存配置</button>
+                      <button type="button" id="restartRssTaskBtn" class="btn">重启任务</button>
                     </div>
                   </form>
 
@@ -219,33 +177,25 @@ export const DashboardPage: FC = () => {
                   </div>
                 </section>
 
-                <h2 class="section-title">🤖 Telegram Bot 设置</h2>
-
                 {/* 推送服务配置 */}
                 <section class="config-section">
                   <h3 class="config-section-title">
-                    🚀 推送服务配置
-                    <span class="status-badge inactive" id="pushServiceStatus">
-                      未配置
-                    </span>
+                    推送服务配置
+                    <span class="status-badge inactive" id="pushServiceStatus">未配置</span>
                   </h3>
 
                   <form id="pushServiceForm" class="form-stack">
                     <div class="form-group">
-                      <label for="botToken" class="form-label">
-                        Bot Token
-                      </label>
+                      <label for="botToken" class="form-label">Bot Token</label>
                       <div class="input-group">
                         <input
                           type="text"
                           id="botToken"
                           name="botToken"
-                          placeholder="请输入从 @BotFather 获取的 Bot Token"
+                          placeholder="从 @BotFather 获取的 Token"
                           class="input-field"
                         />
-                        <button type="submit" class="btn btn-primary">
-                          💾 保存并验证
-                        </button>
+                        <button type="submit" class="btn btn-primary">保存</button>
                       </div>
                     </div>
 
@@ -282,83 +232,49 @@ export const DashboardPage: FC = () => {
                       </div>
 
                       <div class="action-bar">
-                        <button
-                          id="refreshPushStatusBtn"
-                          class="btn btn-warning btn-sm"
-                        >
-                          🔄 刷新状态
-                        </button>
-                        <button id="testPushBtn" class="btn btn-success btn-sm">
-                          📤 测试推送
-                        </button>
+                        <button id="refreshPushStatusBtn" class="btn btn-sm">刷新状态</button>
+                        <button id="testPushBtn" class="btn btn-success btn-sm">测试推送</button>
                       </div>
                     </div>
 
                     <div class="form-group">
-                      <label for="userChatId" class="form-label">
-                        设置用户 Chat ID
-                      </label>
+                      <label for="userChatId" class="form-label">用户 Chat ID</label>
                       <div class="input-group">
                         <input
                           type="text"
                           id="userChatId"
                           name="userChatId"
-                          placeholder="手动输入 Chat ID 或通过交互服务自动获取"
+                          placeholder="用户或群组的 Chat ID"
                           class="input-field"
                         />
-                        <button
-                          type="button"
-                          id="setChatIdBtn"
-                          class="btn btn-primary"
-                        >
-                          ⚙️ 设置并测试
-                        </button>
+                        <button type="button" id="setChatIdBtn" class="btn btn-primary">设置</button>
                       </div>
-                      <p class="help-text">
-                        💡
-                        设置后将自动发送测试消息验证推送功能。可以手动设置或通过下方交互服务的
-                        /start 命令自动获取
-                      </p>
+                      <p class="help-text">可通过 /start 命令自动获取</p>
                     </div>
-
-                    <p class="help-text">
-                      💡 推送服务用于发送文章通知，不需要设置 Webhook
-                    </p>
                   </form>
                 </section>
 
                 {/* 交互服务配置 */}
                 <section class="config-section">
                   <h3 class="config-section-title">
-                    🔗 交互服务配置
-                    <span
-                      class="status-badge inactive"
-                      id="webhookServiceStatus"
-                    >
-                      未启用
-                    </span>
+                    交互服务配置
+                    <span class="status-badge inactive" id="webhookServiceStatus">未启用</span>
                   </h3>
 
                   <form id="webhookServiceForm" class="form-stack">
                     <div class="form-group">
-                      <label for="webhookUrl" class="form-label">
-                        Webhook URL
-                      </label>
+                      <label for="webhookUrl" class="form-label">Webhook URL</label>
                       <div class="input-group">
                         <input
                           type="text"
                           id="webhookUrl"
                           name="webhookUrl"
-                          placeholder="自动检测或手动输入 Webhook URL"
+                          placeholder="https://your-domain.com/telegram/webhook"
                           class="input-field"
                         />
-                        <button type="submit" class="btn btn-primary">
-                          🔗 设置 Webhook
-                        </button>
+                        <button type="submit" class="btn btn-primary">设置</button>
                       </div>
-                      <p class="help-text">
-                        💡 Telegram 需要 HTTPS URL。留空则自动检测当前域名
-                      </p>
+                      <p class="help-text">需要 HTTPS，留空则自动检测</p>
                     </div>
 
                     <div class="info-panel">
@@ -407,24 +323,9 @@ export const DashboardPage: FC = () => {
                     </div>
 
                     <div class="action-bar">
-                      <button
-                        id="testWebhookBtn"
-                        class="btn btn-primary btn-sm"
-                      >
-                        🧪 测试连接
-                      </button>
-                      <button
-                        id="clearWebhookBtn"
-                        class="btn btn-danger btn-sm"
-                      >
-                        🗑️ 清除 Webhook
-                      </button>
-                      <button
-                        id="unbindUserBtn2"
-                        class="btn btn-warning btn-sm"
-                      >
-                        🚫 解除绑定
-                      </button>
+                      <button id="testWebhookBtn" class="btn btn-sm">测试</button>
+                      <button id="clearWebhookBtn" class="btn btn-danger btn-sm">清除</button>
+                      <button id="unbindUserBtn2" class="btn btn-sm">解除绑定</button>
                     </div>
                   </div>
 
@@ -464,32 +365,24 @@ export const DashboardPage: FC = () => {
 
                 {/* 统一操作 */}
                 <section class="config-section">
-                  <h3 class="config-section-title">🛠️ 统一操作</h3>
+                  <h3 class="config-section-title">其他操作</h3>
                   <div class="action-bar">
-                    <button id="clearAllSettingsBtn" class="btn btn-danger">
-                      🗑️ 清空所有设置
-                    </button>
-                    <button id="refreshAllStatusBtn" class="btn btn-warning">
-                      🔄 刷新所有状态
-                    </button>
+                    <button id="clearAllSettingsBtn" class="btn btn-danger">清空所有设置</button>
+                    <button id="refreshAllStatusBtn" class="btn">刷新状态</button>
                   </div>
-                  <p class="help-text">
-                    💡 清空所有设置将同时清除推送服务和交互服务的所有配置
-                  </p>
+                  <p class="help-text">清空所有设置将删除所有配置</p>
                 </section>
 
                 {/* 推送设置 */}
                 <section class="config-section">
-                  <h3 class="config-section-title">📬 推送设置</h3>
+                  <h3 class="config-section-title">推送设置</h3>
 
                   <form id="pushSettingsForm" class="form-stack">
                     <div class="checkbox-wrapper">
                       <input type="checkbox" id="stopPush" name="stopPush" />
                       <div>
                         <div class="checkbox-label">停止推送</div>
-                        <div class="checkbox-description">
-                          勾选后将暂停所有 Telegram 消息推送
-                        </div>
+                        <div class="checkbox-description">暂停所有 Telegram 消息推送</div>
                       </div>
                     </div>
 
@@ -497,32 +390,20 @@ export const DashboardPage: FC = () => {
                       <input type="checkbox" id="onlyTitle" name="onlyTitle" />
                       <div>
                         <div class="checkbox-label">只匹配标题</div>
-                        <div class="checkbox-description">
-                          勾选后仅在文章标题中搜索关键词，不搜索内容
-                        </div>
+                        <div class="checkbox-description">仅在文章标题中搜索关键词</div>
                       </div>
                     </div>
 
-                    <button type="submit" class="btn btn-purple">
-                      💾 保存推送设置
-                    </button>
+                    <button type="submit" class="btn btn-primary">保存设置</button>
                   </form>
                 </section>
               </div>
 
               {/* 订阅管理内容 */}
               <div id="subscriptions" class="tab-panel">
-                <h2 class="section-title">📝 订阅管理</h2>
-
                 <form id="addSubForm" class="form-card">
-                  <h3
-                    style={{
-                      fontSize: "15px",
-                      marginBottom: "16px",
-                      color: "var(--text-primary)",
-                    }}
-                  >
-                    添加新订阅
+                  <h3 style={{ fontSize: "14px", marginBottom: "14px", color: "var(--text-primary)", fontWeight: 600 }}>
+                    添加订阅
                   </h3>
                   <div class="form-grid">
                     <div class="form-group">
@@ -594,12 +475,8 @@ export const DashboardPage: FC = () => {
                       </select>
                     </div>
                   </div>
-                  <button
-                    type="submit"
-                    class="btn btn-success btn-sm"
-                    style={{ marginTop: "16px" }}
-                  >
-                    ➕ 添加订阅
+                  <button type="submit" class="btn btn-success btn-sm" style={{ marginTop: "12px" }}>
+                    添加订阅
                   </button>
                 </form>
 
@@ -630,25 +507,18 @@ export const DashboardPage: FC = () => {
               {/* 文章列表内容 */}
               <div id="posts" class="tab-panel">
                 <div class="panel-header">
-                  <h2 class="section-title">📰 文章列表</h2>
+                  <h2 class="section-title">文章列表</h2>
                   <div class="btn-group">
-                    <button id="refreshPostsBtn" class="btn btn-primary btn-sm">
-                      🔄 刷新
-                    </button>
-                    <button id="updateRssBtn" class="btn btn-warning btn-sm">
-                      📡 更新RSS
-                    </button>
+                    <button id="refreshPostsBtn" class="btn btn-sm">刷新</button>
+                    <button id="updateRssBtn" class="btn btn-primary btn-sm">更新 RSS</button>
                   </div>
                 </div>
 
                 {/* 搜索和过滤器 */}
                 <div class="filter-section">
-                  <h3>🔍 搜索和筛选</h3>
                   <form id="postsFilterForm" class="form-grid">
                     <div class="form-group">
-                      <label for="searchTitle" class="form-label">
-                        标题搜索
-                      </label>
+                      <label for="searchTitle" class="form-label">标题搜索</label>
                       <input
                         type="text"
                         id="searchTitle"
@@ -679,9 +549,8 @@ export const DashboardPage: FC = () => {
                         class="input-field"
                       >
                         <option value="">全部状态</option>
-                        <option value="0">未推送</option>
-                        <option value="1">已推送</option>
-                        <option value="2">无需推送</option>
+                        <option value="0">未订阅</option>
+                        <option value="1">已订阅</option>
                       </select>
                     </div>
                     <div class="form-group">
@@ -709,16 +578,8 @@ export const DashboardPage: FC = () => {
                       </select>
                     </div>
                     <div class="form-group form-group-actions">
-                      <button type="submit" class="btn btn-success btn-sm">
-                        搜索
-                      </button>
-                      <button
-                        type="button"
-                        id="clearFiltersBtn"
-                        class="btn btn-secondary btn-sm"
-                      >
-                        清空
-                      </button>
+                      <button type="submit" class="btn btn-primary btn-sm">搜索</button>
+                      <button type="button" id="clearFiltersBtn" class="btn btn-sm">清空</button>
                     </div>
                   </form>
                 </div>
@@ -787,8 +648,6 @@ export const DashboardPage: FC = () => {
 
               {/* 统计信息内容 */}
               <div id="stats" class="tab-panel">
-                <h2 class="section-title">📊 统计信息</h2>
-
                 <div class="stats-grid" id="statsContent">
                   <div class="stat-card stat-card-green">
                     <div class="stat-header">

@@ -480,7 +480,7 @@ document.addEventListener("DOMContentLoaded", function () {
               </div>
               <div class="subscription-meta">
                 ${sub.creator ? `<span>👤 ${sub.creator}</span>` : ""}
-                ${sub.category ? `<span>📂 ${sub.category}</span>` : ""}
+                ${sub.category ? `<span>📂 ${getCategoryName(sub.category)}</span>` : ""}
               </div>
             </div>
             <div class="subscription-actions">
@@ -544,9 +544,9 @@ document.addEventListener("DOMContentLoaded", function () {
                   : "skipped";
             const statusText =
               post.push_status === 0
-                ? "未推送"
+                ? "未订阅"
                 : post.push_status === 1
-                  ? "已推送"
+                  ? "已订阅"
                   : "无需推送";
 
             return `
@@ -558,7 +558,7 @@ document.addEventListener("DOMContentLoaded", function () {
               </h4>
               <div class="post-meta">
                 <span>👤 ${post.creator}</span>
-                <span>📂 ${post.category}</span>
+                <span>📂 ${getCategoryName(post.category)}</span>
                 <span>📅 ${new Date(post.pub_date).toLocaleString()}</span>
                 <span class="tag ${post.push_status === 1 ? "tag-green" : post.push_status === 0 ? "tag-orange" : "tag-gray"}">
                   ${statusText}
@@ -653,6 +653,26 @@ document.addEventListener("DOMContentLoaded", function () {
       clearTimeout(timeout);
       timeout = setTimeout(later, wait);
     };
+  }
+
+  // 分类映射：英文 key -> 中文标题
+  const categoryMap = {
+    daily: "日常",
+    tech: "技术",
+    info: "情报",
+    review: "测评",
+    trade: "交易",
+    carpool: "拼车",
+    promotion: "推广",
+    life: "生活",
+    dev: "Dev",
+    expose: "曝光",
+    inside: "内版",
+    sandbox: "沙盒",
+  };
+
+  function getCategoryName(key) {
+    return categoryMap[key] || key;
   }
 
   // 加载统计信息
@@ -1146,15 +1166,22 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     function performSearch() {
+      const statusValue = document.getElementById("filterStatus")?.value || "";
       const filters = {
         search: document.getElementById("searchTitle")?.value.trim() || "",
-        pushStatus: document.getElementById("filterStatus")?.value || "",
         creator: document.getElementById("filterCreator")?.value.trim() || "",
         category: document.getElementById("filterCategory")?.value || "",
       };
 
+      // 状态筛选逻辑：全部 | 已订阅(1) | 未订阅(非1)
+      if (statusValue === "1") {
+        filters.pushStatus = "1"; // 已订阅
+      } else if (statusValue === "0") {
+        filters.pushStatusNot = "1"; // 未订阅（排除已订阅）
+      }
+
       Object.keys(filters).forEach((key) => {
-        if (filters[key] === "") delete filters[key];
+        if (filters[key] === "" || filters[key] === undefined) delete filters[key];
       });
 
       loadPosts(1, filters);

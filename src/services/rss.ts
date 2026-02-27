@@ -337,7 +337,7 @@ export class RSSService {
           try {
             const postsWithDefaults = newPostsToCreate.map((post) => ({
               ...post,
-              push_status: 2, // 默认无需推送
+              push_status: 0, // 默认未推送（等待匹配）
             }));
 
             const createdCount =

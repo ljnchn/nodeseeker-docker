@@ -312,6 +312,7 @@ apiRoutes.get('/posts', createQueryValidationMiddleware(paginationSchema), async
             query.limit,
             {
                 pushStatus: query.pushStatus,
+                pushStatusNot: query.pushStatusNot,
                 creator: query.creator,
                 category: query.category,
                 search: query.search
