@@ -1,5 +1,5 @@
 {
-  "name": "NodeSeeker-docker",
+  "name": "nodeseeker",
   "type": "module",
   "scripts": {
     "dev": "bun run --hot src/server.ts",

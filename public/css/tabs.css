@@ -1,0 +1,112 @@
+/* ============================================
+   标签页导航 - 简洁设计
+   ============================================ */
+
+.tabs-container {
+  background: var(--bg-card);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.tabs-header {
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.tabs-header::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.tab-item:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.tab-item.active {
+  color: var(--primary);
+}
+
+.tab-item.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--primary);
+}
+
+.tab-item .tab-icon {
+  font-size: 16px;
+}
+
+.tabs-content {
+  padding: 20px;
+}
+
+.tab-panel {
+  display: none;
+  animation: fadeIn 0.2s ease;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .tab-item {
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+
+  .tab-item .tab-icon {
+    font-size: 18px;
+  }
+
+  .tab-item .tab-text {
+    display: none;
+  }
+
+  .tabs-content {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tab-item .tab-text {
+    display: inline;
+  }
+}

@@ -1,0 +1,132 @@
+/* ============================================
+   主题系统 - Apple 风格设计语言
+   ============================================ */
+
+:root {
+    /* 品牌色 - Apple Blue */
+    --primary: #0071e3;
+    --primary-dark: #0077ED;
+    --primary-light: #419cff;
+    --success: #30d158;
+    --success-dark: #28a745;
+    --warning: #ff9f0a;
+    --warning-dark: #e68a00;
+    --danger: #ff3b30;
+    --danger-dark: #d70015;
+    --purple: #bf5af2;
+    --purple-dark: #a03de0;
+
+    /* 透明色变体 */
+    --primary-alpha: rgba(0, 113, 227, 0.1);
+    --success-alpha: rgba(48, 209, 88, 0.1);
+    --warning-alpha: rgba(255, 159, 10, 0.1);
+    --danger-alpha: rgba(255, 59, 48, 0.1);
+    --purple-alpha: rgba(191, 90, 242, 0.1);
+
+    /* 浅色主题（默认） */
+    --bg-primary: #f5f5f7;
+    --bg-secondary: rgba(255, 255, 255, 0.8);
+    --bg-card: #ffffff;
+    --bg-hover: rgba(0, 0, 0, 0.04);
+    --bg-elevated: #ffffff;
+    --text-primary: #1d1d1f;
+    --text-secondary: #6e6e73;
+    --text-muted: #86868b;
+    --border-color: rgba(0, 0, 0, 0.08);
+    --border-hover: rgba(0, 0, 0, 0.15);
+    --border-light: rgba(0, 0, 0, 0.04);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.1);
+    --ring-color: rgba(0, 113, 227, 0.4);
+
+    /* 间距系统 */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-pill: 980px;
+}
+
+/* 暗色主题 */
+[data-theme="dark"] {
+    color-scheme: dark;
+    --bg-primary: #000000;
+    --bg-secondary: rgba(28, 28, 30, 0.8);
+    --bg-card: #1c1c1e;
+    --bg-hover: rgba(255, 255, 255, 0.06);
+    --bg-elevated: #2c2c2e;
+    --text-primary: #f5f5f7;
+    --text-secondary: #a1a1a6;
+    --text-muted: #6e6e73;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --border-hover: rgba(255, 255, 255, 0.18);
+    --border-light: rgba(255, 255, 255, 0.05);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.5);
+    --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.6);
+    --ring-color: rgba(41, 151, 255, 0.5);
+
+    --primary: #2997ff;
+    --primary-dark: #419cff;
+    --primary-alpha: rgba(41, 151, 255, 0.15);
+    --success-alpha: rgba(48, 209, 88, 0.15);
+    --warning-alpha: rgba(255, 159, 10, 0.15);
+    --danger-alpha: rgba(255, 59, 48, 0.15);
+    --purple-alpha: rgba(191, 90, 242, 0.15);
+}
+
+/* 自动跟随系统偏好 */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --bg-primary: #000000;
+        --bg-secondary: rgba(28, 28, 30, 0.8);
+        --bg-card: #1c1c1e;
+        --bg-hover: rgba(255, 255, 255, 0.06);
+        --bg-elevated: #2c2c2e;
+        --text-primary: #f5f5f7;
+        --text-secondary: #a1a1a6;
+        --text-muted: #6e6e73;
+        --border-color: rgba(255, 255, 255, 0.1);
+        --border-hover: rgba(255, 255, 255, 0.18);
+        --border-light: rgba(255, 255, 255, 0.05);
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+        --shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.5);
+        --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.6);
+        --ring-color: rgba(41, 151, 255, 0.5);
+        --primary: #2997ff;
+        --primary-dark: #419cff;
+        --primary-alpha: rgba(41, 151, 255, 0.15);
+        --success-alpha: rgba(48, 209, 88, 0.15);
+        --warning-alpha: rgba(255, 159, 10, 0.15);
+        --danger-alpha: rgba(255, 59, 48, 0.15);
+        --purple-alpha: rgba(191, 90, 242, 0.15);
+    }
+}
+
+/* 基础样式 */
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family:
+        "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+        "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.47;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    letter-spacing: -0.01em;
+}
+
+/* 文本颜色工具类 */
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+
+/* 背景工具类 */
+.bg-primary { background-color: var(--bg-primary); }
+.bg-secondary { background-color: var(--bg-secondary); }
+.bg-card { background-color: var(--bg-card); }

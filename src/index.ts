@@ -168,6 +168,13 @@ app.route('/api/push', telegramPushRoutes);
 app.route('/api/webhook', telegramWebhookRoutes);
 app.route('/', pageRoutes);
 
+// 默认 RSS 配置
+const DEFAULT_RSS_CONFIG = {
+  url: 'https://rss.nodeseek.com/',
+  intervalSeconds: 60,
+  proxy: null as string | null,
+};
+
 // 初始化数据库
 async function initializeDatabase() {
   console.log('初始化数据库...');
@@ -179,6 +186,47 @@ async function initializeDatabase() {
   } catch (error) {
     console.error('数据库初始化失败:', error);
     throw error;
+  }
+}
+
+// 设置默认 RSS 配置到数据库
+async function setupDefaultRssConfig() {
+  try {
+    const dbService = DatabaseService.create();
+    
+    // 获取当前配置
+    const config = dbService.getBaseConfig();
+    
+    if (config) {
+      // 如果数据库中没有 RSS 配置，则设置默认值
+      const updates: { rss_url?: string; rss_interval_seconds?: number; rss_proxy?: string | null } = {};
+      
+      if (!config.rss_url) {
+        updates.rss_url = DEFAULT_RSS_CONFIG.url;
+        console.log(`设置默认 RSS URL: ${updates.rss_url}`);
+      }
+      
+      if (!config.rss_interval_seconds) {
+        updates.rss_interval_seconds = DEFAULT_RSS_CONFIG.intervalSeconds;
+        console.log(`设置默认 RSS 间隔: ${updates.rss_interval_seconds} 秒`);
+      }
+      
+      if (config.rss_proxy === undefined) {
+        updates.rss_proxy = DEFAULT_RSS_CONFIG.proxy;
+        console.log(`设置默认 RSS 代理: ${updates.rss_proxy || '无'}`);
+      }
+      
+      if (Object.keys(updates).length > 0) {
+        dbService.updateBaseConfig(updates);
+        console.log('✅ 默认 RSS 配置已写入数据库');
+      } else {
+        console.log('RSS 配置已存在，跳过默认设置');
+      }
+    }
+    
+    dbService.close();
+  } catch (error) {
+    console.error('设置默认 RSS 配置失败:', error);
   }
 }
 
@@ -197,6 +245,9 @@ async function startServer() {
     
     // 初始化数据库
     await initializeDatabase();
+    
+    // 设置默认 RSS 配置到数据库
+    await setupDefaultRssConfig();
     
     console.log(`NodeSeeker 服务器启动成功`);
     console.log(`📍 地址: http://${config.HOST}:${config.PORT}`);

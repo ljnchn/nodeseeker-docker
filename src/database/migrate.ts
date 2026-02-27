@@ -29,7 +29,7 @@ export class DatabaseMigrator {
       `).all().map((row: any) => row.filename);
 
       // 读取迁移文件
-      const migrationFiles = ['001_initial.sql'];
+      const migrationFiles = ['001_initial.sql', '002_add_rss_config.sql'];
 
       for (const filename of migrationFiles) {
         if (executedMigrations.includes(filename)) {
@@ -38,7 +38,7 @@ export class DatabaseMigrator {
         }
 
         console.log(`执行迁移: ${filename}`);
-        
+
         const migrationPath = join(__dirname, 'migrations', filename);
         const migrationSQL = readFileSync(migrationPath, 'utf-8');
 

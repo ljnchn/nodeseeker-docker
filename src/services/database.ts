@@ -89,8 +89,8 @@ export class DatabaseService {
 
   createBaseConfig(config: Omit<BaseConfig, 'id' | 'created_at' | 'updated_at'>): BaseConfig {
     const stmt = this.db.query(`
-      INSERT INTO base_config (username, password, bot_token, chat_id, bound_user_name, bound_user_username, stop_push, only_title)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO base_config (username, password, bot_token, chat_id, bound_user_name, bound_user_username, stop_push, only_title, rss_url, rss_interval_seconds, rss_proxy)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       RETURNING *
     `);
     
@@ -102,7 +102,10 @@ export class DatabaseService {
       config.bound_user_name || null,
       config.bound_user_username || null,
       config.stop_push,
-      config.only_title
+      config.only_title,
+      config.rss_url || 'https://rss.nodeseek.com/',
+      config.rss_interval_seconds || 60,
+      config.rss_proxy || null
     ) as BaseConfig;
     
     // 清理相关缓存
@@ -146,6 +149,18 @@ export class DatabaseService {
     if (config.only_title !== undefined) {
       updates.push('only_title = ?');
       values.push(config.only_title);
+    }
+    if (config.rss_url !== undefined) {
+      updates.push('rss_url = ?');
+      values.push(config.rss_url);
+    }
+    if (config.rss_interval_seconds !== undefined) {
+      updates.push('rss_interval_seconds = ?');
+      values.push(config.rss_interval_seconds);
+    }
+    if (config.rss_proxy !== undefined) {
+      updates.push('rss_proxy = ?');
+      values.push(config.rss_proxy);
     }
 
     if (updates.length === 0) {
@@ -307,6 +322,7 @@ export class DatabaseService {
     limit: number = 30, 
     filters?: {
       pushStatus?: number;
+      pushStatusNot?: number;
       creator?: string;
       category?: string;
       search?: string;
@@ -328,6 +344,11 @@ export class DatabaseService {
       if (filters.pushStatus !== undefined && filters.pushStatus !== null && filters.pushStatus.toString() !== '') {
         conditions.push('push_status = ?');
         params.push(filters.pushStatus);
+      }
+      
+      if (filters.pushStatusNot !== undefined && filters.pushStatusNot !== null && filters.pushStatusNot.toString() !== '') {
+        conditions.push('push_status != ?');
+        params.push(filters.pushStatusNot);
       }
       
       if (filters.creator) {
@@ -562,12 +583,30 @@ export class DatabaseService {
     const cached = this.getFromCache<number>(cacheKey);
     if (cached !== null) return cached;
 
+    const today = new Date().toISOString().split('T')[0];
     const stmt = this.db.query(`
       SELECT COUNT(*) as count FROM posts
+      WHERE date(created_at) = date(?)
     `);
-    const result = stmt.get() as { count: number };
+    const result = stmt.get(today) as { count: number };
     const count = result?.count || 0;
-    this.setCache(cacheKey, count, 60000); // 1分钟缓存
+    this.setCache(cacheKey, count, 60000);
+    return count;
+  }
+
+  getTodayPushedCount(): number {
+    const cacheKey = this.getCacheKey('getTodayPushedCount', []);
+    const cached = this.getFromCache<number>(cacheKey);
+    if (cached !== null) return cached;
+
+    const today = new Date().toISOString().split('T')[0];
+    const stmt = this.db.query(`
+      SELECT COUNT(*) as count FROM posts
+      WHERE push_status = 1 AND date(created_at) = date(?)
+    `);
+    const result = stmt.get(today) as { count: number };
+    const count = result?.count || 0;
+    this.setCache(cacheKey, count, 60000);
     return count;
   }
 
@@ -576,13 +615,14 @@ export class DatabaseService {
     const cached = this.getFromCache<number>(cacheKey);
     if (cached !== null) return cached;
 
+    const today = new Date().toISOString().split('T')[0];
     const stmt = this.db.query(`
       SELECT COUNT(*) as count FROM posts
-      WHERE push_status = 1
+      WHERE push_status = 1 AND date(push_date) = date(?)
     `);
-    const result = stmt.get() as { count: number };
+    const result = stmt.get(today) as { count: number };
     const count = result?.count || 0;
-    this.setCache(cacheKey, count, 60000); // 1分钟缓存
+    this.setCache(cacheKey, count, 60000);
     return count;
   }
 
@@ -612,44 +652,32 @@ export class DatabaseService {
   // 获取综合统计信息
   getComprehensiveStats(): {
     total_posts: number;
-    unpushed_posts: number;
     pushed_posts: number;
-    skipped_posts: number;
     total_subscriptions: number;
-    today_posts: number;
-    today_messages: number;
+    today_pushed: number;
     last_update: string | null;
   } {
     try {
       const totalPosts = this.getPostsCount();
-      const unpushedPosts = this.getPostsCountByStatus(0); // 未推送
       const pushedPosts = this.getPostsCountByStatus(1); // 已推送
-      const skippedPosts = this.getPostsCountByStatus(2); // 无需推送
       const totalSubscriptions = this.getSubscriptionsCount();
-      const todayPosts = this.getTodayPostsCount();
-      const todayMessages = this.getTodayMessagesCount();
+      const todayPushed = this.getTodayPushedCount();
       const lastUpdate = this.getLastUpdateTime();
 
       return {
         total_posts: totalPosts,
-        unpushed_posts: unpushedPosts,
         pushed_posts: pushedPosts,
-        skipped_posts: skippedPosts,
         total_subscriptions: totalSubscriptions,
-        today_posts: todayPosts,
-        today_messages: todayMessages,
+        today_pushed: todayPushed,
         last_update: lastUpdate
       };
     } catch (error) {
       console.error('获取综合统计信息失败:', error);
       return {
         total_posts: 0,
-        unpushed_posts: 0,
         pushed_posts: 0,
-        skipped_posts: 0,
         total_subscriptions: 0,
-        today_posts: 0,
-        today_messages: 0,
+        today_pushed: 0,
         last_update: null
       };
     }

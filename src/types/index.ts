@@ -9,6 +9,9 @@ export interface BaseConfig {
   bound_user_username?: string;
   stop_push: number;
   only_title: number;
+  rss_url?: string;
+  rss_interval_seconds?: number;
+  rss_proxy?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -21,7 +24,7 @@ export interface Post {
   memo: string;
   category: string;
   creator: string;
-  push_status: number; // 0 未推送 1 已推送 2 无需推送
+  push_status: number; // 0 待处理 1 已匹配订阅 2 未匹配
   sub_id?: number;
   pub_date: string;
   push_date?: string;
@@ -257,13 +260,8 @@ export interface EnvVars {
   HOST: string;
   NODE_ENV: 'development' | 'production' | 'test';
   DATABASE_PATH: string;
-  RSS_URL: string;
   RSS_TIMEOUT: number;
-  RSS_USER_AGENT: string;
   RSS_CHECK_ENABLED: boolean;
-  RSS_CRON_EXPRESSION: string;
-  TELEGRAM_BOT_TOKEN?: string;
   TELEGRAM_WEBHOOK_URL?: string;
   CORS_ORIGINS: string;
-  LOG_LEVEL: 'error' | 'warn' | 'info' | 'debug';
 }

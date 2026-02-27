@@ -18,7 +18,7 @@ export interface MatchResult {
 export class MatcherService {
   constructor(
     private dbService: DatabaseService,
-    private telegramService: TelegramPushService
+    private telegramService: TelegramPushService | null = null
   ) {}
 
   /**
@@ -258,7 +258,12 @@ export class MatcherService {
   }
 
   /**
-   * 处理未推送的文章 - 优化版本，减少重复查询和批量更新
+   * 处理待处理的文章：先匹配订阅，再尝试推送 Telegram
+   * 
+   * push_status 语义：
+   *   0 = 待处理（未比对过订阅）
+   *   1 = 已匹配（命中了订阅关键词）
+   *   2 = 未匹配（没有命中任何订阅）
    */
   async processUnpushedPosts(): Promise<PushResult> {
     const config = this.dbService.getBaseConfig();
@@ -266,98 +271,106 @@ export class MatcherService {
     const subscriptions = this.dbService.getAllKeywordSubs();
     
     if (!config) {
-      return {
-        pushed: 0,
-        failed: 0,
-        skipped: 0
-      };
+      return { pushed: 0, failed: 0, skipped: 0 };
     }
 
-    if (config.stop_push === 1) {
-      console.log('推送已停止，跳过处理');
-      return {
-        pushed: 0,
-        failed: 0,
-        skipped: 0
-      };
+    console.log(`找到 ${unpushedPosts.length} 篇待处理文章`);
+
+    const result: PushResult = { pushed: 0, failed: 0, skipped: 0 };
+
+    if (subscriptions.length === 0) {
+      console.log('没有订阅词，将所有待处理文章标记为未匹配');
+      const batchUpdates = unpushedPosts.map(post => ({
+        postId: post.post_id,
+        pushStatus: 2
+      }));
+      
+      if (batchUpdates.length > 0) {
+        try {
+          this.dbService.batchUpdatePostPushStatus(batchUpdates);
+          result.skipped = batchUpdates.length;
+        } catch (error) {
+          console.error('批量更新状态失败:', error);
+          result.failed = batchUpdates.length;
+        }
+      }
+      return result;
     }
 
-    console.log(`找到 ${unpushedPosts.length} 篇未推送文章`);
+    const matchedUpdates: Array<{ postId: number; pushStatus: number; subId?: number }> = [];
+    const unmatchedUpdates: Array<{ postId: number; pushStatus: number }> = [];
+    const matchedPostsForPush: Array<{ post: Post; subscription: KeywordSub }> = [];
 
-    const result: PushResult = {
-      pushed: 0,
-      failed: 0,
-      skipped: 0
-    };
-
-    // 收集所有需要批量更新的操作
-    const batchUpdates: Array<{
-      postId: number;
-      pushStatus: number;
-      subId?: number;
-      pushDate?: string;
-    }> = [];
-
-    // 处理每篇文章
+    // 第一步：比对所有帖子和订阅，确定匹配状态
     for (const post of unpushedPosts) {
       try {
-        // 使用缓存的数据进行匹配检查
         const matches = this.checkPostMatchesWithData(post, subscriptions, config);
         
         if (matches.length === 0) {
-          // 没有匹配，收集到批量更新中
-          batchUpdates.push({
-            postId: post.post_id,
-            pushStatus: 2 // 2 = 无需推送
-          });
-          
+          unmatchedUpdates.push({ postId: post.post_id, pushStatus: 2 });
           result.skipped++;
-          continue;
-        }
-
-        // 有匹配，推送第一个匹配的订阅
-        const firstMatch = matches[0];
-        if (!firstMatch.subscription) {
-          result.failed++;
-          continue;
-        }
-
-        const pushSuccess = await this.telegramService.pushPost(post, firstMatch.subscription);
-        
-        if (pushSuccess) {
-          result.pushed++;
-          console.log(`成功推送文章: ${post.title}`);
-          
-          // 注意：pushPost 方法内部已经更新了状态，这里不需要再次更新
         } else {
-          // 推送失败，保持未推送状态，下次再试
-          result.failed++;
-          console.error(`推送文章失败: ${post.title}`);
+          const firstMatch = matches[0];
+          matchedUpdates.push({
+            postId: post.post_id,
+            pushStatus: 1,
+            subId: firstMatch.subscription?.id
+          });
+          if (firstMatch.subscription) {
+            matchedPostsForPush.push({ post, subscription: firstMatch.subscription });
+          }
+          result.pushed++;
         }
-
-        // 添加延迟避免频率限制
-        if (result.pushed > 0 && result.pushed % 5 === 0) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-
       } catch (error) {
         result.failed++;
-        console.error(`处理文章失败: ${post.title}`, error);
+        console.error(`匹配文章失败: ${post.title}`, error);
       }
     }
 
-    // 批量更新数据库状态
-    if (batchUpdates.length > 0) {
+    // 第二步：批量写入匹配状态（不依赖 Telegram 推送结果）
+    const allUpdates = [...matchedUpdates, ...unmatchedUpdates];
+    if (allUpdates.length > 0) {
       try {
-        this.dbService.batchUpdatePostPushStatus(batchUpdates);
-        console.log(`批量更新完成: ${batchUpdates.length} 条记录`);
+        this.dbService.batchUpdatePostPushStatus(allUpdates);
+        console.log(`匹配处理完成: 已匹配 ${matchedUpdates.length} 篇，未匹配 ${unmatchedUpdates.length} 篇`);
       } catch (error) {
-        console.error('批量更新状态失败:', error);
+        console.error('批量更新匹配状态失败:', error);
       }
     }
 
-    console.log(`推送处理完成: 推送 ${result.pushed} 篇，跳过 ${result.skipped} 篇，失败 ${result.failed} 篇`);
-    
+    // 第三步：尝试推送 Telegram（独立于匹配状态）
+    if (config.stop_push === 1) {
+      console.log('推送已停止，跳过 Telegram 推送');
+    } else if (this.telegramService && config.bot_token && config.chat_id) {
+      let pushSuccess = 0;
+      let pushFail = 0;
+
+      for (const { post, subscription } of matchedPostsForPush) {
+        try {
+          const success = await this.telegramService.pushPost(post, subscription);
+          if (success) {
+            pushSuccess++;
+          } else {
+            pushFail++;
+          }
+
+          if (pushSuccess > 0 && pushSuccess % 5 === 0) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        } catch (error) {
+          pushFail++;
+          console.error(`推送文章到 Telegram 失败: ${post.title}`, error);
+        }
+      }
+      
+      if (matchedPostsForPush.length > 0) {
+        console.log(`Telegram 推送: 成功 ${pushSuccess} 篇，失败 ${pushFail} 篇`);
+      }
+    } else {
+      console.log('未配置 Telegram，跳过推送');
+    }
+
+    console.log(`处理完成: 已匹配 ${result.pushed} 篇，未匹配 ${result.skipped} 篇，失败 ${result.failed} 篇`);
     return result;
   }
 
@@ -405,21 +418,19 @@ export class MatcherService {
     message: string;
   }> {
     try {
+      if (!this.telegramService) {
+        return { success: false, message: '未配置 Telegram 服务' };
+      }
+
       const post = this.dbService.getPostByPostId(postId);
       const subscription = this.dbService.getKeywordSubById(subscriptionId);
 
       if (!post) {
-        return {
-          success: false,
-          message: '文章不存在'
-        };
+        return { success: false, message: '文章不存在' };
       }
 
       if (!subscription) {
-        return {
-          success: false,
-          message: '订阅不存在'
-        };
+        return { success: false, message: '订阅不存在' };
       }
 
       const pushSuccess = await this.telegramService.pushPost(post, subscription);

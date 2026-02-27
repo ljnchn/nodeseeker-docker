@@ -312,6 +312,7 @@ apiRoutes.get('/posts', createQueryValidationMiddleware(paginationSchema), async
             query.limit,
             {
                 pushStatus: query.pushStatus,
+                pushStatusNot: query.pushStatusNot,
                 creator: query.creator,
                 category: query.category,
                 search: query.search
@@ -555,5 +556,90 @@ apiRoutes.post('/telegram/send-test', createValidationMiddleware(z.object({
         }
     } catch (error) {
         return c.json(createErrorResponse(`发送测试消息失败: ${error}`), 500);
+    }
+});
+
+// ==================== RSS 配置接口 ====================
+
+// 获取 RSS 配置
+apiRoutes.get('/rss/config', async (c) => {
+    try {
+        const dbService = c.get('dbService');
+        const config = dbService.getBaseConfig();
+
+        if (!config) {
+            return c.json(createErrorResponse('配置不存在'), 404);
+        }
+
+        return c.json(createSuccessResponse({
+            rss_url: config.rss_url || 'https://rss.nodeseek.com/',
+            rss_interval_seconds: config.rss_interval_seconds || 60,
+            rss_proxy: config.rss_proxy || '',
+        }));
+    } catch (error) {
+        return c.json(createErrorResponse(`获取 RSS 配置失败: ${error}`), 500);
+    }
+});
+
+// 更新 RSS 配置
+apiRoutes.put('/rss/config', createValidationMiddleware(z.object({
+    rss_url: z.string().url().optional(),
+    rss_interval_seconds: z.number().int().min(10).max(3600).optional(),
+    rss_proxy: z.string().optional(),
+})), async (c) => {
+    try {
+        const validatedData = c.get('validatedData');
+        const dbService = c.get('dbService');
+
+        // 更新数据库配置
+        const config = dbService.updateBaseConfig(validatedData);
+
+        if (!config) {
+            return c.json(createErrorResponse('更新 RSS 配置失败'), 500);
+        }
+
+        return c.json(createSuccessResponse({
+            rss_url: config.rss_url,
+            rss_interval_seconds: config.rss_interval_seconds,
+            rss_proxy: config.rss_proxy,
+        }, 'RSS 配置更新成功'));
+    } catch (error) {
+        return c.json(createErrorResponse(`更新 RSS 配置失败: ${error}`), 500);
+    }
+});
+
+// 重启 RSS 任务（在配置更新后调用）
+apiRoutes.post('/rss/restart', async (c) => {
+    try {
+        const { schedulerService } = await import('../server');
+        if (schedulerService) {
+            schedulerService.restartRSSTask();
+            return c.json(createSuccessResponse(null, 'RSS 任务已重启'));
+        } else {
+            return c.json(createErrorResponse('调度服务未启动'), 500);
+        }
+    } catch (error) {
+        return c.json(createErrorResponse(`重启 RSS 任务失败: ${error}`), 500);
+    }
+});
+
+// 测试 RSS 连接
+apiRoutes.post('/rss/test-connection', createValidationMiddleware(z.object({
+    rss_url: z.string().url().optional(),
+})), async (c) => {
+    try {
+        const { rss_url } = c.get('validatedData');
+        const dbService = c.get('dbService');
+        const rssService = new RSSService(dbService);
+
+        // 如果传入了 url 则测试指定 url，否则测试当前配置
+        const testUrl = rss_url;
+        const result = testUrl 
+            ? await rssService.validateRSSUrl(testUrl)
+            : await rssService.validateRSSSource();
+
+        return c.json(createSuccessResponse(result, result.accessible ? 'RSS 源连接测试成功' : 'RSS 源连接测试失败'));
+    } catch (error) {
+        return c.json(createErrorResponse(`RSS 连接测试失败: ${error}`), 500);
     }
 });

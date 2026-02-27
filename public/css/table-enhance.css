@@ -1,0 +1,290 @@
+/* ============================================
+   数据表格优化
+   ============================================ */
+
+.data-table-container {
+    background: var(--bg-card);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.data-table thead {
+    background: var(--bg-secondary);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.data-table th {
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.data-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.data-table th.sortable:hover {
+    background: var(--bg-hover);
+}
+
+.data-table th .sort-icon {
+    margin-left: 4px;
+    opacity: 0.3;
+}
+
+.data-table th.sort-asc .sort-icon,
+.data-table th.sort-desc .sort-icon {
+    opacity: 1;
+    color: var(--primary);
+}
+
+.data-table td {
+    padding: 16px;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text-primary);
+}
+
+.data-table tbody tr {
+    transition: background-color 0.15s;
+}
+
+.data-table tbody tr:hover {
+    background: var(--bg-hover);
+}
+
+.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* 表格行状态 */
+.data-table tbody tr.status-pushed {
+    border-left: 3px solid var(--success);
+}
+
+.data-table tbody tr.status-unpushed {
+    border-left: 3px solid var(--warning);
+}
+
+.data-table tbody tr.status-skipped {
+    border-left: 3px solid var(--text-muted);
+}
+
+/* 空状态 */
+.table-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+
+.table-empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.table-empty-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.table-empty-desc {
+    font-size: 14px;
+}
+
+/* 分页 */
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-top: 1px solid var(--border-color);
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.pagination-info {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.pagination-btn {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--bg-hover);
+}
+
+.pagination-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-btn.prev,
+.pagination-btn.next {
+    padding: 0 16px;
+    gap: 4px;
+}
+
+/* 标签 */
+.tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.tag-blue {
+    background: rgba(33, 150, 243, 0.15);
+    color: var(--primary);
+}
+
+.tag-green {
+    background: rgba(76, 175, 80, 0.15);
+    color: var(--success);
+}
+
+.tag-orange {
+    background: rgba(255, 152, 0, 0.15);
+    color: var(--warning);
+}
+
+.tag-red {
+    background: rgba(244, 67, 54, 0.15);
+    color: var(--danger);
+}
+
+.tag-purple {
+    background: rgba(156, 39, 176, 0.15);
+    color: var(--purple);
+}
+
+.tag-gray {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .tag-gray {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* 移动端表格适配 */
+@media (max-width: 768px) {
+    .data-table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .data-table th,
+    .data-table td {
+        white-space: nowrap;
+    }
+
+    .pagination {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pagination-controls {
+        justify-content: center;
+    }
+}
+
+/* 卡片式列表（移动端替代方案） */
+.card-list {
+    display: none;
+}
+
+@media (max-width: 640px) {
+    .data-table-container {
+        display: none;
+    }
+
+    .card-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .card-list-item {
+        background: var(--bg-card);
+        border-radius: 10px;
+        padding: 16px;
+        box-shadow: var(--shadow);
+        border-left: 3px solid var(--primary);
+    }
+
+    .card-list-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+    }
+
+    .card-list-item-title {
+        font-weight: 500;
+        color: var(--text-primary);
+        font-size: 14px;
+        line-height: 1.4;
+    }
+
+    .card-list-item-meta {
+        display: flex;
+        gap: 12px;
+        font-size: 12px;
+        color: var(--text-muted);
+        flex-wrap: wrap;
+    }
+
+    .card-list-item-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border-light);
+    }
+}

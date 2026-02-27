@@ -1,0 +1,251 @@
+/* ============================================
+   按钮组件 - 简洁统一风格
+   ============================================ */
+
+/* 基础按钮 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-decoration: none;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.btn:hover {
+  background: var(--bg-hover);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+/* 按钮变体 - 实心 */
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+
+.btn-success {
+  background: var(--success);
+  color: white;
+  border-color: var(--success);
+}
+
+.btn-success:hover {
+  background: var(--success-dark);
+  border-color: var(--success-dark);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: white;
+  border-color: var(--danger);
+}
+
+.btn-danger:hover {
+  background: var(--danger-dark);
+  border-color: var(--danger-dark);
+}
+
+.btn-warning {
+  background: var(--warning);
+  color: white;
+  border-color: var(--warning);
+}
+
+.btn-warning:hover {
+  background: var(--warning-dark);
+  border-color: var(--warning-dark);
+}
+
+.btn-purple {
+  background: var(--purple);
+  color: white;
+  border-color: var(--purple);
+}
+
+.btn-purple:hover {
+  background: var(--purple-dark);
+  border-color: var(--purple-dark);
+}
+
+/* 按钮变体 - 描边 */
+.btn-outline {
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.btn-outline:hover {
+  background: var(--bg-hover);
+}
+
+.btn-outline-primary {
+  background: transparent;
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+  background: var(--primary-alpha);
+}
+
+/* 按钮变体 - 幽灵 */
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-secondary);
+}
+
+.btn-ghost:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* 按钮尺寸 */
+.btn-xs {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+.btn-lg {
+  padding: 12px 24px;
+  font-size: 15px;
+  border-radius: 10px;
+}
+
+/* 图标按钮 */
+.btn-icon {
+  padding: 9px;
+}
+
+.btn-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-icon.btn-xs {
+  padding: 4px;
+}
+
+.btn-icon.btn-xs svg {
+  width: 14px;
+  height: 14px;
+}
+
+.btn-icon.btn-sm {
+  padding: 6px;
+}
+
+.btn-icon.btn-sm svg {
+  width: 14px;
+  height: 14px;
+}
+
+.btn-icon.btn-lg {
+  padding: 12px;
+}
+
+.btn-icon.btn-lg svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* 按钮组 */
+.btn-group {
+  display: inline-flex;
+  gap: 0;
+}
+
+.btn-group .btn {
+  border-radius: 0;
+  border-right-width: 0;
+}
+
+.btn-group .btn:first-child {
+  border-radius: 8px 0 0 8px;
+}
+
+.btn-group .btn:last-child {
+  border-radius: 0 8px 8px 0;
+  border-right-width: 1px;
+}
+
+/* 禁用状态 */
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn:disabled:active {
+  transform: none;
+}
+
+/* 块级按钮 */
+.btn-block {
+  width: 100%;
+}
+
+/* 加载状态 */
+.btn.loading {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: btnSpin 0.8s linear infinite;
+}
+
+@keyframes btnSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .btn {
+    padding: 10px 16px;
+  }
+
+  .btn-sm {
+    padding: 8px 14px;
+  }
+
+  .btn-group {
+    display: flex;
+    width: 100%;
+  }
+
+  .btn-group .btn {
+    flex: 1;
+  }
+}

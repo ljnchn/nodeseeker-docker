@@ -18,6 +18,7 @@
 - 🗄️ **SQLite 数据库** - 稳定可靠的本地数据库
 - 🔐 **安全认证** - JWT 认证和密码加密存储
 - 📊 **实时统计** - 详细的推送统计和系统监控
+- ⚙️ **动态 RSS 配置** - 支持在 Web 页面配置 RSS 源地址、抓取间隔和代理
 
 ## 🚀 Docker 部署（推荐）
 
@@ -89,9 +90,9 @@ PORT=3010
 HOST=0.0.0.0
 CORS_ORIGINS=http://localhost:3010,https://your-domain.com
 
-# RSS 配置
+# RSS 配置（仅首次启动默认值，后续可在 Web 页面修改）
 RSS_URL=https://rss.nodeseek.com/
-RSS_CRON_EXPRESSION=*/1 * * * *  # 每分钟检查
+RSS_CHECK_ENABLED=true
 
 # Telegram Bot（可通过 Web 界面配置）
 TELEGRAM_BOT_TOKEN=your-telegram-bot-token
@@ -101,7 +102,15 @@ TELEGRAM_BOT_TOKEN=your-telegram-bot-token
 
 1. **访问应用**: http://localhost:3010
 2. **创建管理员账户**: 首次访问时设置用户名和密码
-3. **配置 Telegram Bot**:
+3. **配置 RSS 源**（可选）:
+   - 进入控制台 **基础设置** 标签页
+   - 在 **RSS 抓取设置** 区域配置：
+     - RSS 源地址（默认: https://rss.nodeseek.com/）
+     - 抓取间隔秒数（默认: 60 秒，最小 10 秒）
+     - HTTP/HTTPS 代理地址（可选）
+   - 点击 **测试连接** 验证 RSS 源可用性
+   - 点击 **保存配置** 保存更改
+4. **配置 Telegram Bot**:
    - 在 Telegram 中找到 @BotFather
    - 发送 `/newbot` 创建新的 Bot
    - 获取 Bot Token 并在系统中配置
@@ -214,6 +223,7 @@ src/
 2. **数据库权限** - 确保 data 目录有写权限
 3. **Telegram Bot 无响应** - 检查 Token 并发送 `/start` 绑定
 4. **RSS 抓取失败** - 检查网络连接和 RSS 源可用性
+5. **RSS 配置不生效** - 修改间隔后需要点击 **重启任务** 按钮
 
 ### 诊断命令
 

@@ -12,7 +12,8 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(powershell:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Skill(superpowers:brainstorming)"
     ],
     "deny": [],
     "ask": []

@@ -1,0 +1,119 @@
+/* ============================================
+   登录/初始化页面样式
+   ============================================ */
+
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(
+        135deg,
+        var(--primary-light) 0%,
+        var(--primary) 100%
+    );
+    padding: 20px;
+}
+
+[data-theme="dark"] .auth-page {
+    background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--bg-card);
+    border-radius: 16px;
+    box-shadow: var(--shadow-hover);
+    padding: 40px;
+    animation: authSlideIn 0.5s ease;
+}
+
+@keyframes authSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.auth-logo {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.auth-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+[data-theme="dark"] .auth-title {
+    color: #ffffff;
+}
+
+.auth-subtitle {
+    color: var(--text-secondary);
+    font-size: 15px;
+}
+
+[data-theme="dark"] .auth-subtitle {
+    color: #c9d1d9;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.auth-form .form-group {
+    margin-bottom: 0;
+}
+
+.auth-form .btn {
+    margin-top: 8px;
+    padding: 14px;
+    font-size: 16px;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+/* 移动端适配 */
+@media (max-width: 480px) {
+    .auth-page {
+        padding: 16px;
+        background: var(--bg-primary);
+    }
+
+    .auth-card {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 24px;
+        animation: none;
+        border: 1px solid var(--border-color);
+    }
+
+    .auth-title {
+        font-size: 24px;
+    }
+
+    .auth-logo {
+        font-size: 40px;
+    }
+}

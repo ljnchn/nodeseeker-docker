@@ -11,6 +11,7 @@ on:
     branches:
       - main
 
+
 env:
   GHCR_REGISTRY: ghcr.io
   DOCKERHUB_REGISTRY: docker.io
