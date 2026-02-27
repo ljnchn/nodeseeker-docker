@@ -4,12 +4,10 @@ import type { Post, RSSItem, ParsedPost, RSSProcessResult } from "../types";
 
 export class RSSService {
   private readonly TIMEOUT: number;
-  private readonly USER_AGENT: string;
 
   constructor(private dbService: DatabaseService) {
     const config = getEnvConfig();
     this.TIMEOUT = config.RSS_TIMEOUT;
-    this.USER_AGENT = config.RSS_USER_AGENT;
   }
 
   /**

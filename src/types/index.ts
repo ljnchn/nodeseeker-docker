@@ -260,13 +260,8 @@ export interface EnvVars {
   HOST: string;
   NODE_ENV: 'development' | 'production' | 'test';
   DATABASE_PATH: string;
-  RSS_URL: string;
   RSS_TIMEOUT: number;
-  RSS_USER_AGENT: string;
   RSS_CHECK_ENABLED: boolean;
-  RSS_CRON_EXPRESSION: string;
-  TELEGRAM_BOT_TOKEN?: string;
   TELEGRAM_WEBHOOK_URL?: string;
   CORS_ORIGINS: string;
-  LOG_LEVEL: 'error' | 'warn' | 'info' | 'debug';
 }

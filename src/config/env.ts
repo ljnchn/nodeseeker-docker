@@ -13,25 +13,17 @@ const envSchema = z.object({
   DATABASE_PATH: z.string().default("./data/nodeseeker.db"),
 
   // RSS
-  RSS_URL: z.string().url().default("https://rss.nodeseek.com/"),
-  RSS_TIMEOUT: z.string().transform(Number).default("30000"), // 增加到30秒
-  RSS_USER_AGENT: z.string().default("NodeSeeker-Bot/1.0"),
+  RSS_TIMEOUT: z.string().transform(Number).default("30000"),
   RSS_CHECK_ENABLED: z
     .string()
     .transform((val) => val !== "false")
     .default("true"),
-  RSS_CRON_EXPRESSION: z.string().default("*/1 * * * *"), // 每分钟执行一次
-  RSS_PROXY: z.string().optional(), // RSS 代理配置，格式: http://host:port 或 http://user:pass@host:port
 
   // Telegram (Optional)
-  TELEGRAM_BOT_TOKEN: z.string().optional(),
   TELEGRAM_WEBHOOK_URL: z.string().url().optional(),
 
   // CORS
   CORS_ORIGINS: z.string().default("http://localhost:3010"),
-
-  // Logging
-  LOG_LEVEL: z.enum(["error", "warn", "info", "debug"]).default("info"),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
