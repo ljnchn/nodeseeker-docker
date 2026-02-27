@@ -39,16 +39,28 @@
   font-size: 22px;
 }
 
-/* 顶部中间搜索区域 */
-.header-center {
-  flex: 1;
-  max-width: 480px;
+/* 统一内容区 */
+.content-wrapper {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 搜索区域 */
+.search-area {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0 12px;
 }
 
 .search-box {
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
+  max-width: 480px;
 }
 
 .search-icon {
@@ -214,9 +226,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 24px;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-color);
+  padding: 8px 0;
 }
 
 .toolbar-left {
@@ -303,8 +313,6 @@
 
 /* 可折叠筛选面板 */
 .filter-panel {
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-color);
   overflow: hidden;
   animation: filterSlideDown 0.2s ease;
 }
@@ -324,7 +332,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 24px;
+  padding: 4px 0 8px;
   flex-wrap: wrap;
 }
 
@@ -404,18 +412,11 @@
 }
 
 /* 帖子列表 */
-.posts-container {
-  flex: 1;
-  padding: 24px;
-  overflow-y: auto;
-}
-
 .posts-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: 1000px;
-  margin: 0 auto;
+  padding: 8px 0;
 }
 
 .post-card {
@@ -556,9 +557,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 24px;
-  border-top: 1px solid var(--border-color);
-  background: var(--bg-secondary);
+  padding: 16px 0 24px;
 }
 
 .pagination-info {
@@ -1097,30 +1096,18 @@
 @media (max-width: 768px) {
   .home-header {
     padding: 10px 16px;
-    flex-wrap: wrap;
-  }
-
-  .header-center {
-    order: 3;
-    flex-basis: 100%;
-    max-width: none;
-    margin-top: 8px;
   }
 
   .logo-text {
     display: none;
   }
 
-  .toolbar {
-    padding: 10px 16px;
+  .content-wrapper {
+    padding: 0 16px;
   }
 
-  .filter-panel-inner {
-    padding: 10px 16px;
-  }
-
-  .posts-container {
-    padding: 16px;
+  .search-area {
+    padding: 16px 0 8px;
   }
 
   .post-card {
@@ -1130,7 +1117,7 @@
   .pagination-wrapper {
     flex-direction: column;
     gap: 14px;
-    padding: 16px;
+    padding: 12px 0 20px;
   }
 
   .drawer {

@@ -15,26 +15,6 @@ export const HomePage: FC = () => {
             <span class="logo-icon">📡</span>
             <span class="logo-text">NodeSeeker</span>
           </a>
-
-          <div class="header-center">
-            <div class="search-box">
-              <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
-              </svg>
-              <input
-                type="text"
-                id="searchInput"
-                placeholder="搜索标题、作者..."
-                class="search-input"
-              />
-              <button id="clearSearchBtn" class="search-clear" style="display: none;">
-                <svg viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-
           <div class="header-actions">
             <button id="themeToggleBtn" class="icon-btn" title="切换主题">
               <svg viewBox="0 0 20 20" fill="currentColor">
@@ -69,57 +49,78 @@ export const HomePage: FC = () => {
           </div>
         </header>
 
-        {/* 工具栏 */}
-        <div class="toolbar">
-          <div class="toolbar-left">
-            <label class="toggle-chip" id="subscribedOnlyChip">
-              <input type="checkbox" id="subscribedOnlyToggle" />
-              <span class="toggle-chip-label">只看订阅</span>
-            </label>
-            <button id="filterToggleBtn" class="filter-toggle-btn" title="更多筛选">
-              <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-                <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd"/>
+        {/* 主内容区 - 统一宽度 */}
+        <div class="content-wrapper">
+          {/* 搜索框 居中 */}
+          <div class="search-area">
+            <div class="search-box">
+              <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
               </svg>
-              <span>筛选</span>
-            </button>
+              <input
+                type="text"
+                id="searchInput"
+                placeholder="搜索标题、作者..."
+                class="search-input"
+              />
+              <button id="clearSearchBtn" class="search-clear" style="display: none;">
+                <svg viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                </svg>
+              </button>
+            </div>
           </div>
-          <div class="toolbar-right">
-            <button id="refreshBtn" class="btn btn-icon" title="刷新">
-              <svg viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
-              </svg>
-            </button>
-            <button id="fetchRssBtn" class="btn btn-primary">
-              抓取 RSS
-            </button>
-          </div>
-        </div>
 
-        {/* 可折叠筛选面板 */}
-        <div id="filterPanel" class="filter-panel" style="display: none;">
-          <div class="filter-panel-inner">
-            <select id="filterCategory" class="filter-select">
-              <option value="">全部分类</option>
-              <option value="daily">日常</option>
-              <option value="tech">技术</option>
-              <option value="info">情报</option>
-              <option value="review">测评</option>
-              <option value="trade">交易</option>
-              <option value="carpool">拼车</option>
-              <option value="promotion">推广</option>
-              <option value="life">生活</option>
-              <option value="dev">Dev</option>
-              <option value="expose">曝光</option>
-              <option value="inside">内版</option>
-              <option value="sandbox">沙盒</option>
-            </select>
-            <input type="text" id="filterCreator" placeholder="作者筛选" class="filter-input" />
-            <button id="clearFiltersBtn" class="btn btn-text">清除筛选</button>
+          {/* 工具栏 */}
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <label class="toggle-chip" id="subscribedOnlyChip">
+                <input type="checkbox" id="subscribedOnlyToggle" />
+                <span class="toggle-chip-label">只看订阅</span>
+              </label>
+              <button id="filterToggleBtn" class="filter-toggle-btn" title="更多筛选">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                  <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd"/>
+                </svg>
+                <span>筛选</span>
+              </button>
+            </div>
+            <div class="toolbar-right">
+              <button id="refreshBtn" class="btn btn-icon" title="刷新">
+                <svg viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                </svg>
+              </button>
+              <button id="fetchRssBtn" class="btn btn-primary">
+                抓取 RSS
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* 帖子列表 */}
-        <main class="posts-container">
+          {/* 可折叠筛选面板 */}
+          <div id="filterPanel" class="filter-panel" style="display: none;">
+            <div class="filter-panel-inner">
+              <select id="filterCategory" class="filter-select">
+                <option value="">全部分类</option>
+                <option value="daily">日常</option>
+                <option value="tech">技术</option>
+                <option value="info">情报</option>
+                <option value="review">测评</option>
+                <option value="trade">交易</option>
+                <option value="carpool">拼车</option>
+                <option value="promotion">推广</option>
+                <option value="life">生活</option>
+                <option value="dev">Dev</option>
+                <option value="expose">曝光</option>
+                <option value="inside">内版</option>
+                <option value="sandbox">沙盒</option>
+              </select>
+              <input type="text" id="filterCreator" placeholder="作者筛选" class="filter-input" />
+              <button id="clearFiltersBtn" class="btn btn-text">清除筛选</button>
+            </div>
+          </div>
+
+          {/* 帖子列表 */}
           <div id="postsList" class="posts-list">
             {/* 骨架屏 */}
             <div class="skeleton-wrapper">
@@ -143,21 +144,21 @@ export const HomePage: FC = () => {
             <div class="empty-title">暂无文章</div>
             <div class="empty-desc">点击右上角"抓取 RSS"按钮获取最新文章</div>
           </div>
-        </main>
 
-        {/* 分页 */}
-        <div id="pagination" class="pagination-wrapper" style="display: none;">
-          <div class="pagination-info">
-            <span id="paginationInfo">第 1 页，共 0 条记录</span>
-          </div>
-          <div class="pagination-controls">
-            <button id="prevPageBtn" class="pagination-btn" disabled>
-              ← 上一页
-            </button>
-            <div id="pageNumbers" class="page-numbers"></div>
-            <button id="nextPageBtn" class="pagination-btn" disabled>
-              下一页 →
-            </button>
+          {/* 分页 */}
+          <div id="pagination" class="pagination-wrapper" style="display: none;">
+            <div class="pagination-info">
+              <span id="paginationInfo">第 1 页，共 0 条记录</span>
+            </div>
+            <div class="pagination-controls">
+              <button id="prevPageBtn" class="pagination-btn" disabled>
+                ← 上一页
+              </button>
+              <div id="pageNumbers" class="page-numbers"></div>
+              <button id="nextPageBtn" class="pagination-btn" disabled>
+                下一页 →
+              </button>
+            </div>
           </div>
         </div>
       </div>
