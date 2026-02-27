@@ -22,6 +22,9 @@ export const baseConfigUpdateSchema = z.object({
     bound_user_username: z.string().optional(),
     stop_push: z.union([z.number().int().min(0).max(1), z.boolean().transform(val => val ? 1 : 0)]).optional(),
     only_title: z.union([z.number().int().min(0).max(1), z.boolean().transform(val => val ? 1 : 0)]).optional(),
+    rss_url: z.string().url('RSS URL格式不正确').optional(),
+    rss_interval_seconds: z.number().int().min(10).max(3600).optional(),
+    rss_proxy: z.string().optional(),
 });
 
 // 文章验证 Schema

@@ -3,7 +3,7 @@ import { app, initializeApp, startServer } from './index';
 import { DatabaseService } from './services/database';
 import { SchedulerService } from './services/scheduler';
 
-let schedulerService: SchedulerService | null = null;
+export let schedulerService: SchedulerService | null = null;
 
 // 启动服务器
 async function main() {

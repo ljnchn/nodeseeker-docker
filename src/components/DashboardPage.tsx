@@ -101,6 +101,124 @@ export const DashboardPage: FC = () => {
             <div class="tabs-content">
               {/* 基础设置内容 */}
               <div id="config" class="tab-panel active">
+                <h2 class="section-title">📡 RSS 源配置</h2>
+
+                {/* RSS 源配置 */}
+                <section class="config-section">
+                  <h3 class="config-section-title">
+                    📡 RSS 抓取设置
+                    <span class="status-badge active" id="rssServiceStatus">
+                      运行中
+                    </span>
+                  </h3>
+
+                  <form id="rssConfigForm" class="form-stack">
+                    <div class="form-group">
+                      <label for="rssUrl" class="form-label">
+                        RSS 源地址
+                      </label>
+                      <div class="input-group">
+                        <input
+                          type="url"
+                          id="rssUrl"
+                          name="rssUrl"
+                          placeholder="https://rss.nodeseek.com/"
+                          class="input-field"
+                        />
+                        <button
+                          type="button"
+                          id="testRssConnectionBtn"
+                          class="btn btn-secondary"
+                        >
+                          🔗 测试连接
+                        </button>
+                      </div>
+                      <p class="help-text">
+                        💡 支持标准的 RSS/Atom 格式，默认使用 NodeSeek 官方 RSS
+                      </p>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="rssInterval" class="form-label">
+                        抓取间隔（秒）
+                      </label>
+                      <input
+                        type="number"
+                        id="rssInterval"
+                        name="rssInterval"
+                        min="10"
+                        max="3600"
+                        placeholder="60"
+                        class="input-field"
+                        style={{ width: "200px" }}
+                      />
+                      <p class="help-text">
+                        💡 最小 10 秒，建议 60 秒以上，避免对源站造成压力
+                      </p>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="rssProxy" class="form-label">
+                        代理地址（可选）
+                      </label>
+                      <input
+                        type="text"
+                        id="rssProxy"
+                        name="rssProxy"
+                        placeholder="http://127.0.0.1:7890 或 http://user:pass@host:port"
+                        class="input-field"
+                      />
+                      <p class="help-text">
+                        💡 如需代理访问 RSS 源，请填写 HTTP/HTTPS 代理地址，留空则不使用代理
+                      </p>
+                    </div>
+
+                    <div class="action-bar">
+                      <button type="submit" class="btn btn-primary">
+                        💾 保存配置
+                      </button>
+                      <button
+                        type="button"
+                        id="restartRssTaskBtn"
+                        class="btn btn-warning"
+                      >
+                        🔄 重启任务
+                      </button>
+                    </div>
+                  </form>
+
+                  {/* RSS 状态信息 */}
+                  <div id="rssStatusInfo" class="info-panel" style="display: none;">
+                    <h4
+                      style={{
+                        fontSize: "14px",
+                        marginBottom: "12px",
+                        color: "var(--text-primary)",
+                      }}
+                    >
+                      RSS 服务状态
+                    </h4>
+                    <div class="info-grid">
+                      <div class="info-item">
+                        <strong>当前 URL:</strong>{" "}
+                        <span id="currentRssUrl">-</span>
+                      </div>
+                      <div class="info-item">
+                        <strong>抓取间隔:</strong>{" "}
+                        <span id="currentRssInterval">-</span> 秒
+                      </div>
+                      <div class="info-item">
+                        <strong>代理状态:</strong>{" "}
+                        <span id="currentRssProxy">-</span>
+                      </div>
+                      <div class="info-item">
+                        <strong>任务状态:</strong>{" "}
+                        <span id="rssTaskRunning">运行中</span>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
                 <h2 class="section-title">🤖 Telegram Bot 设置</h2>
 
                 {/* 推送服务配置 */}

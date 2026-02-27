@@ -1,4 +1,3 @@
-import * as cron from 'node-cron';
 import { DatabaseService } from './database';
 import { RSSService } from './rss';
 import { TelegramPushService } from './telegram/push';
@@ -6,24 +5,35 @@ import { MatcherService } from './matcher';
 import { getEnvConfig } from '../config/env';
 
 export class SchedulerService {
-    private rssTask?: cron.ScheduledTask;
+    private rssIntervalId?: NodeJS.Timeout;
     private dbService: DatabaseService;
+    private isRunning: boolean = false;
 
     constructor(dbService: DatabaseService) {
         this.dbService = dbService;
     }
 
     /**
+     * 获取 RSS 间隔秒数（从数据库）
+     */
+    private getRSSIntervalSeconds(): number {
+        const config = this.dbService.getBaseConfig();
+        // 默认 60 秒，最小 10 秒
+        const seconds = config?.rss_interval_seconds || 60;
+        return Math.max(10, seconds);
+    }
+
+    /**
      * 启动所有定时任务
      */
     start(): void {
-        const config = getEnvConfig();
+        const envConfig = getEnvConfig();
 
         console.log('🕐 启动定时任务服务...');
 
         // RSS 抓取和推送任务
-        if (config.RSS_CHECK_ENABLED) {
-            this.startRSSTask(config.RSS_CRON_EXPRESSION);
+        if (envConfig.RSS_CHECK_ENABLED) {
+            this.startRSSTask();
         }
 
         console.log('✅ 定时任务服务启动完成');
@@ -35,25 +45,32 @@ export class SchedulerService {
     stop(): void {
         console.log('🛑 停止定时任务服务...');
 
-        if (this.rssTask) {
-            this.rssTask.stop();
-            this.rssTask = undefined;
+        if (this.rssIntervalId) {
+            clearInterval(this.rssIntervalId);
+            this.rssIntervalId = undefined;
         }
+        this.isRunning = false;
 
         console.log('✅ 定时任务服务已停止');
     }
 
     /**
-     * 启动 RSS 抓取和推送任务
+     * 启动 RSS 抓取和推送任务（使用 setInterval 实现秒级间隔）
      */
-    private startRSSTask(cronExpression: string): void {
-        console.log(`📡 启动 RSS 任务，执行频率: ${cronExpression}`);
+    private startRSSTask(): void {
+        const intervalSeconds = this.getRSSIntervalSeconds();
+        console.log(`📡 启动 RSS 任务，执行间隔: ${intervalSeconds} 秒`);
 
-        this.rssTask = cron.schedule(cronExpression, async () => {
+        this.isRunning = true;
+        
+        // 立即执行一次
+        this.executeRSSTask();
+
+        // 设置定时执行
+        this.rssIntervalId = setInterval(async () => {
+            if (!this.isRunning) return;
             await this.executeRSSTask();
-        }, {
-            timezone: 'Asia/Shanghai'
-        });
+        }, intervalSeconds * 1000);
     }
 
 
@@ -133,28 +150,64 @@ export class SchedulerService {
     getStatus(): {
         rssTask: {
             running: boolean;
+            intervalSeconds: number;
         };
     } {
         return {
             rssTask: {
-                running: this.rssTask ? true : false
+                running: this.isRunning,
+                intervalSeconds: this.getRSSIntervalSeconds()
             }
         };
     }
 
     /**
-     * 重启 RSS 任务
+     * 重启 RSS 任务（用于配置更新后）
      */
     restartRSSTask(): void {
-        if (this.rssTask) {
-            this.rssTask.stop();
+        console.log('🔄 正在重启 RSS 任务...');
+        
+        // 停止现有任务
+        if (this.rssIntervalId) {
+            clearInterval(this.rssIntervalId);
+            this.rssIntervalId = undefined;
         }
+        this.isRunning = false;
 
-        const config = getEnvConfig();
-        if (config.RSS_CHECK_ENABLED) {
-            this.startRSSTask(config.RSS_CRON_EXPRESSION);
-            console.log('🔄 RSS 任务已重启');
+        // 重新启动
+        const envConfig = getEnvConfig();
+        if (envConfig.RSS_CHECK_ENABLED) {
+            this.startRSSTask();
+            const intervalSeconds = this.getRSSIntervalSeconds();
+            console.log(`✅ RSS 任务已重启，新间隔: ${intervalSeconds} 秒`);
         }
     }
 
+    /**
+     * 更新 RSS 间隔并重启任务
+     */
+    async updateIntervalAndRestart(newIntervalSeconds: number): Promise<{ success: boolean; message: string }> {
+        try {
+            // 验证参数
+            const validInterval = Math.max(10, newIntervalSeconds);
+            
+            // 更新数据库
+            this.dbService.updateBaseConfig({
+                rss_interval_seconds: validInterval
+            });
+
+            // 重启任务
+            this.restartRSSTask();
+
+            return {
+                success: true,
+                message: `RSS 抓取间隔已更新为 ${validInterval} 秒`
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: `更新间隔失败: ${error}`
+            };
+        }
+    }
 }

@@ -89,6 +89,9 @@ Authorization: Bearer <token>
     "bound_user_username": "johndoe",
     "stop_push": 0,
     "only_title": 0,
+    "rss_url": "https://rss.nodeseek.com/",
+    "rss_interval_seconds": 60,
+    "rss_proxy": null,
     "created_at": "2024-01-01T00:00:00.000Z",
     "updated_at": "2024-01-01T00:00:00.000Z"
   }
@@ -104,7 +107,10 @@ Content-Type: application/json
 {
   "chat_id": "987654321",
   "stop_push": 0,
-  "only_title": 1
+  "only_title": 1,
+  "rss_url": "https://rss.nodeseek.com/",
+  "rss_interval_seconds": 60,
+  "rss_proxy": "http://127.0.0.1:7890"
 }
 ```
 
@@ -296,10 +302,53 @@ Authorization: Bearer <token>
 }
 ```
 
-### 验证 RSS 源
+### RSS 配置管理
+
+#### 获取 RSS 配置
 ```http
-GET /api/rss/validate
+GET /api/rss/config
 Authorization: Bearer <token>
+```
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "data": {
+    "rss_url": "https://rss.nodeseek.com/",
+    "rss_interval_seconds": 60,
+    "rss_proxy": ""
+  }
+}
+```
+
+#### 更新 RSS 配置
+```http
+PUT /api/rss/config
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "rss_url": "https://rss.nodeseek.com/",
+  "rss_interval_seconds": 60,
+  "rss_proxy": "http://127.0.0.1:7890"
+}
+```
+
+**参数说明**:
+- `rss_url`: RSS 源地址（可选）
+- `rss_interval_seconds`: 抓取间隔秒数，范围 10-3600（可选）
+- `rss_proxy`: HTTP/HTTPS 代理地址，留空表示不使用代理（可选）
+
+#### 测试 RSS 连接
+```http
+POST /api/rss/test-connection
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "rss_url": "https://rss.nodeseek.com/"
+}
 ```
 
 **响应示例**:
@@ -310,6 +359,21 @@ Authorization: Bearer <token>
     "accessible": true,
     "message": "RSS 源可正常访问"
   }
+}
+```
+
+#### 重启 RSS 任务
+修改抓取间隔后需要重启任务才能生效：
+```http
+POST /api/rss/restart
+Authorization: Bearer <token>
+```
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "message": "RSS 任务已重启"
 }
 ```
 
@@ -442,6 +506,9 @@ interface BaseConfig {
   bound_user_username?: string;
   stop_push: number;
   only_title: number;
+  rss_url?: string;           // RSS 源地址
+  rss_interval_seconds?: number;  // 抓取间隔秒数
+  rss_proxy?: string;         // HTTP/HTTPS 代理地址
   created_at?: string;
   updated_at?: string;
 }

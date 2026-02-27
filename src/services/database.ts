@@ -89,8 +89,8 @@ export class DatabaseService {
 
   createBaseConfig(config: Omit<BaseConfig, 'id' | 'created_at' | 'updated_at'>): BaseConfig {
     const stmt = this.db.query(`
-      INSERT INTO base_config (username, password, bot_token, chat_id, bound_user_name, bound_user_username, stop_push, only_title)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO base_config (username, password, bot_token, chat_id, bound_user_name, bound_user_username, stop_push, only_title, rss_url, rss_interval_seconds, rss_proxy)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       RETURNING *
     `);
     
@@ -102,7 +102,10 @@ export class DatabaseService {
       config.bound_user_name || null,
       config.bound_user_username || null,
       config.stop_push,
-      config.only_title
+      config.only_title,
+      config.rss_url || 'https://rss.nodeseek.com/',
+      config.rss_interval_seconds || 60,
+      config.rss_proxy || null
     ) as BaseConfig;
     
     // 清理相关缓存
@@ -146,6 +149,18 @@ export class DatabaseService {
     if (config.only_title !== undefined) {
       updates.push('only_title = ?');
       values.push(config.only_title);
+    }
+    if (config.rss_url !== undefined) {
+      updates.push('rss_url = ?');
+      values.push(config.rss_url);
+    }
+    if (config.rss_interval_seconds !== undefined) {
+      updates.push('rss_interval_seconds = ?');
+      values.push(config.rss_interval_seconds);
+    }
+    if (config.rss_proxy !== undefined) {
+      updates.push('rss_proxy = ?');
+      values.push(config.rss_proxy);
     }
 
     if (updates.length === 0) {

@@ -252,9 +252,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // 加载配置
   async function loadConfig() {
-    const result = await apiRequest("/api/config");
-    if (result?.success) {
-      const config = result.data;
+    const [configResult, rssConfigResult] = await Promise.allSettled([
+      apiRequest("/api/config"),
+      apiRequest("/api/rss/config"),
+    ]);
+
+    // 处理基础配置
+    if (configResult.status === "fulfilled" && configResult.value?.success) {
+      const config = configResult.value.data;
 
       const botToken = document.getElementById("botToken");
       const userChatId = document.getElementById("userChatId");
@@ -274,6 +279,34 @@ document.addEventListener("DOMContentLoaded", function () {
         onlyTitleCheckbox.checked = config.only_title === 1;
 
       await loadTelegramStatus();
+    }
+
+    // 处理 RSS 配置
+    if (rssConfigResult.status === "fulfilled" && rssConfigResult.value?.success) {
+      const rssConfig = rssConfigResult.value.data;
+
+      const rssUrl = document.getElementById("rssUrl");
+      const rssInterval = document.getElementById("rssInterval");
+      const rssProxy = document.getElementById("rssProxy");
+
+      if (rssUrl) rssUrl.value = rssConfig.rss_url || "";
+      if (rssInterval) rssInterval.value = rssConfig.rss_interval_seconds || 60;
+      if (rssProxy) rssProxy.value = rssConfig.rss_proxy || "";
+
+      // 更新 RSS 状态显示
+      updateRssStatusInfo(rssConfig);
+    }
+  }
+
+  // 更新 RSS 状态信息显示
+  function updateRssStatusInfo(config) {
+    const rssStatusInfo = document.getElementById("rssStatusInfo");
+    if (rssStatusInfo) {
+      rssStatusInfo.style.display = "block";
+      document.getElementById("currentRssUrl").textContent = config.rss_url || "-";
+      document.getElementById("currentRssInterval").textContent = config.rss_interval_seconds || 60;
+      document.getElementById("currentRssProxy").textContent = config.rss_proxy ? "已启用" : "未使用";
+      document.getElementById("rssTaskRunning").textContent = "运行中";
     }
   }
 
@@ -878,6 +911,100 @@ document.addEventListener("DOMContentLoaded", function () {
         await updateStatusCards();
         Toast.success("所有状态已刷新");
       });
+  }
+
+  // RSS 配置表单
+  document
+    .getElementById("rssConfigForm")
+    ?.addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const rssUrl = document.getElementById("rssUrl").value.trim();
+      const rssInterval = parseInt(document.getElementById("rssInterval").value, 10);
+      const rssProxy = document.getElementById("rssProxy").value.trim();
+
+      const data = {};
+      if (rssUrl) data.rss_url = rssUrl;
+      if (rssInterval && rssInterval >= 10) data.rss_interval_seconds = rssInterval;
+      // 代理地址可以为空字符串（清空代理）
+      data.rss_proxy = rssProxy;
+
+      if (Object.keys(data).length === 0) {
+        Toast.warning("没有需要保存的更改");
+        return;
+      }
+
+      Toast.info("正在保存 RSS 配置...");
+
+      const result = await apiRequest("/api/rss/config", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+
+      if (result?.success) {
+        Toast.success("RSS 配置保存成功");
+        updateRssStatusInfo(result.data);
+
+        // 如果间隔时间有变化，询问是否重启任务
+        if (data.rss_interval_seconds !== undefined) {
+          const shouldRestart = confirm("抓取间隔已更改，是否立即重启 RSS 任务以应用新设置？");
+          if (shouldRestart) {
+            await restartRssTask();
+          }
+        }
+      } else {
+        Toast.error(result?.message || "RSS 配置保存失败");
+      }
+    });
+
+  // 测试 RSS 连接按钮
+  document
+    .getElementById("testRssConnectionBtn")
+    ?.addEventListener("click", async function () {
+      const rssUrl = document.getElementById("rssUrl").value.trim();
+
+      Toast.info("正在测试 RSS 源连接...");
+
+      const data = {};
+      if (rssUrl) data.rss_url = rssUrl;
+
+      const result = await apiRequest("/api/rss/test-connection", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+
+      if (result?.success) {
+        if (result.data.accessible) {
+          Toast.success("RSS 源连接测试成功！");
+        } else {
+          Toast.error("RSS 源连接失败：" + result.data.message);
+        }
+      } else {
+        Toast.error(result?.message || "RSS 连接测试失败");
+      }
+    });
+
+  // 重启 RSS 任务按钮
+  document
+    .getElementById("restartRssTaskBtn")
+    ?.addEventListener("click", async function () {
+      if (!confirm("确定要重启 RSS 任务吗？")) return;
+      await restartRssTask();
+    });
+
+  // 重启 RSS 任务函数
+  async function restartRssTask() {
+    Toast.info("正在重启 RSS 任务...");
+
+    const result = await apiRequest("/api/rss/restart", {
+      method: "POST",
+    });
+
+    if (result?.success) {
+      Toast.success("RSS 任务已重启");
+    } else {
+      Toast.error(result?.message || "重启 RSS 任务失败");
+    }
   }
 
   // 推送设置表单

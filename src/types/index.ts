@@ -9,6 +9,9 @@ export interface BaseConfig {
   bound_user_username?: string;
   stop_push: number;
   only_title: number;
+  rss_url?: string;
+  rss_interval_seconds?: number;
+  rss_proxy?: string;
   created_at?: string;
   updated_at?: string;
 }

@@ -3,17 +3,32 @@ import { getEnvConfig } from "../config/env";
 import type { Post, RSSItem, ParsedPost, RSSProcessResult } from "../types";
 
 export class RSSService {
-  private readonly RSS_URL: string;
   private readonly TIMEOUT: number;
   private readonly USER_AGENT: string;
-  private readonly PROXY: string | undefined;
 
   constructor(private dbService: DatabaseService) {
     const config = getEnvConfig();
-    this.RSS_URL = config.RSS_URL;
     this.TIMEOUT = config.RSS_TIMEOUT;
     this.USER_AGENT = config.RSS_USER_AGENT;
-    this.PROXY = config.RSS_PROXY;
+  }
+
+  /**
+   * 获取代理配置（从数据库）
+   */
+  private getProxy(): string | undefined {
+    const config = this.dbService.getBaseConfig();
+    return config?.rss_proxy || undefined;
+  }
+
+  /**
+   * 获取 RSS 配置（从数据库）
+   */
+  private getRSSConfig(): { url: string; intervalSeconds: number } {
+    const config = this.dbService.getBaseConfig();
+    return {
+      url: config?.rss_url || "https://rss.nodeseek.com/",
+      intervalSeconds: config?.rss_interval_seconds || 60,
+    };
   }
 
   /**
@@ -99,11 +114,13 @@ export class RSSService {
     let timeoutId: NodeJS.Timeout | undefined;
 
     try {
+      const rssConfig = this.getRSSConfig();
       console.log("开始抓取 RSS 数据...");
-      console.log(`RSS URL: ${this.RSS_URL}`);
+      console.log(`RSS URL: ${rssConfig.url}`);
       console.log(`超时设置: ${this.TIMEOUT}ms`);
-      if (this.PROXY) {
-        console.log(`使用代理: ${this.PROXY}`);
+      const proxy = this.getProxy();
+      if (proxy) {
+        console.log(`使用代理: ${proxy}`);
       }
 
       controller = new AbortController();
@@ -139,11 +156,11 @@ export class RSSService {
       };
 
       // 如果配置了代理，添加代理选项
-      if (this.PROXY) {
-        (fetchOptions as any).proxy = this.PROXY;
+      if (proxy) {
+        (fetchOptions as any).proxy = proxy;
       }
 
-      const response = await fetch(this.RSS_URL, fetchOptions);
+      const response = await fetch(rssConfig.url, fetchOptions);
 
       if (timeoutId) {
         clearTimeout(timeoutId);
@@ -320,7 +337,7 @@ export class RSSService {
           try {
             const postsWithDefaults = newPostsToCreate.map((post) => ({
               ...post,
-              push_status: 0, // 默认未推送
+              push_status: 2, // 默认无需推送
             }));
 
             const createdCount =
@@ -401,9 +418,17 @@ export class RSSService {
   }
 
   /**
-   * 验证 RSS 源是否可访问
+   * 验证 RSS 源是否可访问（使用数据库配置的 URL）
    */
   async validateRSSSource(): Promise<{ accessible: boolean; message: string }> {
+    const rssConfig = this.getRSSConfig();
+    return this.validateRSSUrl(rssConfig.url);
+  }
+
+  /**
+   * 验证指定 RSS URL 是否可访问
+   */
+  async validateRSSUrl(url: string): Promise<{ accessible: boolean; message: string }> {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -433,11 +458,12 @@ export class RSSService {
       };
 
       // 如果配置了代理，添加代理选项
-      if (this.PROXY) {
-        (fetchOptions as any).proxy = this.PROXY;
+      const proxy = this.getProxy();
+      if (proxy) {
+        (fetchOptions as any).proxy = proxy;
       }
 
-      const response = await fetch(this.RSS_URL, fetchOptions);
+      const response = await fetch(url, fetchOptions);
 
       clearTimeout(timeoutId);
 
@@ -458,5 +484,12 @@ export class RSSService {
         message: `RSS 源访问失败: ${error}`,
       };
     }
+  }
+
+  /**
+   * 获取当前 RSS 配置
+   */
+  getRSSConfigFromDB(): { url: string; intervalSeconds: number } {
+    return this.getRSSConfig();
   }
 }
