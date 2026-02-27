@@ -1,4 +1,4 @@
-import type { FC, PropsWithChildren } from 'hono/jsx';
+import type { FC, PropsWithChildren } from "hono/jsx";
 
 interface LayoutProps {
   title?: string;
@@ -6,11 +6,11 @@ interface LayoutProps {
   scriptSrc?: string;
 }
 
-export const Layout: FC<PropsWithChildren<LayoutProps>> = ({ 
-  title = 'NodeSeek RSS 监控', 
+export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
+  title = "NodeSeek RSS 监控",
   description,
   scriptSrc,
-  children 
+  children,
 }) => {
   return (
     <html>
@@ -19,7 +19,40 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         {description && <meta name="description" content={description} />}
+
+        {/* 基础样式 */}
         <link href="/css/style.css" rel="stylesheet" />
+
+        {/* 主题系统 */}
+        <link href="/css/theme.css" rel="stylesheet" />
+
+        {/* 组件样式 */}
+        <link href="/css/buttons.css" rel="stylesheet" />
+        <link href="/css/form-enhance.css" rel="stylesheet" />
+        <link href="/css/tabs.css" rel="stylesheet" />
+        <link href="/css/table-enhance.css" rel="stylesheet" />
+        <link href="/css/toast.css" rel="stylesheet" />
+        <link href="/css/skeleton.css" rel="stylesheet" />
+        <link href="/css/dashboard.css" rel="stylesheet" />
+        <link href="/css/auth.css" rel="stylesheet" />
+
+        {/* 主题初始化脚本 - 防止闪烁 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+            (function() {
+              const savedTheme = localStorage.getItem('theme');
+              if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+              } else if (savedTheme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+              } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+              }
+            })();
+          `,
+          }}
+        />
       </head>
       <body>
         {children}
@@ -30,18 +63,18 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
 };
 
 // 专门的页面布局组件
-export const PageLayout: FC<PropsWithChildren<LayoutProps & { containerClass?: string }>> = ({
+export const PageLayout: FC<
+  PropsWithChildren<LayoutProps & { containerClass?: string }>
+> = ({
   title,
   description,
   scriptSrc,
-  containerClass = 'container',
-  children
+  containerClass = "container",
+  children,
 }) => {
   return (
     <Layout title={title} description={description} scriptSrc={scriptSrc}>
-      <div class={containerClass}>
-        {children}
-      </div>
+      <div class={containerClass}>{children}</div>
     </Layout>
   );
 };

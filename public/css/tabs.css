@@ -1,0 +1,217 @@
+/* ============================================
+   标签页导航优化
+   ============================================ */
+
+.tabs-container {
+    background: var(--bg-card);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.tabs-header {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.tabs-header::-webkit-scrollbar {
+    display: none;
+}
+
+.tab-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.tab-item:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.tab-item.active {
+    color: var(--primary);
+}
+
+.tab-item.active::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary);
+}
+
+.tab-item .tab-icon {
+    font-size: 16px;
+}
+
+.tab-item .tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    background: var(--danger);
+    border-radius: 10px;
+}
+
+.tabs-content {
+    padding: 24px;
+}
+
+.tab-panel {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 垂直标签页 */
+.tabs-vertical {
+    display: flex;
+    gap: 0;
+}
+
+.tabs-vertical .tabs-header {
+    flex-direction: column;
+    border-bottom: none;
+    border-right: 1px solid var(--border-color);
+    min-width: 200px;
+}
+
+.tabs-vertical .tab-item {
+    justify-content: flex-start;
+    border-right: 3px solid transparent;
+}
+
+.tabs-vertical .tab-item.active::after {
+    display: none;
+}
+
+.tabs-vertical .tab-item.active {
+    background: rgba(33, 150, 243, 0.05);
+    border-right-color: var(--primary);
+}
+
+.tabs-vertical .tabs-content {
+    flex: 1;
+}
+
+/* 卡片式标签页 */
+.tabs-card .tab-item {
+    margin: 8px 4px;
+    padding: 10px 20px;
+    border-radius: 8px;
+}
+
+.tabs-card .tab-item.active {
+    background: var(--primary);
+    color: white;
+}
+
+.tabs-card .tab-item.active::after {
+    display: none;
+}
+
+/* 胶囊式标签页 */
+.tabs-pill .tabs-header {
+    background: transparent;
+    border-bottom: none;
+    padding: 12px;
+    gap: 8px;
+}
+
+.tabs-pill .tab-item {
+    padding: 10px 20px;
+    border-radius: 20px;
+}
+
+.tabs-pill .tab-item.active {
+    background: var(--primary);
+    color: white;
+}
+
+.tabs-pill .tab-item.active::after {
+    display: none;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .tab-item {
+        padding: 14px 16px;
+        font-size: 13px;
+    }
+
+    .tab-item .tab-icon {
+        font-size: 18px;
+    }
+
+    .tab-item .tab-text {
+        display: none;
+    }
+
+    .tabs-content {
+        padding: 16px;
+    }
+
+    .tabs-vertical {
+        flex-direction: column;
+    }
+
+    .tabs-vertical .tabs-header {
+        flex-direction: row;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        min-width: auto;
+    }
+
+    .tabs-vertical .tab-item {
+        border-right: none;
+        border-bottom: 3px solid transparent;
+    }
+
+    .tabs-vertical .tab-item.active {
+        border-right-color: transparent;
+        border-bottom-color: var(--primary);
+    }
+}
+
+/* 小屏幕显示文字 */
+@media (max-width: 480px) {
+    .tab-item .tab-text {
+        display: inline;
+    }
+}
