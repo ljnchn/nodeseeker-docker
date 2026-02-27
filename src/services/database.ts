@@ -602,7 +602,7 @@ export class DatabaseService {
     const today = new Date().toISOString().split('T')[0];
     const stmt = this.db.query(`
       SELECT COUNT(*) as count FROM posts
-      WHERE push_status = 1 AND date(push_date) = date(?)
+      WHERE push_status = 1 AND date(created_at) = date(?)
     `);
     const result = stmt.get(today) as { count: number };
     const count = result?.count || 0;
