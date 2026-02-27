@@ -1,108 +1,108 @@
 /* ============================================
-   主题系统 - CSS 变量 + 暗色模式支持
+   主题系统 - Apple 风格设计语言
    ============================================ */
 
 :root {
-    /* 品牌色 */
-    --primary: #2196f3;
-    --primary-dark: #1976d2;
-    --primary-light: #64b5f6;
-    --success: #4caf50;
-    --success-dark: #388e3c;
-    --warning: #ff9800;
-    --warning-dark: #f57c00;
-    --danger: #f44336;
-    --danger-dark: #d32f2f;
-    --purple: #9c27b0;
-    --purple-dark: #7b1fa2;
+    /* 品牌色 - Apple Blue */
+    --primary: #0071e3;
+    --primary-dark: #0077ED;
+    --primary-light: #419cff;
+    --success: #30d158;
+    --success-dark: #28a745;
+    --warning: #ff9f0a;
+    --warning-dark: #e68a00;
+    --danger: #ff3b30;
+    --danger-dark: #d70015;
+    --purple: #bf5af2;
+    --purple-dark: #a03de0;
 
     /* 透明色变体 */
-    --primary-alpha: rgba(33, 150, 243, 0.12);
-    --success-alpha: rgba(76, 175, 80, 0.12);
-    --warning-alpha: rgba(255, 152, 0, 0.12);
-    --danger-alpha: rgba(244, 67, 54, 0.12);
-    --purple-alpha: rgba(156, 39, 176, 0.12);
+    --primary-alpha: rgba(0, 113, 227, 0.1);
+    --success-alpha: rgba(48, 209, 88, 0.1);
+    --warning-alpha: rgba(255, 159, 10, 0.1);
+    --danger-alpha: rgba(255, 59, 48, 0.1);
+    --purple-alpha: rgba(191, 90, 242, 0.1);
 
     /* 浅色主题（默认） */
-    --bg-primary: #f5f5f5;
-    --bg-secondary: #ffffff;
+    --bg-primary: #f5f5f7;
+    --bg-secondary: rgba(255, 255, 255, 0.8);
     --bg-card: #ffffff;
     --bg-hover: rgba(0, 0, 0, 0.04);
-    --text-primary: #1a1a1a;
-    --text-secondary: #666666;
-    --text-muted: #999999;
-    --border-color: #e5e5e5;
-    --border-hover: #d0d0d0;
-    --border-light: #f0f0f0;
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-    --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.1);
-    --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+    --bg-elevated: #ffffff;
+    --text-primary: #1d1d1f;
+    --text-secondary: #6e6e73;
+    --text-muted: #86868b;
+    --border-color: rgba(0, 0, 0, 0.08);
+    --border-hover: rgba(0, 0, 0, 0.15);
+    --border-light: rgba(0, 0, 0, 0.04);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.1);
+    --ring-color: rgba(0, 113, 227, 0.4);
+
+    /* 间距系统 */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-pill: 980px;
 }
 
 /* 暗色主题 */
 [data-theme="dark"] {
-    --bg-primary: #0d1117;
-    --bg-secondary: #161b22;
-    --bg-card: #21262d;
+    --bg-primary: #000000;
+    --bg-secondary: rgba(28, 28, 30, 0.8);
+    --bg-card: #1c1c1e;
     --bg-hover: rgba(255, 255, 255, 0.06);
-    --text-primary: #f0f0f0;
-    --text-secondary: #b0b8c4;
-    --text-muted: #6e7681;
-    --border-color: #30363d;
-    --border-hover: #484f58;
-    --border-light: #21262d;
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.5);
-    --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.6);
+    --bg-elevated: #2c2c2e;
+    --text-primary: #f5f5f7;
+    --text-secondary: #a1a1a6;
+    --text-muted: #6e6e73;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --border-hover: rgba(255, 255, 255, 0.18);
+    --border-light: rgba(255, 255, 255, 0.05);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.5);
+    --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.6);
+    --ring-color: rgba(41, 151, 255, 0.5);
 
-    /* 暗色主题透明色变体 */
-    --primary-alpha: rgba(33, 150, 243, 0.2);
-    --success-alpha: rgba(76, 175, 80, 0.2);
-    --warning-alpha: rgba(255, 152, 0, 0.2);
-    --danger-alpha: rgba(244, 67, 54, 0.2);
-    --purple-alpha: rgba(156, 39, 176, 0.2);
+    --primary: #2997ff;
+    --primary-dark: #419cff;
+    --primary-alpha: rgba(41, 151, 255, 0.15);
+    --success-alpha: rgba(48, 209, 88, 0.15);
+    --warning-alpha: rgba(255, 159, 10, 0.15);
+    --danger-alpha: rgba(255, 59, 48, 0.15);
+    --purple-alpha: rgba(191, 90, 242, 0.15);
 }
 
 /* 自动跟随系统偏好 */
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-        --bg-primary: #0d1117;
-        --bg-secondary: #161b22;
-        --bg-card: #21262d;
+        --bg-primary: #000000;
+        --bg-secondary: rgba(28, 28, 30, 0.8);
+        --bg-card: #1c1c1e;
         --bg-hover: rgba(255, 255, 255, 0.06);
-        --text-primary: #f0f0f0;
-        --text-secondary: #b0b8c4;
-        --text-muted: #6e7681;
-        --border-color: #30363d;
-        --border-hover: #484f58;
-        --border-light: #21262d;
-        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-        --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-        --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.5);
-        --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.6);
-        --primary-alpha: rgba(33, 150, 243, 0.2);
-        --success-alpha: rgba(76, 175, 80, 0.2);
-        --warning-alpha: rgba(255, 152, 0, 0.2);
-        --danger-alpha: rgba(244, 67, 54, 0.2);
-        --purple-alpha: rgba(156, 39, 176, 0.2);
+        --bg-elevated: #2c2c2e;
+        --text-primary: #f5f5f7;
+        --text-secondary: #a1a1a6;
+        --text-muted: #6e6e73;
+        --border-color: rgba(255, 255, 255, 0.1);
+        --border-hover: rgba(255, 255, 255, 0.18);
+        --border-light: rgba(255, 255, 255, 0.05);
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+        --shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.5);
+        --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.6);
+        --ring-color: rgba(41, 151, 255, 0.5);
+        --primary: #2997ff;
+        --primary-dark: #419cff;
+        --primary-alpha: rgba(41, 151, 255, 0.15);
+        --success-alpha: rgba(48, 209, 88, 0.15);
+        --warning-alpha: rgba(255, 159, 10, 0.15);
+        --danger-alpha: rgba(255, 59, 48, 0.15);
+        --purple-alpha: rgba(191, 90, 242, 0.15);
     }
-}
-
-/* 平滑过渡 */
-* {
-    transition:
-        background-color 0.15s ease,
-        color 0.15s ease,
-        border-color 0.15s ease,
-        box-shadow 0.15s ease;
-}
-
-/* 禁用过渡的元素 */
-.no-transition,
-.no-transition * {
-    transition: none !important;
 }
 
 /* 基础样式 */
@@ -110,87 +110,22 @@ body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
     font-family:
-        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
-        Arial, sans-serif;
-    line-height: 1.6;
+        "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+        "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.47;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    letter-spacing: -0.01em;
 }
 
 /* 文本颜色工具类 */
-.text-primary {
-    color: var(--text-primary);
-}
-.text-secondary {
-    color: var(--text-secondary);
-}
-.text-muted {
-    color: var(--text-muted);
-}
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
 
 /* 背景工具类 */
-.bg-primary {
-    background-color: var(--bg-primary);
-}
-.bg-secondary {
-    background-color: var(--bg-secondary);
-}
-.bg-card {
-    background-color: var(--bg-card);
-}
-
-/* 图标按钮 */
-.icon-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    background: var(--bg-card);
-    color: var(--text-secondary);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s ease;
-}
-
-.icon-btn svg {
-    width: 18px;
-    height: 18px;
-}
-
-.icon-btn:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-    border-color: var(--primary);
-}
-
-/* 悬浮主题按钮（移动端） */
-.fab-theme {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    border: none;
-    background: var(--primary);
-    color: white;
-    font-size: 24px;
-    cursor: pointer;
-    box-shadow: var(--shadow-lg);
-    z-index: 1000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-}
-
-.fab-theme:hover {
-    transform: scale(1.1);
-    box-shadow: var(--shadow-hover);
-}
-
-@media (max-width: 768px) {
-    .fab-theme {
-        display: flex;
-    }
-}
+.bg-primary { background-color: var(--bg-primary); }
+.bg-secondary { background-color: var(--bg-secondary); }
+.bg-card { background-color: var(--bg-card); }

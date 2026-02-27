@@ -20,6 +20,11 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         {description && <meta name="description" content={description} />}
 
+        {/* Inter 字体 */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
         {/* 基础样式 */}
         <link href="/css/style.css" rel="stylesheet" />
 
