@@ -379,12 +379,17 @@ document.addEventListener("DOMContentLoaded", function () {
   function initFilters() {
     const searchInput = document.getElementById("searchInput");
     const clearSearchBtn = document.getElementById("clearSearchBtn");
-    const filterStatus = document.getElementById("filterStatus");
+    const subscribedOnlyToggle = document.getElementById("subscribedOnlyToggle");
+    const subscribedOnlyChip = document.getElementById("subscribedOnlyChip");
+    const filterToggleBtn = document.getElementById("filterToggleBtn");
+    const filterPanel = document.getElementById("filterPanel");
     const filterCategory = document.getElementById("filterCategory");
     const filterCreator = document.getElementById("filterCreator");
+    const clearFiltersBtn = document.getElementById("clearFiltersBtn");
+
+    let searchTimeout;
 
     // 搜索防抖
-    let searchTimeout;
     searchInput?.addEventListener("input", (e) => {
       clearTimeout(searchTimeout);
       const value = e.target.value.trim();
@@ -404,37 +409,50 @@ document.addEventListener("DOMContentLoaded", function () {
       loadPosts(1, currentFilters);
     });
 
-    // 筛选器变化
-    // 筛选逻辑：全部 | 已订阅(1) | 未订阅(0和2)
-    filterStatus?.addEventListener("change", (e) => {
-      const value = e.target.value;
-      if (value === "") {
-        // 全部 - 不传筛选条件
-        delete currentFilters.pushStatus;
-        delete currentFilters.pushStatusNot;
-      } else if (value === "1") {
-        // 已订阅 - push_status = 1
+    // 只看订阅 toggle
+    subscribedOnlyChip?.addEventListener("click", () => {
+      const isActive = subscribedOnlyChip.classList.toggle("active");
+      subscribedOnlyToggle.checked = isActive;
+
+      if (isActive) {
         currentFilters.pushStatus = "1";
         delete currentFilters.pushStatusNot;
-      } else if (value === "0") {
-        // 未订阅 - push_status != 1 (即 0 或 2)
-        currentFilters.pushStatusNot = "1";
+      } else {
         delete currentFilters.pushStatus;
+        delete currentFilters.pushStatusNot;
       }
       loadPosts(1, currentFilters);
     });
 
+    // 筛选面板展开/收起
+    filterToggleBtn?.addEventListener("click", () => {
+      const isOpen = filterPanel.style.display !== "none";
+      filterPanel.style.display = isOpen ? "none" : "block";
+      filterToggleBtn.classList.toggle("active", !isOpen);
+    });
+
+    // 分类筛选
     filterCategory?.addEventListener("change", (e) => {
       currentFilters.category = e.target.value;
       loadPosts(1, currentFilters);
     });
 
+    // 作者筛选
     filterCreator?.addEventListener("input", (e) => {
       clearTimeout(searchTimeout);
       searchTimeout = setTimeout(() => {
         currentFilters.creator = e.target.value.trim();
         loadPosts(1, currentFilters);
       }, 500);
+    });
+
+    // 清除筛选
+    clearFiltersBtn?.addEventListener("click", () => {
+      filterCategory.value = "";
+      filterCreator.value = "";
+      delete currentFilters.category;
+      delete currentFilters.creator;
+      loadPosts(1, currentFilters);
     });
 
     // 刷新按钮

@@ -69,14 +69,35 @@ export const HomePage: FC = () => {
           </div>
         </header>
 
-        {/* 筛选栏 + 统计 */}
-        <div class="filter-bar">
-          <div class="filter-left">
-            <select id="filterStatus" class="filter-select">
-              <option value="">全部状态</option>
-              <option value="0">未订阅</option>
-              <option value="1">已订阅</option>
-            </select>
+        {/* 工具栏 */}
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <label class="toggle-chip" id="subscribedOnlyChip">
+              <input type="checkbox" id="subscribedOnlyToggle" />
+              <span class="toggle-chip-label">只看订阅</span>
+            </label>
+            <button id="filterToggleBtn" class="filter-toggle-btn" title="更多筛选">
+              <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd"/>
+              </svg>
+              <span>筛选</span>
+            </button>
+          </div>
+          <div class="toolbar-right">
+            <button id="refreshBtn" class="btn btn-icon" title="刷新">
+              <svg viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+              </svg>
+            </button>
+            <button id="fetchRssBtn" class="btn btn-primary">
+              抓取 RSS
+            </button>
+          </div>
+        </div>
+
+        {/* 可折叠筛选面板 */}
+        <div id="filterPanel" class="filter-panel" style="display: none;">
+          <div class="filter-panel-inner">
             <select id="filterCategory" class="filter-select">
               <option value="">全部分类</option>
               <option value="daily">日常</option>
@@ -93,19 +114,7 @@ export const HomePage: FC = () => {
               <option value="sandbox">沙盒</option>
             </select>
             <input type="text" id="filterCreator" placeholder="作者筛选" class="filter-input" />
-          </div>
-          <div class="filter-right">
-            <span class="stat-item" id="telegramStatusItem" style="display: none;">Bot <strong id="statBotStatus">-</strong></span>
-            <div class="filter-actions">
-              <button id="refreshBtn" class="btn btn-icon" title="刷新">
-                <svg viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
-                </svg>
-              </button>
-              <button id="fetchRssBtn" class="btn btn-primary">
-                抓取 RSS
-              </button>
-            </div>
+            <button id="clearFiltersBtn" class="btn btn-text">清除筛选</button>
           </div>
         </div>
 
