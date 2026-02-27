@@ -184,6 +184,7 @@
 
 .info-item {
   color: var(--text-secondary);
+  overflow-wrap: anywhere;
 }
 
 .info-item strong {
@@ -232,6 +233,7 @@
 
 .subscription-content {
   flex: 1;
+  min-width: 0;
 }
 
 .subscription-keywords {
@@ -365,6 +367,14 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.pagination-controls #pageNumbers {
+  max-width: 100%;
+  overflow-x: auto;
+  padding-bottom: 2px;
 }
 
 .pagination-btn {
@@ -408,6 +418,17 @@
   .header-actions {
     width: 100%;
     justify-content: space-between;
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .header-actions .btn,
+  .header-actions .icon-btn {
+    min-height: 40px;
+  }
+
+  .header-actions .user-status {
+    width: 100%;
   }
 
   .stats-grid {
@@ -429,6 +450,15 @@
 
   .config-section {
     padding: 16px;
+  }
+
+  .action-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .action-bar .btn {
+    width: 100%;
   }
 
   .form-grid {
@@ -455,11 +485,22 @@
     align-items: flex-start;
   }
 
+  .panel-header .btn-group {
+    width: 100%;
+  }
+
   .action-bar {
     width: 100%;
   }
 
   .action-bar .btn {
-    flex: 1;
+    width: 100%;
+  }
+
+  .pagination-controls {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 2px;
   }
 }
