@@ -234,6 +234,7 @@
 @media (max-width: 768px) {
   .btn {
     padding: 10px 16px;
+    width: auto;
   }
 
   .btn-sm {
@@ -247,5 +248,9 @@
 
   .btn-group .btn {
     flex: 1;
+  }
+
+  .btn-block {
+    width: 100%;
   }
 }

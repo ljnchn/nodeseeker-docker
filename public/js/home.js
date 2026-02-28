@@ -702,34 +702,63 @@ document.addEventListener("DOMContentLoaded", function () {
     const settingsBtn = document.getElementById("settingsBtn");
     const dropdown = settingsBtn?.closest(".dropdown");
     const menu = dropdown?.querySelector(".dropdown-menu");
+    const supportsHover = window.matchMedia("(hover: hover) and (pointer: fine)")
+      .matches;
     let closeTimeout;
 
     if (!settingsBtn || !dropdown || !menu) return;
 
     // 显示菜单
-    const showMenu = () => {
+    const openMenu = () => {
       clearTimeout(closeTimeout);
       dropdown.classList.add("open");
     };
 
-    // 延迟关闭菜单
-    const hideMenu = () => {
+    const closeMenu = () => {
+      clearTimeout(closeTimeout);
+      dropdown.classList.remove("open");
+    };
+
+    // 延迟关闭菜单（用于桌面 hover）
+    const closeMenuWithDelay = () => {
       closeTimeout = setTimeout(() => {
-        dropdown.classList.remove("open");
+        closeMenu();
       }, 150);
     };
 
-    // 鼠标悬停显示
-    settingsBtn.addEventListener("mouseenter", showMenu);
-    menu.addEventListener("mouseenter", showMenu);
+    if (supportsHover) {
+      // 桌面端：鼠标悬停显示
+      settingsBtn.addEventListener("mouseenter", openMenu);
+      menu.addEventListener("mouseenter", openMenu);
 
-    // 鼠标移出延迟关闭
-    settingsBtn.addEventListener("mouseleave", hideMenu);
-    menu.addEventListener("mouseleave", hideMenu);
+      // 桌面端：鼠标移出延迟关闭
+      settingsBtn.addEventListener("mouseleave", closeMenuWithDelay);
+      menu.addEventListener("mouseleave", closeMenuWithDelay);
+    }
+
+    // 触屏/桌面通用：点击按钮切换菜单
+    settingsBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle("open");
+    });
+
+    // 菜单内部点击不触发外部关闭
+    menu.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
 
     // 点击外部关闭
-    document.addEventListener("click", () => {
-      dropdown.classList.remove("open");
+    document.addEventListener("click", (e) => {
+      if (!dropdown.contains(e.target)) {
+        closeMenu();
+      }
+    });
+
+    // ESC 快捷关闭
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeMenu();
+      }
     });
 
     // 下拉菜单项点击
@@ -737,7 +766,7 @@ document.addEventListener("DOMContentLoaded", function () {
       item.addEventListener("click", (e) => {
         e.stopPropagation();
         const drawerName = item.dataset.drawer;
-        dropdown.classList.remove("open");
+        closeMenu();
 
         // 加载对应数据并打开抽屉
         if (drawerName === "subscriptions") {
