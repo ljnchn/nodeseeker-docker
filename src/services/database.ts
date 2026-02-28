@@ -322,6 +322,7 @@ export class DatabaseService {
     limit: number = 30, 
     filters?: {
       pushStatus?: number;
+      pushStatusIn?: number[];  // 新增：IN 查询
       pushStatusNot?: number;
       creator?: string;
       category?: string;
@@ -341,7 +342,12 @@ export class DatabaseService {
     
 
     if (filters) {
-      if (filters.pushStatus !== undefined && filters.pushStatus !== null && filters.pushStatus.toString() !== '') {
+      if (filters.pushStatusIn && filters.pushStatusIn.length > 0) {
+        // 同时查询多个状态（如 [1, 3] 表示已匹配的文章）
+        const placeholders = filters.pushStatusIn.map(() => '?').join(',');
+        conditions.push(`push_status IN (${placeholders})`);
+        params.push(...filters.pushStatusIn);
+      } else if (filters.pushStatus !== undefined && filters.pushStatus !== null && filters.pushStatus.toString() !== '') {
         conditions.push('push_status = ?');
         params.push(filters.pushStatus);
       }

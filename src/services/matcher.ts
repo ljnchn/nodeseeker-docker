@@ -1,5 +1,6 @@
 import { DatabaseService } from './database';
 import { TelegramPushService } from './telegram/push';
+import { logger } from '../utils/logger';
 import type { Post, KeywordSub, BaseConfig, PushResult } from '../types';
 
 export interface MatchResult {
@@ -275,12 +276,11 @@ export class MatcherService {
       return { pushed: 0, failed: 0, skipped: 0 };
     }
 
-    console.log(`找到 ${unpushedPosts.length} 篇待处理文章`);
+
 
     const result: PushResult = { pushed: 0, failed: 0, skipped: 0 };
 
     if (subscriptions.length === 0) {
-      console.log('没有订阅词，将所有待处理文章标记为未匹配');
       const batchUpdates = unpushedPosts.map(post => ({
         postId: post.post_id,
         pushStatus: 2
@@ -291,7 +291,7 @@ export class MatcherService {
           this.dbService.batchUpdatePostPushStatus(batchUpdates);
           result.skipped = batchUpdates.length;
         } catch (error) {
-          console.error('批量更新状态失败:', error);
+          logger.error('批量更新状态失败', error);
           result.failed = batchUpdates.length;
         }
       }
@@ -324,24 +324,23 @@ export class MatcherService {
         }
       } catch (error) {
         result.failed++;
-        console.error(`匹配文章失败: ${post.title}`, error);
+        logger.error(`匹配失败: ${post.title}`, error);
       }
     }
 
-    // 第二步：批量写入匹配状态（不依赖 Telegram 推送结果）
+    // 第二步：批量写入匹配状态
     const allUpdates = [...matchedUpdates, ...unmatchedUpdates];
     if (allUpdates.length > 0) {
       try {
         this.dbService.batchUpdatePostPushStatus(allUpdates);
-        console.log(`匹配处理完成: 已匹配 ${matchedUpdates.length} 篇，未匹配 ${unmatchedUpdates.length} 篇`);
       } catch (error) {
-        console.error('批量更新匹配状态失败:', error);
+        logger.error('批量更新匹配状态失败', error);
       }
     }
 
-    // 第三步：尝试推送 Telegram（独立于匹配状态）
+    // 第三步：尝试推送 Telegram
     if (config.stop_push === 1) {
-      console.log('推送已停止，跳过 Telegram 推送');
+      logger.match('推送已停止');
     } else if (this.telegramService && config.bot_token && config.chat_id) {
       let pushSuccess = 0;
       let pushFail = 0;
@@ -349,29 +348,22 @@ export class MatcherService {
       for (const { post, subscription } of matchedPostsForPush) {
         try {
           const success = await this.telegramService.pushPost(post, subscription);
-          if (success) {
-            pushSuccess++;
-          } else {
-            pushFail++;
-          }
+          if (success) pushSuccess++;
+          else pushFail++;
 
           if (pushSuccess > 0 && pushSuccess % 5 === 0) {
             await new Promise(resolve => setTimeout(resolve, 1000));
           }
         } catch (error) {
           pushFail++;
-          console.error(`推送文章到 Telegram 失败: ${post.title}`, error);
+          logger.error(`推送失败: ${post.title}`, error);
         }
       }
       
       if (matchedPostsForPush.length > 0) {
-        console.log(`Telegram 推送: 成功 ${pushSuccess} 篇，失败 ${pushFail} 篇`);
+        logger.telegram(`推送: ${pushSuccess} 成功, ${pushFail} 失败`);
       }
-    } else {
-      console.log('未配置 Telegram，跳过推送');
     }
-
-    console.log(`处理完成: 已匹配 ${result.pushed} 篇，未匹配 ${result.skipped} 篇，失败 ${result.failed} 篇`);
     return result;
   }
 

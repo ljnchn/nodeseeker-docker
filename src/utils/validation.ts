@@ -93,6 +93,7 @@ export const paginationSchema = z.object({
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(100).default(30),
     pushStatus: z.coerce.number().int().min(0).max(3).optional(),
+    pushStatusIn: z.string().optional(),  // 格式: "1,3" 表示同时查询状态 1 和 3
     pushStatusNot: z.coerce.number().int().min(0).max(3).optional(),
     creator: z.string().max(100).optional(),
     category: z.string().max(100).optional(),

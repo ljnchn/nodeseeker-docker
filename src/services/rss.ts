@@ -1,5 +1,6 @@
 import { DatabaseService } from "./database";
 import { getEnvConfig } from "../config/env";
+import { logger } from "../utils/logger";
 import type { Post, RSSItem, ParsedPost, RSSProcessResult } from "../types";
 
 export class RSSService {
@@ -113,22 +114,16 @@ export class RSSService {
 
     try {
       const rssConfig = this.getRSSConfig();
-      console.log("开始抓取 RSS 数据...");
-      console.log(`RSS URL: ${rssConfig.url}`);
-      console.log(`超时设置: ${this.TIMEOUT}ms`);
       const proxy = this.getProxy();
       if (proxy) {
-        console.log(`使用代理: ${proxy}`);
+        logger.rss(`使用代理: ${proxy}`);
       }
 
       controller = new AbortController();
-      timeoutId = setTimeout(() => {
-        console.log("RSS 请求超时，正在终止...");
-        controller?.abort();
-      }, this.TIMEOUT);
+      timeoutId = setTimeout(() => controller?.abort(), this.TIMEOUT);
 
       // 构建 fetch 选项
-      const fetchOptions: RequestInit = {
+      const fetchOptions: RequestInit & { proxy?: string } = {
         signal: controller.signal,
         headers: {
           "User-Agent":
@@ -155,7 +150,7 @@ export class RSSService {
 
       // 如果配置了代理，添加代理选项
       if (proxy) {
-        (fetchOptions as any).proxy = proxy;
+        fetchOptions.proxy = proxy;
       }
 
       const response = await fetch(rssConfig.url, fetchOptions);
@@ -169,38 +164,22 @@ export class RSSService {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      console.log("RSS 响应接收成功，开始解析...");
       const xmlText = await response.text();
-      console.log(`接收到 XML 数据，长度: ${xmlText.length} 字符`);
 
       const items = this.parseRSSXML(xmlText);
 
       if (!items || items.length === 0) {
-        console.log("RSS 数据为空");
         return [];
       }
-
-      console.log(`成功抓取到 ${items.length} 条 RSS 数据`);
       return items;
     } catch (error) {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
 
-      // 处理不同类型的错误
-      if (error instanceof Error) {
-        if (error.name === "AbortError") {
-          console.error(
-            `RSS 请求超时 (${this.TIMEOUT}ms)，可能是网络连接慢或服务器响应慢`,
-          );
-          throw new Error(`RSS 请求超时，请检查网络连接或增加超时时间`);
-        } else if (error.message.includes("fetch")) {
-          console.error("RSS 网络请求失败:", error.message);
-          throw new Error(`RSS 网络请求失败: ${error.message}`);
-        }
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error(`RSS 请求超时 (${this.TIMEOUT}ms)`);
       }
-
-      console.error("RSS 抓取失败:", error);
       throw new Error(`RSS 抓取失败: ${error}`);
     }
   }
@@ -287,7 +266,7 @@ export class RSSService {
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`开始第 ${attempt} 次尝试获取 RSS 数据...`);
+        if (attempt > 1) logger.rssDebug(`第 ${attempt} 次尝试...`);
 
         const rssItems = await this.fetchAndParseRSS();
 
@@ -313,22 +292,15 @@ export class RSSService {
             postIds.push(parsedPost.post_id);
           } catch (error) {
             errors++;
-            console.error("解析单条 RSS 数据失败:", error);
+            logger.debug(`解析单条 RSS 数据失败: ${error}`);
           }
         }
 
         // 第二步：批量查询已存在的文章
         const existingPosts = this.dbService.getPostsByPostIds(postIds);
-        console.log(`批量查询完成: 找到 ${existingPosts.size} 个已存在的文章`);
 
         // 第三步：筛选出需要创建的新文章
-        const newPostsToCreate = parsedPosts.filter((parsedPost) => {
-          if (existingPosts.has(parsedPost.post_id)) {
-            console.log(`文章已存在: ${parsedPost.post_id}`);
-            return false;
-          }
-          return true;
-        });
+        const newPostsToCreate = parsedPosts.filter((parsedPost) => !existingPosts.has(parsedPost.post_id));
 
         // 第四步：批量创建新文章
         if (newPostsToCreate.length > 0) {
@@ -337,9 +309,7 @@ export class RSSService {
             const subscriptions = this.dbService.getAllKeywordSubs();
             const hasSubscriptions = subscriptions.length > 0;
             
-            if (!hasSubscriptions) {
-              console.log('没有订阅词，新文章将直接标记为无需推送');
-            }
+
             
             const postsWithDefaults = newPostsToCreate.map((post) => ({
               ...post,
@@ -350,23 +320,12 @@ export class RSSService {
               this.dbService.batchCreatePosts(postsWithDefaults);
             newPosts = createdCount;
 
-            console.log(`批量创建完成: 成功创建 ${createdCount} 篇新文章`);
-
-            // 记录创建的文章详情
-            newPostsToCreate.forEach((post) => {
-              console.log(`新增文章: ${post.title} (ID: ${post.post_id})`);
-            });
+            logger.rss(`新增 ${createdCount} 篇文章`);
           } catch (error) {
             errors += newPostsToCreate.length;
-            console.error("批量创建文章失败:", error);
+            logger.error('批量创建文章失败', error);
           }
-        } else {
-          console.log("没有新文章需要创建");
         }
-
-        console.log(
-          `RSS 处理完成: 处理 ${processed} 条，新增 ${newPosts} 条，错误 ${errors} 条`,
-        );
 
         return {
           new: newPosts,
@@ -375,21 +334,16 @@ export class RSSService {
         };
       } catch (error) {
         lastError = error as Error;
-        console.error(`第 ${attempt} 次尝试失败:`, error);
+        logger.warn(`第 ${attempt} 次尝试失败`);
 
         if (attempt < maxRetries) {
-          const delayMs = attempt * 2000; // 递增延迟：2s, 4s, 6s
-          console.log(`等待 ${delayMs}ms 后重试...`);
+          const delayMs = attempt * 2000;
           await new Promise((resolve) => setTimeout(resolve, delayMs));
         }
       }
     }
 
-    // 所有重试都失败了
-    console.error(
-      `RSS 处理失败，已尝试 ${maxRetries} 次，最后错误:`,
-      lastError,
-    );
+    logger.error(`RSS 处理失败，已尝试 ${maxRetries} 次`, lastError);
     throw lastError || new Error("RSS 处理失败，已达到最大重试次数");
   }
 
@@ -436,10 +390,15 @@ export class RSSService {
    */
   async validateRSSUrl(url: string): Promise<{ accessible: boolean; message: string }> {
     try {
+      const proxy = this.getProxy();
+      if (proxy) {
+        logger.rss(`测试连接使用代理: ${proxy}`);
+      }
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-      const fetchOptions: RequestInit = {
+      const fetchOptions: RequestInit & { proxy?: string } = {
         method: "HEAD",
         signal: controller.signal,
         headers: {
@@ -464,9 +423,8 @@ export class RSSService {
       };
 
       // 如果配置了代理，添加代理选项
-      const proxy = this.getProxy();
       if (proxy) {
-        (fetchOptions as any).proxy = proxy;
+        fetchOptions.proxy = proxy;
       }
 
       const response = await fetch(url, fetchOptions);

@@ -307,11 +307,18 @@ apiRoutes.get('/posts', createQueryValidationMiddleware(paginationSchema), async
         const query = c.get('validatedQuery');
         const dbService = c.get('dbService');
 
+        // 解析 pushStatusIn 参数（格式: "1,3"）
+        let pushStatusIn: number[] | undefined;
+        if (query.pushStatusIn) {
+            pushStatusIn = query.pushStatusIn.split(',').map((s: string) => parseInt(s.trim(), 10)).filter((n: number) => !isNaN(n));
+        }
+
         const result = dbService.getPostsWithPagination(
             query.page,
             query.limit,
             {
                 pushStatus: query.pushStatus,
+                pushStatusIn,
                 pushStatusNot: query.pushStatusNot,
                 creator: query.creator,
                 category: query.category,

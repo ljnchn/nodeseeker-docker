@@ -408,14 +408,17 @@ document.addEventListener("DOMContentLoaded", function () {
       loadPosts(1, currentFilters);
     });
 
-    // 只看订阅 toggle
+    // 只看订阅 toggle（查询状态 1=已匹配但未推送 和 3=已匹配且已推送成功）
     subscribedOnlyChip?.addEventListener("click", () => {
       const isActive = subscribedOnlyChip.classList.toggle("active");
 
       if (isActive) {
-        currentFilters.pushStatus = "1";
+        // 同时查询状态 1 和 3（所有已匹配的文章）
+        currentFilters.pushStatusIn = "1,3";
+        delete currentFilters.pushStatus;
         delete currentFilters.pushStatusNot;
       } else {
+        delete currentFilters.pushStatusIn;
         delete currentFilters.pushStatus;
         delete currentFilters.pushStatusNot;
       }
