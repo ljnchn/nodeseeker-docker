@@ -728,8 +728,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const supportsHover = window.matchMedia("(hover: hover) and (pointer: fine)")
       .matches;
     let closeTimeout;
+    let isTouchDevice = false;
 
     if (!settingsBtn || !dropdown || !menu) return;
+
+    // 检测是否为触摸设备
+    const detectTouch = () => {
+      isTouchDevice = true;
+    };
+    settingsBtn.addEventListener("touchstart", detectTouch, { passive: true, once: true });
 
     // 显示菜单
     const openMenu = () => {
@@ -750,19 +757,33 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     if (supportsHover) {
-      // 桌面端：鼠标悬停显示
-      settingsBtn.addEventListener("mouseenter", openMenu);
-      menu.addEventListener("mouseenter", openMenu);
+      // 桌面端：鼠标悬停显示（仅非触摸设备）
+      settingsBtn.addEventListener("mouseenter", () => {
+        if (!isTouchDevice) openMenu();
+      });
+      menu.addEventListener("mouseenter", () => {
+        if (!isTouchDevice) openMenu();
+      });
 
       // 桌面端：鼠标移出延迟关闭
-      settingsBtn.addEventListener("mouseleave", closeMenuWithDelay);
-      menu.addEventListener("mouseleave", closeMenuWithDelay);
+      settingsBtn.addEventListener("mouseleave", () => {
+        if (!isTouchDevice) closeMenuWithDelay();
+      });
+      menu.addEventListener("mouseleave", () => {
+        if (!isTouchDevice) closeMenuWithDelay();
+      });
     }
 
     // 触屏/桌面通用：点击按钮切换菜单
     settingsBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      dropdown.classList.toggle("open");
+      e.preventDefault();
+      const isOpen = dropdown.classList.contains("open");
+      if (isOpen) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
     });
 
     // 菜单内部点击不触发外部关闭
@@ -776,6 +797,13 @@ document.addEventListener("DOMContentLoaded", function () {
         closeMenu();
       }
     });
+
+    // 触摸设备：点击遮罩关闭
+    document.addEventListener("touchstart", (e) => {
+      if (!dropdown.contains(e.target)) {
+        closeMenu();
+      }
+    }, { passive: true });
 
     // ESC 快捷关闭
     document.addEventListener("keydown", (e) => {
