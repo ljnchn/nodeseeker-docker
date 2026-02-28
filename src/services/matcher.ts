@@ -99,7 +99,7 @@ export class MatcherService {
         const regex = new RegExp(regexInfo.pattern, flags);
         return regex.test(text);
       } catch (error) {
-        console.warn(`正则表达式语法错误，回退到字符串匹配: ${keyword}`, error);
+        logger.warn(`正则表达式语法错误，回退到字符串匹配: ${keyword}`, error);
         // 回退到字符串匹配
         return text.toLowerCase().includes(keyword.toLowerCase());
       }
@@ -395,7 +395,7 @@ export class MatcherService {
         totalSubscriptions
       };
     } catch (error) {
-      console.error('获取匹配统计失败:', error);
+      logger.error('获取匹配统计失败:', error);
       return {
         totalPosts: 0,
         pendingPosts: 0,

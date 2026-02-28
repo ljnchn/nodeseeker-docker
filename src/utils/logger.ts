@@ -26,19 +26,19 @@ const COLORS = {
   white: '\x1b[37m',
 };
 
-// 图标配置
-const ICONS = {
-  debug: '🔍',
-  info: 'ℹ️',
-  success: '✅',
-  warn: '⚠️',
-  error: '❌',
-  rss: '📡',
-  telegram: '✈️',
-  db: '💾',
-  match: '🎯',
-  server: '🚀',
-  scheduler: '⏰',
+// 标签配置（固定 5 字符宽度，保证对齐）
+const TAGS = {
+  debug: '[DBG]',
+  info:  '[INF]',
+  success: '[ OK]',
+  warn:  '[WRN]',
+  error: '[ERR]',
+  rss:   '[RSS]',
+  telegram: '[ TG]',
+  db:    '[ DB]',
+  match: '[MAT]',
+  server: '[SRV]',
+  scheduler: '[SCH]',
 };
 
 // 格式化时间
@@ -48,7 +48,7 @@ function formatTime(): string {
 }
 
 // 基础日志函数
-function log(level: LogLevel, icon: string, message: string, ...args: any[]) {
+function log(level: LogLevel, tag: string, message: string, ...args: any[]) {
   if (LOG_LEVELS[level] < currentLevelValue) return;
 
   const time = `${COLORS.dim}${formatTime()}${COLORS.reset}`;
@@ -59,42 +59,43 @@ function log(level: LogLevel, icon: string, message: string, ...args: any[]) {
     error: COLORS.red,
   }[level] || COLORS.white;
 
+  const tagStr = `${levelColor}${tag}${COLORS.reset}`;
   const levelStr = `${levelColor}${level.toUpperCase().padEnd(5)}${COLORS.reset}`;
 
   if (args.length > 0) {
-    console.log(`${time} ${icon} ${levelStr} ${message}`, ...args);
+    console.log(`${time} ${tagStr} ${levelStr} ${message}`, ...args);
   } else {
-    console.log(`${time} ${icon} ${levelStr} ${message}`);
+    console.log(`${time} ${tagStr} ${levelStr} ${message}`);
   }
 }
 
 // 导出日志函数
 export const logger = {
-  debug: (message: string, ...args: any[]) => log('debug', ICONS.debug, message, ...args),
-  info: (message: string, ...args: any[]) => log('info', ICONS.info, message, ...args),
-  warn: (message: string, ...args: any[]) => log('warn', ICONS.warn, message, ...args),
-  error: (message: string, ...args: any[]) => log('error', ICONS.error, message, ...args),
-  success: (message: string, ...args: any[]) => log('info', ICONS.success, message, ...args),
+  debug: (message: string, ...args: any[]) => log('debug', TAGS.debug, message, ...args),
+  info: (message: string, ...args: any[]) => log('info', TAGS.info, message, ...args),
+  warn: (message: string, ...args: any[]) => log('warn', TAGS.warn, message, ...args),
+  error: (message: string, ...args: any[]) => log('error', TAGS.error, message, ...args),
+  success: (message: string, ...args: any[]) => log('info', TAGS.success, message, ...args),
 
   // 分类日志
-  rss: (message: string, ...args: any[]) => log('info', ICONS.rss, message, ...args),
-  rssDebug: (message: string, ...args: any[]) => log('debug', ICONS.rss, message, ...args),
-  telegram: (message: string, ...args: any[]) => log('info', ICONS.telegram, message, ...args),
-  db: (message: string, ...args: any[]) => log('info', ICONS.db, message, ...args),
-  match: (message: string, ...args: any[]) => log('info', ICONS.match, message, ...args),
-  server: (message: string, ...args: any[]) => log('info', ICONS.server, message, ...args),
-  scheduler: (message: string, ...args: any[]) => log('info', ICONS.scheduler, message, ...args),
+  rss: (message: string, ...args: any[]) => log('info', TAGS.rss, message, ...args),
+  rssDebug: (message: string, ...args: any[]) => log('debug', TAGS.rss, message, ...args),
+  telegram: (message: string, ...args: any[]) => log('info', TAGS.telegram, message, ...args),
+  db: (message: string, ...args: any[]) => log('info', TAGS.db, message, ...args),
+  match: (message: string, ...args: any[]) => log('info', TAGS.match, message, ...args),
+  server: (message: string, ...args: any[]) => log('info', TAGS.server, message, ...args),
+  scheduler: (message: string, ...args: any[]) => log('info', TAGS.scheduler, message, ...args),
 
   // 任务相关（带缩进）
   task: {
-    start: (name: string) => log('info', '🚀', `${COLORS.cyan}▶${COLORS.reset} ${name}`),
+    start: (name: string) => log('info', '[>>>]', name),
     end: (name: string, duration?: number) => {
       const timeStr = duration ? ` (${duration}ms)` : '';
-      log('info', '✓', `${COLORS.green}◀${COLORS.reset} ${name}${timeStr}`);
+      log('info', '[<<<]', `${name}${timeStr}`);
     },
-    info: (message: string) => log('info', '  ', `  ${message}`),
-    warn: (message: string) => log('warn', '⚠', `  ${message}`),
-    error: (message: string) => log('error', '✗', `  ${message}`),
+    info: (message: string) => log('info', '[   ]', `  ${message}`),
+    warn: (message: string) => log('warn', '[WRN]', `  ${message}`),
+    error: (message: string) => log('error', '[ERR]', `  ${message}`),
   },
 
   // 统计输出

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { logger } from "../utils/logger";
 
 // 环境变量验证 schema
 const envSchema = z.object({
@@ -54,16 +55,16 @@ export async function loadEnvConfig(): Promise<EnvConfig> {
         }
       }
     } catch (error) {
-      console.warn("无法加载 .env 文件:", error);
+      logger.warn("无法加载 .env 文件:", error);
     }
 
     // 验证环境变量
     cachedConfig = envSchema.parse(process.env);
 
-    console.log("环境配置加载成功");
+    logger.success("环境配置加载成功");
     return cachedConfig;
   } catch (error) {
-    console.error("环境配置验证失败:", error);
+    logger.error("环境配置验证失败:", error);
     throw new Error(`环境配置无效: ${error}`);
   }
 }

@@ -2,6 +2,7 @@
 import { app, initializeApp, startServer } from './index';
 import { DatabaseService } from './services/database';
 import { SchedulerService } from './services/scheduler';
+import { logger } from './utils/logger';
 
 export let schedulerService: SchedulerService | null = null;
 
@@ -25,27 +26,27 @@ async function main() {
             fetch: app.fetch,
         });
 
-        console.log(`🌐 服务器运行在: http://${server.hostname}:${server.port}`);
+        logger.server(`服务器运行在: http://${server.hostname}:${server.port}`);
 
         // 优雅关闭处理
         process.on('SIGINT', gracefulShutdown);
         process.on('SIGTERM', gracefulShutdown);
 
     } catch (error) {
-        console.error('启动失败:', error);
+        logger.error('启动失败:', error);
         process.exit(1);
     }
 }
 
 // 优雅关闭
 function gracefulShutdown() {
-    console.log('\n🛑 收到关闭信号，正在优雅关闭...');
+    logger.warn('收到关闭信号，正在优雅关闭...');
 
     if (schedulerService) {
         schedulerService.stop();
     }
 
-    console.log('✅ 服务器已关闭');
+    logger.success('服务器已关闭');
     process.exit(0);
 }
 

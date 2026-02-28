@@ -1,5 +1,6 @@
 import { TelegramBaseService } from './base';
 import type { Post, KeywordSub } from '../../types';
+import { logger } from '../../utils/logger';
 
 export class TelegramPushService extends TelegramBaseService {
   /**
@@ -10,7 +11,7 @@ export class TelegramPushService extends TelegramBaseService {
       await this.bot.api.sendMessage(chatId, text, { parse_mode: 'Markdown' });
       return true;
     } catch (error) {
-      console.error('发送 Telegram 消息时出错:', error);
+      logger.error('发送 Telegram 消息时出错:', error);
       return false;
     }
   }
@@ -66,7 +67,7 @@ export class TelegramPushService extends TelegramBaseService {
 
       return false;
     } catch (error) {
-      console.error('推送文章失败:', error);
+      logger.error('推送文章失败:', error);
       return false;
     }
   }

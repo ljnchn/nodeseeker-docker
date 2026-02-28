@@ -100,7 +100,7 @@ export class RSSService {
 
       return items;
     } catch (error) {
-      console.error("RSS XML 解析失败:", error);
+      logger.error("RSS XML 解析失败:", error);
       throw new Error(`RSS XML 解析失败: ${error}`);
     }
   }
@@ -204,7 +204,7 @@ export class RSSService {
 
       return null;
     } catch (error) {
-      console.error("提取 post_id 失败:", error);
+      logger.error("提取 post_id 失败:", error);
       return null;
     }
   }
@@ -215,7 +215,7 @@ export class RSSService {
   private cleanAndFormatData(item: RSSItem): ParsedPost | null {
     const postId = this.extractPostId(item.link);
     if (!postId) {
-      console.warn("无法提取 post_id:", item.link);
+      logger.warn("无法提取 post_id:", item.link);
       return null;
     }
 

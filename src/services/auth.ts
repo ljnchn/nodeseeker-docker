@@ -3,6 +3,7 @@ import { SessionService } from './session';
 import { getEnvConfig } from '../config/env';
 import * as bcrypt from 'bcryptjs';
 import type { BaseConfig, SessionData, AuthVerification } from '../types';
+import { logger } from '../utils/logger';
 
 export interface LoginRequest {
   username: string;
@@ -62,7 +63,7 @@ export class AuthService {
         }
       };
     } catch (error) {
-      console.error('验证session失败:', error);
+      logger.error('验证session失败:', error);
       return { valid: false, message: `Session验证失败: ${error}` };
     }
   }
@@ -143,7 +144,7 @@ export class AuthService {
         }
       };
     } catch (error) {
-      console.error('注册失败:', error);
+      logger.error('注册失败:', error);
       return {
         success: false,
         message: `注册失败: ${error}`
@@ -201,7 +202,7 @@ export class AuthService {
         }
       };
     } catch (error) {
-      console.error('登录失败:', error);
+      logger.error('登录失败:', error);
       return {
         success: false,
         message: `登录失败: ${error}`
@@ -253,7 +254,7 @@ export class AuthService {
         message: destroyed ? '登出成功' : 'Session不存在或已过期'
       };
     } catch (error) {
-      console.error('登出失败:', error);
+      logger.error('登出失败:', error);
       return {
         success: false,
         message: `登出失败: ${error}`
@@ -274,7 +275,7 @@ export class AuthService {
         count
       };
     } catch (error) {
-      console.error('登出所有设备失败:', error);
+      logger.error('登出所有设备失败:', error);
       return {
         success: false,
         message: `登出所有设备失败: ${error}`,
@@ -334,7 +335,7 @@ export class AuthService {
         message: '密码修改成功'
       };
     } catch (error) {
-      console.error('修改密码失败:', error);
+      logger.error('修改密码失败:', error);
       return {
         success: false,
         message: `修改密码失败: ${error}`

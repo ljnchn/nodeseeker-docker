@@ -1,6 +1,7 @@
 import type { Database } from 'bun:sqlite';
 import { createDatabaseConnection } from '../config/database';
 import type { BaseConfig, Post, KeywordSub } from '../types';
+import { logger } from '../utils/logger';
 
 export class DatabaseService {
   private queryCache: Map<string, { data: any; timestamp: number; ttl: number }>;
@@ -69,7 +70,7 @@ export class DatabaseService {
       
       return true;
     } catch (error) {
-      console.error('检查数据库表存在性失败:', error);
+      logger.error('检查数据库表存在性失败:', error);
       return false;
     }
   }
@@ -242,7 +243,7 @@ export class DatabaseService {
           );
           insertedCount++;
         } catch (error) {
-          console.error(`插入文章失败 (post_id: ${post.post_id}):`, error);
+          logger.error(`插入文章失败 (post_id: ${post.post_id}):`, error);
         }
       }
       return insertedCount;
@@ -537,7 +538,7 @@ export class DatabaseService {
       const config = this.getBaseConfig();
       return config !== null;
     } catch (error) {
-      console.error('检查数据库初始化状态失败:', error);
+      logger.error('检查数据库初始化状态失败:', error);
       return false;
     }
   }
@@ -681,7 +682,7 @@ export class DatabaseService {
         last_update: lastUpdate
       };
     } catch (error) {
-      console.error('获取综合统计信息失败:', error);
+      logger.error('获取综合统计信息失败:', error);
       return {
         total_posts: 0,
         pushed_posts: 0,

@@ -1,4 +1,5 @@
 import type { ApiResponseType } from '../types';
+import { logger } from './logger';
 
 /**
  * 创建成功响应
@@ -208,7 +209,7 @@ export async function retry<T>(
         throw lastError;
       }
       
-      console.warn(`尝试 ${attempt} 失败，${delayMs}ms 后重试:`, lastError.message);
+      logger.warn(`尝试 ${attempt} 失败，${delayMs}ms 后重试:`, lastError.message);
       await delay(delayMs);
     }
   }

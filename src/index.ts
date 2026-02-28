@@ -180,14 +180,14 @@ const DEFAULT_RSS_CONFIG = {
 
 // 初始化数据库
 async function initializeDatabase() {
-  console.log('初始化数据库...');
+  logger.db('初始化数据库...');
   const migrator = new DatabaseMigrator();
   try {
     await migrator.runMigrations();
     migrator.close();
     logger.success('数据库初始化完成');
   } catch (error) {
-    console.error('数据库初始化失败:', error);
+    logger.error('数据库初始化失败:', error);
     throw error;
   }
 }
@@ -202,7 +202,7 @@ async function setupDefaultRssConfig() {
     
     if (config) {
       // 如果数据库中没有 RSS 配置，则设置默认值
-      const updates: { rss_url?: string; rss_interval_seconds?: number; rss_proxy?: string | null } = {};
+      const updates: { rss_url?: string; rss_interval_seconds?: number; rss_proxy?: string } = {};
       
       if (!config.rss_url) {
         updates.rss_url = DEFAULT_RSS_CONFIG.url;
@@ -215,7 +215,7 @@ async function setupDefaultRssConfig() {
       }
       
       if (config.rss_proxy === undefined) {
-        updates.rss_proxy = DEFAULT_RSS_CONFIG.proxy;
+        updates.rss_proxy = DEFAULT_RSS_CONFIG.proxy || '';
         logger.rss(`设置默认 RSS 代理: ${updates.rss_proxy || '无'}`);
       }
       
@@ -229,7 +229,7 @@ async function setupDefaultRssConfig() {
     
     dbService.close();
   } catch (error) {
-    console.error('设置默认 RSS 配置失败:', error);
+    logger.error('设置默认 RSS 配置失败:', error);
   }
 }
 
@@ -261,7 +261,7 @@ async function startServer() {
     
     return config;
   } catch (error) {
-    console.error('服务器启动失败:', error);
+    logger.error('服务器启动失败:', error);
     process.exit(1);
   }
 }
