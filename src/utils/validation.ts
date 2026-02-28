@@ -34,7 +34,7 @@ export const postSchema = z.object({
     memo: z.string().max(2000, '摘要不能超过2000个字符').default(''),
     category: z.string().min(1, '分类不能为空').max(100, '分类不能超过100个字符'),
     creator: z.string().min(1, '创建者不能为空').max(100, '创建者不能超过100个字符'),
-    push_status: z.number().int().min(0).max(2).default(0),
+    push_status: z.number().int().min(0).max(3).default(0),
     sub_id: z.number().int().positive().optional(),
     pub_date: z.string().min(1, '发布日期不能为空'),
     push_date: z.string().optional(),
@@ -92,8 +92,8 @@ export const botTokenSchema = z.object({
 export const paginationSchema = z.object({
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(100).default(30),
-    pushStatus: z.coerce.number().int().min(0).max(2).optional(),
-    pushStatusNot: z.coerce.number().int().min(0).max(2).optional(),
+    pushStatus: z.coerce.number().int().min(0).max(3).optional(),
+    pushStatusNot: z.coerce.number().int().min(0).max(3).optional(),
     creator: z.string().max(100).optional(),
     category: z.string().max(100).optional(),
     search: z.string().max(200).optional(),
@@ -123,7 +123,7 @@ export const rssConfigSchema = z.object({
 // 推送状态更新验证 Schema
 export const pushStatusUpdateSchema = z.object({
     postId: z.number().int().positive(),
-    pushStatus: z.number().int().min(0).max(2),
+    pushStatus: z.number().int().min(0).max(3),
     subId: z.number().int().positive().optional(),
     pushDate: z.string().optional(),
 });

@@ -658,20 +658,20 @@ export const DashboardPage: FC = () => {
                     </div>
                   </div>
 
+                  <div class="stat-card stat-card-yellow">
+                    <div class="stat-header">
+                      <span class="stat-title">已匹配</span>
+                    </div>
+                    <div class="stat-value" id="statMatchedPosts">
+                      0
+                    </div>
+                  </div>
+
                   <div class="stat-card stat-card-blue">
                     <div class="stat-header">
                       <span class="stat-title">已推送</span>
                     </div>
                     <div class="stat-value" id="statPushedPosts">
-                      0
-                    </div>
-                  </div>
-
-                  <div class="stat-card stat-card-orange">
-                    <div class="stat-header">
-                      <span class="stat-title">未推送</span>
-                    </div>
-                    <div class="stat-value" id="statUnpushedPosts">
                       0
                     </div>
                   </div>

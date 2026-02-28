@@ -536,21 +536,17 @@ document.addEventListener("DOMContentLoaded", function () {
       } else {
         postsList.innerHTML = posts
           .map((post) => {
-            const statusClass =
-              post.push_status === 0
-                ? "unpushed"
-                : post.push_status === 1
-                  ? "pushed"
-                  : "skipped";
-            const statusText =
-              post.push_status === 0
-                ? "未订阅"
-                : post.push_status === 1
-                  ? "已订阅"
-                  : "无需推送";
+            // push_status: 0=待处理, 1=已匹配但未推送, 2=未匹配, 3=已匹配且已推送成功
+            const statusConfig = {
+              0: { class: "unpushed", icon: "⏳", title: "待处理", tagClass: "tag-orange" },
+              1: { class: "matched", icon: "🎯", title: "已匹配", tagClass: "tag-yellow" },
+              2: { class: "skipped", icon: "⏭️", title: "无需推送", tagClass: "tag-gray" },
+              3: { class: "pushed", icon: "✈️", title: "已推送", tagClass: "tag-green" },
+            };
+            const config = statusConfig[post.push_status] || statusConfig[0];
 
             return `
-            <div class="post-item ${statusClass}">
+            <div class="post-item ${config.class}">
               <h4 class="post-title">
                 <a href="https://www.nodeseek.com/post-${post.post_id}-1" target="_blank">
                   ${post.title}
@@ -560,8 +556,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 <span>👤 ${post.creator}</span>
                 <span>📂 ${getCategoryName(post.category)}</span>
                 <span>📅 ${new Date(post.pub_date).toLocaleString()}</span>
-                <span class="tag ${post.push_status === 1 ? "tag-green" : post.push_status === 0 ? "tag-orange" : "tag-gray"}">
-                  ${statusText}
+                <span class="tag ${config.tagClass}" title="${config.title}">
+                  ${config.icon}
                 </span>
               </div>
             </div>
@@ -681,10 +677,10 @@ document.addEventListener("DOMContentLoaded", function () {
     if (result?.success) {
       document.getElementById("statTotalPosts").textContent =
         result.data.total_posts;
+      document.getElementById("statMatchedPosts").textContent =
+        result.data.matched_not_pushed || 0;
       document.getElementById("statPushedPosts").textContent =
         result.data.pushed_posts;
-      document.getElementById("statUnpushedPosts").textContent =
-        result.data.unpushed_posts;
       document.getElementById("statSubscriptions").textContent =
         result.data.total_subscriptions;
     }

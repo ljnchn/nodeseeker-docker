@@ -262,8 +262,9 @@ export class MatcherService {
    * 
    * push_status 语义：
    *   0 = 待处理（未比对过订阅）
-   *   1 = 已匹配（命中了订阅关键词）
+   *   1 = 已匹配但未推送（命中订阅，推送失败或未配置推送）
    *   2 = 未匹配（没有命中任何订阅）
+   *   3 = 已匹配且已推送成功
    */
   async processUnpushedPosts(): Promise<PushResult> {
     const config = this.dbService.getBaseConfig();
@@ -379,32 +380,36 @@ export class MatcherService {
    */
   getMatchStats(): {
     totalPosts: number;
-    unpushedPosts: number;
-    pushedPosts: number;
-    skippedPosts: number;
+    pendingPosts: number;      // 待处理 (状态 0)
+    matchedNotPushed: number;  // 已匹配但未推送 (状态 1)
+    skippedPosts: number;      // 无需推送 (状态 2)
+    pushedPosts: number;       // 已推送成功 (状态 3)
     totalSubscriptions: number;
   } {
     try {
       const totalPosts = this.dbService.getPostsCount();
-      const unpushedPosts = this.dbService.getPostsCountByStatus(0); // 未推送
-      const pushedPosts = this.dbService.getPostsCountByStatus(1); // 已推送
+      const pendingPosts = this.dbService.getPostsCountByStatus(0); // 待处理
+      const matchedNotPushed = this.dbService.getPostsCountByStatus(1); // 已匹配但未推送
       const skippedPosts = this.dbService.getPostsCountByStatus(2); // 无需推送
+      const pushedPosts = this.dbService.getPostsCountByStatus(3); // 已推送成功
       const totalSubscriptions = this.dbService.getSubscriptionsCount();
 
       return {
         totalPosts,
-        unpushedPosts,
-        pushedPosts,
+        pendingPosts,
+        matchedNotPushed,
         skippedPosts,
+        pushedPosts,
         totalSubscriptions
       };
     } catch (error) {
       console.error('获取匹配统计失败:', error);
       return {
         totalPosts: 0,
-        unpushedPosts: 0,
-        pushedPosts: 0,
+        pendingPosts: 0,
+        matchedNotPushed: 0,
         skippedPosts: 0,
+        pushedPosts: 0,
         totalSubscriptions: 0
       };
     }

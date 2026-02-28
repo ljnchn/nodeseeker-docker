@@ -281,12 +281,14 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function createPostElement(post) {
-    // push_status: 0=待处理, 1=已匹配订阅, 2=未匹配
-    const showStatus = post.push_status === 1;
-    const statusClass =
-      post.push_status === 1 ? "matched" : "";
-    const statusText = "已匹配";
-    const statusColor = "tag-green";
+    // push_status: 0=待处理, 1=已匹配但未推送, 2=未匹配, 3=已匹配且已推送成功
+    const isMatchedNotPushed = post.push_status === 1;
+    const isPushed = post.push_status === 3;
+    const showStatus = isMatchedNotPushed || isPushed;
+    const statusClass = isPushed ? "matched" : isMatchedNotPushed ? "matched-not-pushed" : "";
+    const statusIcon = isPushed ? "✈️" : "🎯";
+    const statusTitle = isPushed ? "已推送" : "已匹配";
+    const statusColor = isPushed ? "" : "";
 
     const el = document.createElement("div");
     el.className = `post-card ${statusClass}`;
@@ -303,7 +305,7 @@ document.addEventListener("DOMContentLoaded", function () {
       <div class="post-meta">
         <span class="post-creator">${escapeHtml(post.creator)}</span>
         <span class="post-date">${new Date(post.pub_date).toLocaleString()}</span>
-        ${showStatus ? `<span class="tag ${statusColor}">${statusText}</span>` : ""}
+        ${showStatus ? `<span class="tag ${statusColor}" title="${statusTitle}">${statusIcon}</span>` : ""}
       </div>
     `;
     return el;
@@ -593,11 +595,29 @@ document.addEventListener("DOMContentLoaded", function () {
 
     document.getElementById("testTelegramBtn")?.addEventListener("click", async () => {
       Toast.info("正在测试连接...");
-      const result = await apiRequest("/telegram/test", { method: "POST" });
-      if (result?.success) {
-        Toast.success("连接测试成功");
-      } else {
+
+      // 1. 先测试 Bot 连接
+      const result = await apiRequest("/api/webhook/test-connection", { method: "POST" });
+      if (!result?.success) {
         Toast.error(result?.message || "连接测试失败");
+        return;
+      }
+
+      // 2. 如果 Chat ID 已配置，发送测试消息
+      const chatId = document.getElementById("chatId").value.trim();
+      if (chatId) {
+        Toast.info("连接成功，正在发送测试消息...");
+        const testResult = await apiRequest("/api/push/test-send", {
+          method: "POST",
+          body: JSON.stringify({ message: "📡 NodeSeeker 推送测试" }),
+        });
+        if (testResult?.success) {
+          Toast.success("连接测试成功，测试消息已发送");
+        } else {
+          Toast.warning("连接成功，但测试消息发送失败：" + (testResult?.message || "未知错误"));
+        }
+      } else {
+        Toast.success("Bot 连接测试成功（未配置 Chat ID，跳过消息测试）");
       }
     });
   }
