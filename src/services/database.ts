@@ -322,6 +322,7 @@ export class DatabaseService {
     limit: number = 30, 
     filters?: {
       pushStatus?: number;
+      pushStatusIn?: number[];  // 新增：IN 查询
       pushStatusNot?: number;
       creator?: string;
       category?: string;
@@ -341,7 +342,12 @@ export class DatabaseService {
     
 
     if (filters) {
-      if (filters.pushStatus !== undefined && filters.pushStatus !== null && filters.pushStatus.toString() !== '') {
+      if (filters.pushStatusIn && filters.pushStatusIn.length > 0) {
+        // 同时查询多个状态（如 [1, 3] 表示已匹配的文章）
+        const placeholders = filters.pushStatusIn.map(() => '?').join(',');
+        conditions.push(`push_status IN (${placeholders})`);
+        params.push(...filters.pushStatusIn);
+      } else if (filters.pushStatus !== undefined && filters.pushStatus !== null && filters.pushStatus.toString() !== '') {
         conditions.push('push_status = ?');
         params.push(filters.pushStatus);
       }
@@ -602,7 +608,7 @@ export class DatabaseService {
     const today = new Date().toISOString().split('T')[0];
     const stmt = this.db.query(`
       SELECT COUNT(*) as count FROM posts
-      WHERE push_status = 1 AND date(created_at) = date(?)
+      WHERE push_status = 3 AND date(created_at) = date(?)
     `);
     const result = stmt.get(today) as { count: number };
     const count = result?.count || 0;
@@ -618,7 +624,7 @@ export class DatabaseService {
     const today = new Date().toISOString().split('T')[0];
     const stmt = this.db.query(`
       SELECT COUNT(*) as count FROM posts
-      WHERE push_status = 1 AND date(push_date) = date(?)
+      WHERE push_status = 3 AND date(push_date) = date(?)
     `);
     const result = stmt.get(today) as { count: number };
     const count = result?.count || 0;
@@ -652,14 +658,16 @@ export class DatabaseService {
   // 获取综合统计信息
   getComprehensiveStats(): {
     total_posts: number;
-    pushed_posts: number;
+    pushed_posts: number; // 已推送成功 (状态 3)
+    matched_not_pushed: number; // 已匹配但未推送 (状态 1)
     total_subscriptions: number;
     today_pushed: number;
     last_update: string | null;
   } {
     try {
       const totalPosts = this.getPostsCount();
-      const pushedPosts = this.getPostsCountByStatus(1); // 已推送
+      const pushedPosts = this.getPostsCountByStatus(3); // 已推送成功
+      const matchedNotPushed = this.getPostsCountByStatus(1); // 已匹配但未推送
       const totalSubscriptions = this.getSubscriptionsCount();
       const todayPushed = this.getTodayPushedCount();
       const lastUpdate = this.getLastUpdateTime();
@@ -667,6 +675,7 @@ export class DatabaseService {
       return {
         total_posts: totalPosts,
         pushed_posts: pushedPosts,
+        matched_not_pushed: matchedNotPushed,
         total_subscriptions: totalSubscriptions,
         today_pushed: todayPushed,
         last_update: lastUpdate
@@ -676,6 +685,7 @@ export class DatabaseService {
       return {
         total_posts: 0,
         pushed_posts: 0,
+        matched_not_pushed: 0,
         total_subscriptions: 0,
         today_pushed: 0,
         last_update: null

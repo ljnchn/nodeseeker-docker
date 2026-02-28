@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { DatabaseService } from '../services/database';
 import { AuthService } from '../services/auth';
-import { InitPage, LoginPage, DashboardPage, HomePage, ErrorPage } from '../components';
+import { InitPage, LoginPage, HomePage, ErrorPage } from '../components';
 import type { ContextVariables } from '../types';
 
 type Variables = ContextVariables & {

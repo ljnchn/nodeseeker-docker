@@ -7,6 +7,7 @@ import { AuthService } from './services/auth';
 import { SchedulerService } from './services/scheduler';
 import { DatabaseMigrator } from './database/migrate';
 import { renderer } from './renderer';
+import { logger } from './utils/logger';
 
 // 导入路由
 import { authRoutes } from './routes/auth';
@@ -34,6 +35,8 @@ app.use(renderer);
 app.use('/css/*', serveStatic({ root: './public' }));
 app.use('/js/*', serveStatic({ root: './public' }));
 app.use('/images/*', serveStatic({ root: './public' }));
+app.use('/favicon.ico', serveStatic({ path: './public/favicon.ico' }));
+app.use('/favicon.svg', serveStatic({ path: './public/favicon.svg' }));
 
 // 全局服务中间件
 app.use('*', async (c, next) => {
@@ -182,7 +185,7 @@ async function initializeDatabase() {
   try {
     await migrator.runMigrations();
     migrator.close();
-    console.log('数据库初始化完成');
+    logger.success('数据库初始化完成');
   } catch (error) {
     console.error('数据库初始化失败:', error);
     throw error;
@@ -203,24 +206,24 @@ async function setupDefaultRssConfig() {
       
       if (!config.rss_url) {
         updates.rss_url = DEFAULT_RSS_CONFIG.url;
-        console.log(`设置默认 RSS URL: ${updates.rss_url}`);
+        logger.rss(`设置默认 RSS URL: ${updates.rss_url}`);
       }
       
       if (!config.rss_interval_seconds) {
         updates.rss_interval_seconds = DEFAULT_RSS_CONFIG.intervalSeconds;
-        console.log(`设置默认 RSS 间隔: ${updates.rss_interval_seconds} 秒`);
+        logger.rss(`设置默认 RSS 间隔: ${updates.rss_interval_seconds} 秒`);
       }
       
       if (config.rss_proxy === undefined) {
         updates.rss_proxy = DEFAULT_RSS_CONFIG.proxy;
-        console.log(`设置默认 RSS 代理: ${updates.rss_proxy || '无'}`);
+        logger.rss(`设置默认 RSS 代理: ${updates.rss_proxy || '无'}`);
       }
       
       if (Object.keys(updates).length > 0) {
         dbService.updateBaseConfig(updates);
-        console.log('✅ 默认 RSS 配置已写入数据库');
+        logger.success('默认 RSS 配置已写入数据库');
       } else {
-        console.log('RSS 配置已存在，跳过默认设置');
+        logger.info('RSS 配置已存在，跳过默认设置');
       }
     }
     
@@ -249,10 +252,12 @@ async function startServer() {
     // 设置默认 RSS 配置到数据库
     await setupDefaultRssConfig();
     
-    console.log(`NodeSeeker 服务器启动成功`);
-    console.log(`📍 地址: http://${config.HOST}:${config.PORT}`);
-    console.log(`🌍 环境: ${config.NODE_ENV}`);
-    console.log(`💾 数据库: ${config.DATABASE_PATH}`);
+    logger.server('NodeSeeker 服务器启动成功');
+    logger.stats({
+      '地址': `http://${config.HOST}:${config.PORT}`,
+      '环境': config.NODE_ENV,
+      '数据库': config.DATABASE_PATH,
+    });
     
     return config;
   } catch (error) {
