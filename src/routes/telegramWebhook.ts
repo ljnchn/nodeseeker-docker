@@ -4,6 +4,7 @@ import { TelegramWebhookService } from '../services/telegram/webhook';
 import { createValidationMiddleware } from '../utils/validation';
 import { createSuccessResponse, createErrorResponse } from '../utils/helpers';
 import type { ContextVariables } from '../types';
+import { logger } from '../utils/logger';
 
 type Variables = ContextVariables;
 
@@ -66,12 +67,12 @@ telegramWebhookRoutes.get('/status', async (c) => {
             const webhookInfo = await telegramService.bot.api.getWebhookInfo();
             status.webhook_set = !!(webhookInfo.url && webhookInfo.url.trim() !== '');
           } catch (webhookError) {
-            console.error('获取 Webhook 信息失败:', webhookError);
+            logger.error('获取 Webhook 信息失败:', webhookError);
             status.webhook_set = false;
           }
         }
       } catch (error) {
-        console.error('检查 Webhook 状态失败:', error);
+        logger.error('检查 Webhook 状态失败:', error);
       }
     }
     

@@ -24,7 +24,7 @@ export interface Post {
   memo: string;
   category: string;
   creator: string;
-  push_status: number; // 0 待处理 1 已匹配订阅 2 未匹配
+  push_status: number; // 0=待处理, 1=已匹配但未推送, 2=未匹配, 3=已匹配且已推送成功
   sub_id?: number;
   pub_date: string;
   push_date?: string;
@@ -156,11 +156,12 @@ export interface PaginatedResponse<T> {
 // 统计信息接口
 export interface DatabaseStats {
   total_posts: number;
-  unpushed_posts: number;
-  pushed_posts: number;
-  skipped_posts: number;
+  pending_posts: number;      // 待处理 (状态 0)
+  matched_not_pushed: number; // 已匹配但未推送 (状态 1)
+  skipped_posts: number;      // 无需推送 (状态 2)
+  pushed_posts: number;       // 已推送成功 (状态 3)
   total_subscriptions: number;
-  today_posts: number;
+  today_pushed: number;       // 今日推送成功
   today_messages: number;
   last_update: string | null;
 }

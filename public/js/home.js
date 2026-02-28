@@ -281,12 +281,14 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function createPostElement(post) {
-    // push_status: 0=待处理, 1=已匹配订阅, 2=未匹配
-    const showStatus = post.push_status === 1;
-    const statusClass =
-      post.push_status === 1 ? "matched" : "";
-    const statusText = "已匹配";
-    const statusColor = "tag-green";
+    // push_status: 0=待处理, 1=已匹配但未推送, 2=未匹配, 3=已匹配且已推送成功
+    const isMatchedNotPushed = post.push_status === 1;
+    const isPushed = post.push_status === 3;
+    const showStatus = isMatchedNotPushed || isPushed;
+    const statusClass = isPushed ? "matched" : isMatchedNotPushed ? "matched-not-pushed" : "";
+    const statusIcon = isPushed ? "✈️" : "🎯";
+    const statusTitle = isPushed ? "已推送" : "已匹配";
+    const statusColor = isPushed ? "" : "";
 
     const el = document.createElement("div");
     el.className = `post-card ${statusClass}`;
@@ -303,7 +305,7 @@ document.addEventListener("DOMContentLoaded", function () {
       <div class="post-meta">
         <span class="post-creator">${escapeHtml(post.creator)}</span>
         <span class="post-date">${new Date(post.pub_date).toLocaleString()}</span>
-        ${showStatus ? `<span class="tag ${statusColor}">${statusText}</span>` : ""}
+        ${showStatus ? `<span class="tag ${statusColor}" title="${statusTitle}">${statusIcon}</span>` : ""}
       </div>
     `;
     return el;
@@ -406,14 +408,17 @@ document.addEventListener("DOMContentLoaded", function () {
       loadPosts(1, currentFilters);
     });
 
-    // 只看订阅 toggle
+    // 只看订阅 toggle（查询状态 1=已匹配但未推送 和 3=已匹配且已推送成功）
     subscribedOnlyChip?.addEventListener("click", () => {
       const isActive = subscribedOnlyChip.classList.toggle("active");
 
       if (isActive) {
-        currentFilters.pushStatus = "1";
+        // 同时查询状态 1 和 3（所有已匹配的文章）
+        currentFilters.pushStatusIn = "1,3";
+        delete currentFilters.pushStatus;
         delete currentFilters.pushStatusNot;
       } else {
+        delete currentFilters.pushStatusIn;
         delete currentFilters.pushStatus;
         delete currentFilters.pushStatusNot;
       }
@@ -593,11 +598,29 @@ document.addEventListener("DOMContentLoaded", function () {
 
     document.getElementById("testTelegramBtn")?.addEventListener("click", async () => {
       Toast.info("正在测试连接...");
-      const result = await apiRequest("/telegram/test", { method: "POST" });
-      if (result?.success) {
-        Toast.success("连接测试成功");
-      } else {
+
+      // 1. 先测试 Bot 连接
+      const result = await apiRequest("/api/webhook/test-connection", { method: "POST" });
+      if (!result?.success) {
         Toast.error(result?.message || "连接测试失败");
+        return;
+      }
+
+      // 2. 如果 Chat ID 已配置，发送测试消息
+      const chatId = document.getElementById("chatId").value.trim();
+      if (chatId) {
+        Toast.info("连接成功，正在发送测试消息...");
+        const testResult = await apiRequest("/api/push/test-send", {
+          method: "POST",
+          body: JSON.stringify({ message: "📡 NodeSeeker 推送测试" }),
+        });
+        if (testResult?.success) {
+          Toast.success("连接测试成功，测试消息已发送");
+        } else {
+          Toast.warning("连接成功，但测试消息发送失败：" + (testResult?.message || "未知错误"));
+        }
+      } else {
+        Toast.success("Bot 连接测试成功（未配置 Chat ID，跳过消息测试）");
       }
     });
   }
@@ -702,34 +725,91 @@ document.addEventListener("DOMContentLoaded", function () {
     const settingsBtn = document.getElementById("settingsBtn");
     const dropdown = settingsBtn?.closest(".dropdown");
     const menu = dropdown?.querySelector(".dropdown-menu");
+    const supportsHover = window.matchMedia("(hover: hover) and (pointer: fine)")
+      .matches;
     let closeTimeout;
+    let isTouchDevice = false;
 
     if (!settingsBtn || !dropdown || !menu) return;
 
+    // 检测是否为触摸设备
+    const detectTouch = () => {
+      isTouchDevice = true;
+    };
+    settingsBtn.addEventListener("touchstart", detectTouch, { passive: true, once: true });
+
     // 显示菜单
-    const showMenu = () => {
+    const openMenu = () => {
       clearTimeout(closeTimeout);
       dropdown.classList.add("open");
     };
 
-    // 延迟关闭菜单
-    const hideMenu = () => {
+    const closeMenu = () => {
+      clearTimeout(closeTimeout);
+      dropdown.classList.remove("open");
+    };
+
+    // 延迟关闭菜单（用于桌面 hover）
+    const closeMenuWithDelay = () => {
       closeTimeout = setTimeout(() => {
-        dropdown.classList.remove("open");
+        closeMenu();
       }, 150);
     };
 
-    // 鼠标悬停显示
-    settingsBtn.addEventListener("mouseenter", showMenu);
-    menu.addEventListener("mouseenter", showMenu);
+    if (supportsHover) {
+      // 桌面端：鼠标悬停显示（仅非触摸设备）
+      settingsBtn.addEventListener("mouseenter", () => {
+        if (!isTouchDevice) openMenu();
+      });
+      menu.addEventListener("mouseenter", () => {
+        if (!isTouchDevice) openMenu();
+      });
 
-    // 鼠标移出延迟关闭
-    settingsBtn.addEventListener("mouseleave", hideMenu);
-    menu.addEventListener("mouseleave", hideMenu);
+      // 桌面端：鼠标移出延迟关闭
+      settingsBtn.addEventListener("mouseleave", () => {
+        if (!isTouchDevice) closeMenuWithDelay();
+      });
+      menu.addEventListener("mouseleave", () => {
+        if (!isTouchDevice) closeMenuWithDelay();
+      });
+    }
+
+    // 触屏/桌面通用：点击按钮切换菜单
+    settingsBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      const isOpen = dropdown.classList.contains("open");
+      if (isOpen) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    });
+
+    // 菜单内部点击不触发外部关闭
+    menu.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
 
     // 点击外部关闭
-    document.addEventListener("click", () => {
-      dropdown.classList.remove("open");
+    document.addEventListener("click", (e) => {
+      if (!dropdown.contains(e.target)) {
+        closeMenu();
+      }
+    });
+
+    // 触摸设备：点击遮罩关闭
+    document.addEventListener("touchstart", (e) => {
+      if (!dropdown.contains(e.target)) {
+        closeMenu();
+      }
+    }, { passive: true });
+
+    // ESC 快捷关闭
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeMenu();
+      }
     });
 
     // 下拉菜单项点击
@@ -737,7 +817,7 @@ document.addEventListener("DOMContentLoaded", function () {
       item.addEventListener("click", (e) => {
         e.stopPropagation();
         const drawerName = item.dataset.drawer;
-        dropdown.classList.remove("open");
+        closeMenu();
 
         // 加载对应数据并打开抽屉
         if (drawerName === "subscriptions") {

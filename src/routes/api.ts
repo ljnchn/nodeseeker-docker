@@ -18,6 +18,7 @@ import {
 } from '../utils/validation';
 import type { ContextVariables } from '../types';
 import { getEnvConfig } from '../config/env';
+import { logger } from '../utils/logger';
 
 /**
  * 智能构建 Webhook URL，考虑 CDN 代理情况
@@ -27,7 +28,7 @@ function buildWebhookUrl(c: any): string {
     
     // 优先使用环境变量配置的 Webhook URL
     if (envConfig.TELEGRAM_WEBHOOK_URL) {
-        console.log('使用环境变量配置的 Webhook URL:', envConfig.TELEGRAM_WEBHOOK_URL);
+        logger.debug('使用环境变量配置的 Webhook URL:', envConfig.TELEGRAM_WEBHOOK_URL);
         return envConfig.TELEGRAM_WEBHOOK_URL;
     }
     
@@ -46,7 +47,7 @@ function buildWebhookUrl(c: any): string {
             isHttps = visitor.scheme === 'https';
         } catch (e) {
             // 如果解析失败，使用其他方法
-            console.warn('解析 cf-visitor 头失败:', e);
+            logger.warn('解析 cf-visitor 头失败:', e);
         }
     }
     
@@ -67,7 +68,7 @@ function buildWebhookUrl(c: any): string {
     const protocol = isHttps ? 'https' : 'http';
     const webhookUrl = `${protocol}://${host}/telegram/webhook`;
     
-    console.log('URL构建详情:', {
+    logger.debug('URL构建详情:', {
         'cf-visitor': cfVisitor,
         'x-forwarded-proto': c.req.header('x-forwarded-proto'),
         'x-forwarded-ssl': c.req.header('x-forwarded-ssl'),
@@ -185,20 +186,20 @@ apiRoutes.post('/bot-token', createValidationMiddleware(botTokenSchema), async (
             if (webhook_url && webhook_url.trim()) {
                 // 使用用户提供的 webhook URL
                 finalWebhookUrl = webhook_url.trim();
-                console.log('使用用户提供的 Webhook URL:', finalWebhookUrl);
+                logger.debug('使用用户提供的 Webhook URL:', finalWebhookUrl);
             } else {
                 // 智能构建 Webhook URL
                 finalWebhookUrl = buildWebhookUrl(c);
-                console.log('自动构建的 Webhook URL:', finalWebhookUrl);
+                logger.debug('自动构建的 Webhook URL:', finalWebhookUrl);
             }
             
             webhookResult = await telegramService.setWebhook(finalWebhookUrl);
             
             if (!webhookResult.success) {
-                console.error('Webhook 设置失败:', webhookResult.error);
+                logger.error('Webhook 设置失败:', webhookResult.error);
             }
         } catch (error) {
-            console.error('Webhook 设置异常:', error);
+            logger.error('Webhook 设置异常:', error);
             webhookResult = { 
                 success: false, 
                 error: `Webhook 设置异常: ${error}`,
@@ -307,11 +308,18 @@ apiRoutes.get('/posts', createQueryValidationMiddleware(paginationSchema), async
         const query = c.get('validatedQuery');
         const dbService = c.get('dbService');
 
+        // 解析 pushStatusIn 参数（格式: "1,3"）
+        let pushStatusIn: number[] | undefined;
+        if (query.pushStatusIn) {
+            pushStatusIn = query.pushStatusIn.split(',').map((s: string) => parseInt(s.trim(), 10)).filter((n: number) => !isNaN(n));
+        }
+
         const result = dbService.getPostsWithPagination(
             query.page,
             query.limit,
             {
                 pushStatus: query.pushStatus,
+                pushStatusIn,
                 pushStatusNot: query.pushStatusNot,
                 creator: query.creator,
                 category: query.category,

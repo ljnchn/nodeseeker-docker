@@ -1,6 +1,7 @@
 import { DatabaseService } from './database';
 import type { SessionData, SessionVerification } from '../types';
 import { randomBytes } from 'crypto';
+import { logger } from '../utils/logger';
 
 export class SessionService {
   private readonly SESSION_EXPIRY_HOURS = 24 * 7; // 7天过期
@@ -71,10 +72,10 @@ export class SessionService {
         now, expiresAt, ipAddress, userAgent
       );
 
-      console.log(`创建新session: ${sessionId} for user: ${username}`);
+      logger.debug(`创建新session: ${sessionId} for user: ${username}`);
       return sessionData;
     } catch (error) {
-      console.error('创建session失败:', error);
+      logger.error('创建session失败:', error);
       throw new Error(`创建session失败: ${error}`);
     }
   }
@@ -102,7 +103,7 @@ export class SessionService {
 
       // 可选：检查IP地址是否匹配（增强安全性）
       if (row.ip_address && ipAddress && row.ip_address !== ipAddress) {
-        console.warn(`Session ${sessionId} IP地址不匹配: ${row.ip_address} vs ${ipAddress}`);
+        logger.warn(`Session ${sessionId} IP地址不匹配: ${row.ip_address} vs ${ipAddress}`);
         // 可以选择是否严格检查IP，这里仅记录警告
       }
 
@@ -122,7 +123,7 @@ export class SessionService {
 
       return { valid: true, sessionData };
     } catch (error) {
-      console.error('验证session失败:', error);
+      logger.error('验证session失败:', error);
       return { valid: false, message: `验证session失败: ${error}` };
     }
   }
@@ -139,7 +140,7 @@ export class SessionService {
       `);
       stmt.run(sessionId);
     } catch (error) {
-      console.error('更新session访问时间失败:', error);
+      logger.error('更新session访问时间失败:', error);
     }
   }
 
@@ -167,10 +168,10 @@ export class SessionService {
       verification.sessionData.expiresAt = newExpiresAt;
       verification.sessionData.lastAccessedAt = new Date().toISOString();
 
-      console.log(`刷新session: ${sessionId}`);
+      logger.debug(`刷新session: ${sessionId}`);
       return verification;
     } catch (error) {
-      console.error('刷新session失败:', error);
+      logger.error('刷新session失败:', error);
       return { valid: false, message: `刷新session失败: ${error}` };
     }
   }
@@ -188,12 +189,12 @@ export class SessionService {
       const destroyed = result.changes > 0;
       
       if (destroyed) {
-        console.log(`销毁session: ${sessionId}`);
+        logger.debug(`销毁session: ${sessionId}`);
       }
       
       return destroyed;
     } catch (error) {
-      console.error('销毁session失败:', error);
+      logger.error('销毁session失败:', error);
       return false;
     }
   }
@@ -210,10 +211,10 @@ export class SessionService {
       const result = stmt.run(userId);
       const destroyedCount = result.changes;
       
-      console.log(`销毁用户 ${userId} 的 ${destroyedCount} 个session`);
+      logger.debug(`销毁用户 ${userId} 的 ${destroyedCount} 个session`);
       return destroyedCount;
     } catch (error) {
-      console.error('销毁用户session失败:', error);
+      logger.error('销毁用户session失败:', error);
       return 0;
     }
   }
@@ -236,12 +237,12 @@ export class SessionService {
       const cleanedCount = result.changes;
       
       if (cleanedCount > 0) {
-        console.log(`清理了 ${cleanedCount} 个过期session`);
+        logger.debug(`清理了 ${cleanedCount} 个过期session`);
       }
       
       return cleanedCount;
     } catch (error) {
-      console.error('清理过期session失败:', error);
+      logger.error('清理过期session失败:', error);
       return 0;
     }
   }
@@ -271,10 +272,10 @@ export class SessionService {
         const toDelete = count - this.MAX_SESSIONS_PER_USER + 1;
         const result = deleteStmt.run(userId, toDelete);
         
-        console.log(`用户 ${userId} session数量超限，删除了 ${result.changes} 个旧session`);
+        logger.debug(`用户 ${userId} session数量超限，删除了 ${result.changes} 个旧session`);
       }
     } catch (error) {
-      console.error('限制用户session数量失败:', error);
+      logger.error('限制用户session数量失败:', error);
     }
   }
 
@@ -302,7 +303,7 @@ export class SessionService {
         userAgent: row.user_agent
       }));
     } catch (error) {
-      console.error('获取用户session列表失败:', error);
+      logger.error('获取用户session列表失败:', error);
       return [];
     }
   }
@@ -331,7 +332,7 @@ export class SessionService {
 
       return { totalSessions, activeSessions, expiredSessions };
     } catch (error) {
-      console.error('获取session统计信息失败:', error);
+      logger.error('获取session统计信息失败:', error);
       return { totalSessions: 0, activeSessions: 0, expiredSessions: 0 };
     }
   }

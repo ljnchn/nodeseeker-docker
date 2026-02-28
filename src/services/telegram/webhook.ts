@@ -1,6 +1,7 @@
 import { Context } from 'grammy';
 import { TelegramBaseService } from './base';
 import type { Post } from '../../types';
+import { logger } from '../../utils/logger';
 
 export class TelegramWebhookService extends TelegramBaseService {
   /**
@@ -11,7 +12,7 @@ export class TelegramWebhookService extends TelegramBaseService {
       await this.bot.api.sendMessage(chatId, text, { parse_mode: 'Markdown' });
       return true;
     } catch (error) {
-      console.error('发送 Telegram 消息时出错:', error);
+      logger.error('发送 Telegram 消息时出错:', error);
       return false;
     }
   }
@@ -144,7 +145,7 @@ export class TelegramWebhookService extends TelegramBaseService {
         if (!this.initialized) {
           const initResult = await this.initializeWithHandlers();
           if (!initResult) {
-            console.error('Bot 初始化失败，无法处理 webhook');
+            logger.error('Bot 初始化失败，无法处理 webhook');
             return new Response('Bot initialization failed', { status: 500 });
           }
         }
@@ -153,7 +154,7 @@ export class TelegramWebhookService extends TelegramBaseService {
         await this.bot.handleUpdate(body);
         return new Response('OK');
       } catch (error) {
-        console.error('处理 Telegram webhook 失败:', error);
+        logger.error('处理 Telegram webhook 失败:', error);
         return new Response('Error', { status: 500 });
       }
     };
@@ -167,12 +168,12 @@ export class TelegramWebhookService extends TelegramBaseService {
     error?: string;
   }> {
     try {
-      console.log('正在清空 Webhook 设置...');
+      logger.telegram('正在清空 Webhook 设置...');
       await this.bot.api.deleteWebhook();
-      console.log('Webhook 清空成功');
+      logger.telegram('Webhook 清空成功');
       return { success: true };
     } catch (error: any) {
-      console.error('清空 Webhook 失败:', error);
+      logger.error('清空 Webhook 失败:', error);
       
       let errorMessage = 'Webhook 清空失败';
       if (error && error.description) {
@@ -198,13 +199,13 @@ export class TelegramWebhookService extends TelegramBaseService {
     suggestions?: string[];
   }> {
     try {
-      console.log('正在设置 Webhook:', webhookUrl);
+      logger.telegram('正在设置 Webhook: ' + webhookUrl);
       await this.bot.api.setWebhook(webhookUrl);
-      console.log('Webhook 设置成功:', webhookUrl);
+      logger.telegram('Webhook 设置成功: ' + webhookUrl);
       return { success: true };
     } catch (error: any) {
-      console.error('设置 Webhook 失败:', error);
-      console.error('Webhook URL:', webhookUrl);
+      logger.error('设置 Webhook 失败:', error);
+      logger.error('Webhook URL:', webhookUrl);
 
       // 解析 Grammy 错误
       let errorMessage = 'Webhook 设置失败';
@@ -289,10 +290,10 @@ export class TelegramWebhookService extends TelegramBaseService {
       ];
 
       await this.bot.api.setMyCommands(commands);
-      console.log('Bot 命令菜单设置成功');
+      logger.telegram('Bot 命令菜单设置成功');
       return true;
     } catch (error) {
-      console.error('设置 Bot 命令菜单失败:', error);
+      logger.error('设置 Bot 命令菜单失败:', error);
       return false;
     }
   }
@@ -589,7 +590,7 @@ ${userBindingStatus}
 
       await ctx.reply(text, { parse_mode: 'Markdown' });
     } catch (error) {
-      console.error('处理 /getme 命令失败:', error);
+      logger.error('处理 /getme 命令失败:', error);
       await ctx.reply('❌ 获取信息时发生错误');
     }
   }

@@ -74,7 +74,7 @@ export const HomePage: FC = () => {
           {/* 工具栏 */}
           <div class="toolbar">
             <div class="toolbar-left">
-              <div class="toggle-chip" id="subscribedOnlyChip" role="button" tabindex="0">
+              <div class="toggle-chip" id="subscribedOnlyChip" role="button" tabindex={0}>
                 <span class="toggle-chip-label">只看订阅</span>
               </div>
               <button id="filterToggleBtn" class="filter-toggle-btn" title="更多筛选">

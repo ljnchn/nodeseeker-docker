@@ -4,6 +4,7 @@ import { TelegramPushService } from '../services/telegram/push';
 import { createValidationMiddleware } from '../utils/validation';
 import { createSuccessResponse, createErrorResponse } from '../utils/helpers';
 import type { ContextVariables } from '../types';
+import { logger } from '../utils/logger';
 
 type Variables = ContextVariables;
 
@@ -207,7 +208,7 @@ telegramPushRoutes.get('/status', async (c) => {
           status.can_send = !!config.chat_id;
         }
       } catch (error) {
-        console.error('检查推送服务状态失败:', error);
+        logger.error('检查推送服务状态失败:', error);
       }
     }
     

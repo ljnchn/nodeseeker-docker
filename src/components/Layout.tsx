@@ -20,6 +20,10 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         {description && <meta name="description" content={description} />}
 
+        {/* Favicon */}
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="alternate icon" type="image/x-icon" href="/favicon.ico" />
+
         {/* Inter 字体 */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />

@@ -1,5 +1,6 @@
 import { DatabaseService } from './database';
 import { TelegramPushService } from './telegram/push';
+import { logger } from '../utils/logger';
 import type { Post, KeywordSub, BaseConfig, PushResult } from '../types';
 
 export interface MatchResult {
@@ -98,7 +99,7 @@ export class MatcherService {
         const regex = new RegExp(regexInfo.pattern, flags);
         return regex.test(text);
       } catch (error) {
-        console.warn(`正则表达式语法错误，回退到字符串匹配: ${keyword}`, error);
+        logger.warn(`正则表达式语法错误，回退到字符串匹配: ${keyword}`, error);
         // 回退到字符串匹配
         return text.toLowerCase().includes(keyword.toLowerCase());
       }
@@ -262,8 +263,9 @@ export class MatcherService {
    * 
    * push_status 语义：
    *   0 = 待处理（未比对过订阅）
-   *   1 = 已匹配（命中了订阅关键词）
+   *   1 = 已匹配但未推送（命中订阅，推送失败或未配置推送）
    *   2 = 未匹配（没有命中任何订阅）
+   *   3 = 已匹配且已推送成功
    */
   async processUnpushedPosts(): Promise<PushResult> {
     const config = this.dbService.getBaseConfig();
@@ -274,12 +276,11 @@ export class MatcherService {
       return { pushed: 0, failed: 0, skipped: 0 };
     }
 
-    console.log(`找到 ${unpushedPosts.length} 篇待处理文章`);
+
 
     const result: PushResult = { pushed: 0, failed: 0, skipped: 0 };
 
     if (subscriptions.length === 0) {
-      console.log('没有订阅词，将所有待处理文章标记为未匹配');
       const batchUpdates = unpushedPosts.map(post => ({
         postId: post.post_id,
         pushStatus: 2
@@ -290,7 +291,7 @@ export class MatcherService {
           this.dbService.batchUpdatePostPushStatus(batchUpdates);
           result.skipped = batchUpdates.length;
         } catch (error) {
-          console.error('批量更新状态失败:', error);
+          logger.error('批量更新状态失败', error);
           result.failed = batchUpdates.length;
         }
       }
@@ -323,24 +324,23 @@ export class MatcherService {
         }
       } catch (error) {
         result.failed++;
-        console.error(`匹配文章失败: ${post.title}`, error);
+        logger.error(`匹配失败: ${post.title}`, error);
       }
     }
 
-    // 第二步：批量写入匹配状态（不依赖 Telegram 推送结果）
+    // 第二步：批量写入匹配状态
     const allUpdates = [...matchedUpdates, ...unmatchedUpdates];
     if (allUpdates.length > 0) {
       try {
         this.dbService.batchUpdatePostPushStatus(allUpdates);
-        console.log(`匹配处理完成: 已匹配 ${matchedUpdates.length} 篇，未匹配 ${unmatchedUpdates.length} 篇`);
       } catch (error) {
-        console.error('批量更新匹配状态失败:', error);
+        logger.error('批量更新匹配状态失败', error);
       }
     }
 
-    // 第三步：尝试推送 Telegram（独立于匹配状态）
+    // 第三步：尝试推送 Telegram
     if (config.stop_push === 1) {
-      console.log('推送已停止，跳过 Telegram 推送');
+      logger.match('推送已停止');
     } else if (this.telegramService && config.bot_token && config.chat_id) {
       let pushSuccess = 0;
       let pushFail = 0;
@@ -348,29 +348,22 @@ export class MatcherService {
       for (const { post, subscription } of matchedPostsForPush) {
         try {
           const success = await this.telegramService.pushPost(post, subscription);
-          if (success) {
-            pushSuccess++;
-          } else {
-            pushFail++;
-          }
+          if (success) pushSuccess++;
+          else pushFail++;
 
           if (pushSuccess > 0 && pushSuccess % 5 === 0) {
             await new Promise(resolve => setTimeout(resolve, 1000));
           }
         } catch (error) {
           pushFail++;
-          console.error(`推送文章到 Telegram 失败: ${post.title}`, error);
+          logger.error(`推送失败: ${post.title}`, error);
         }
       }
       
       if (matchedPostsForPush.length > 0) {
-        console.log(`Telegram 推送: 成功 ${pushSuccess} 篇，失败 ${pushFail} 篇`);
+        logger.telegram(`推送: ${pushSuccess} 成功, ${pushFail} 失败`);
       }
-    } else {
-      console.log('未配置 Telegram，跳过推送');
     }
-
-    console.log(`处理完成: 已匹配 ${result.pushed} 篇，未匹配 ${result.skipped} 篇，失败 ${result.failed} 篇`);
     return result;
   }
 
@@ -379,32 +372,36 @@ export class MatcherService {
    */
   getMatchStats(): {
     totalPosts: number;
-    unpushedPosts: number;
-    pushedPosts: number;
-    skippedPosts: number;
+    pendingPosts: number;      // 待处理 (状态 0)
+    matchedNotPushed: number;  // 已匹配但未推送 (状态 1)
+    skippedPosts: number;      // 无需推送 (状态 2)
+    pushedPosts: number;       // 已推送成功 (状态 3)
     totalSubscriptions: number;
   } {
     try {
       const totalPosts = this.dbService.getPostsCount();
-      const unpushedPosts = this.dbService.getPostsCountByStatus(0); // 未推送
-      const pushedPosts = this.dbService.getPostsCountByStatus(1); // 已推送
+      const pendingPosts = this.dbService.getPostsCountByStatus(0); // 待处理
+      const matchedNotPushed = this.dbService.getPostsCountByStatus(1); // 已匹配但未推送
       const skippedPosts = this.dbService.getPostsCountByStatus(2); // 无需推送
+      const pushedPosts = this.dbService.getPostsCountByStatus(3); // 已推送成功
       const totalSubscriptions = this.dbService.getSubscriptionsCount();
 
       return {
         totalPosts,
-        unpushedPosts,
-        pushedPosts,
+        pendingPosts,
+        matchedNotPushed,
         skippedPosts,
+        pushedPosts,
         totalSubscriptions
       };
     } catch (error) {
-      console.error('获取匹配统计失败:', error);
+      logger.error('获取匹配统计失败:', error);
       return {
         totalPosts: 0,
-        unpushedPosts: 0,
-        pushedPosts: 0,
+        pendingPosts: 0,
+        matchedNotPushed: 0,
         skippedPosts: 0,
+        pushedPosts: 0,
         totalSubscriptions: 0
       };
     }

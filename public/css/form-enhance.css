@@ -309,3 +309,29 @@ select.input-field {
   grid-column: 1 / -1;
   margin-top: 4px;
 }
+
+@media (max-width: 768px) {
+  .input-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .input-group .input-field,
+  .input-group .btn {
+    width: 100%;
+    border-radius: 8px;
+  }
+
+  .input-group .btn {
+    border-left: 1px solid var(--border-color);
+  }
+
+  .form-group-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .form-group-actions .btn {
+    width: 100%;
+  }
+}

@@ -1,5 +1,6 @@
 import { Bot } from 'grammy';
 import { DatabaseService } from '../database';
+import { logger } from '../../utils/logger';
 
 export abstract class TelegramBaseService {
   protected bot: Bot;
@@ -25,12 +26,12 @@ export abstract class TelegramBaseService {
       if (botInfo) {
         this.bot.botInfo = botInfo;
         this.initialized = true;
-        console.log(`Bot 初始化成功: ${botInfo.username} (${botInfo.id})`);
+        logger.telegram(`Bot 初始化成功: ${botInfo.username} (${botInfo.id})`);
         return true;
       }
       return false;
     } catch (error) {
-      console.error('Bot 初始化失败:', error);
+      logger.error('Bot 初始化失败:', error);
       return false;
     }
   }
@@ -87,11 +88,11 @@ export abstract class TelegramBaseService {
       if (botInfo && !this.initialized) {
         this.bot.botInfo = botInfo;
         this.initialized = true;
-        console.log(`Bot 初始化成功: ${botInfo.username} (${botInfo.id})`);
+        logger.telegram(`Bot 初始化成功: ${botInfo.username} (${botInfo.id})`);
       }
       return botInfo;
     } catch (error) {
-      console.error('获取 Bot 信息失败:', error);
+      logger.error('获取 Bot 信息失败:', error);
       return null;
     }
   }

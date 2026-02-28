@@ -2,6 +2,7 @@ import { createDatabaseConnection } from '../config/database';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import type { Database } from 'bun:sqlite';
+import { logger } from '../utils/logger';
 
 export class DatabaseMigrator {
   private db: Database;
@@ -11,7 +12,7 @@ export class DatabaseMigrator {
   }
 
   async runMigrations(): Promise<void> {
-    console.log('开始数据库迁移...');
+    logger.task.start('数据库迁移');
 
     try {
       // 创建迁移记录表
@@ -33,11 +34,11 @@ export class DatabaseMigrator {
 
       for (const filename of migrationFiles) {
         if (executedMigrations.includes(filename)) {
-          console.log(`跳过已执行的迁移: ${filename}`);
+          logger.task.info(`跳过已执行的迁移: ${filename}`);
           continue;
         }
 
-        console.log(`执行迁移: ${filename}`);
+        logger.task.info(`执行迁移: ${filename}`);
 
         const migrationPath = join(__dirname, 'migrations', filename);
         const migrationSQL = readFileSync(migrationPath, 'utf-8');
@@ -50,12 +51,12 @@ export class DatabaseMigrator {
           INSERT INTO migrations (filename) VALUES (?)
         `).run(filename);
 
-        console.log(`迁移完成: ${filename}`);
+        logger.task.info(`迁移完成: ${filename}`);
       }
 
-      console.log('所有数据库迁移完成');
+      logger.task.end('数据库迁移');
     } catch (error) {
-      console.error('数据库迁移失败:', error);
+      logger.error('数据库迁移失败:', error);
       throw error;
     }
   }

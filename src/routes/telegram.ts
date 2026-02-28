@@ -3,6 +3,7 @@ import { TelegramWebhookService } from '../services/telegram/webhook';
 import { TelegramPushService } from '../services/telegram/push';
 import { createSuccessResponse, createErrorResponse } from '../utils/helpers';
 import type { ContextVariables } from '../types';
+import { logger } from '../utils/logger';
 
 type Variables = ContextVariables;
 
@@ -15,7 +16,7 @@ telegramRoutes.post('/webhook', async (c) => {
     const config = dbService.getBaseConfig();
     
     if (!config?.bot_token) {
-      console.error('未配置 Telegram Bot Token');
+      logger.error('未配置 Telegram Bot Token');
       return c.json(createErrorResponse('未配置 Bot Token'), 400);
     }
     
@@ -27,7 +28,7 @@ telegramRoutes.post('/webhook', async (c) => {
     return await webhookHandler(c.req.raw);
     
   } catch (error) {
-    console.error('处理 Telegram webhook 失败:', error);
+    logger.error('处理 Telegram webhook 失败:', error);
     return c.json(createErrorResponse(`处理 webhook 失败: ${error}`), 500);
   }
 });
