@@ -286,8 +286,32 @@ document.addEventListener("DOMContentLoaded", function () {
     const isPushed = post.push_status === 3;
     const showStatus = isMatchedNotPushed || isPushed;
     const statusClass = isPushed ? "matched" : isMatchedNotPushed ? "matched-not-pushed" : "";
-    const statusIcon = isPushed ? "✈️" : "🎯";
-    const statusTitle = isPushed ? "已推送" : "已匹配";
+
+    // 构建匹配订阅行：条件标签(左) + 推送状态(右)
+    let subRowHtml = "";
+    if (showStatus && post.sub_id) {
+      const parts = [];
+      [post.sub_keyword1, post.sub_keyword2, post.sub_keyword3]
+        .filter((k) => k)
+        .forEach((k) => parts.push(`<span class="tag tag-blue">${escapeHtml(k)}</span>`));
+      if (post.sub_category) {
+        parts.push(`<span class="tag tag-orange">🗂️ ${escapeHtml(getCategoryName(post.sub_category))}</span>`);
+      }
+      if (post.sub_creator) {
+        parts.push(`<span class="tag tag-green">👤 ${escapeHtml(post.sub_creator)}</span>`);
+      }
+      const statusTag = isPushed
+        ? `<span class="push-status push-status-done">已推送</span>`
+        : `<span class="push-status push-status-pending">已匹配</span>`;
+      if (parts.length > 0) {
+        subRowHtml = `<div class="post-sub-row"><span class="post-sub-tags">${parts.join("")}</span>${statusTag}</div>`;
+      }
+    } else if (showStatus) {
+      const statusTag = isPushed
+        ? `<span class="push-status push-status-done">已推送</span>`
+        : `<span class="push-status push-status-pending">已匹配</span>`;
+      subRowHtml = `<div class="post-sub-row"><span></span>${statusTag}</div>`;
+    }
 
     const el = document.createElement("div");
     el.className = `post-card ${statusClass}`;
@@ -304,8 +328,8 @@ document.addEventListener("DOMContentLoaded", function () {
       <div class="post-meta">
         <span class="post-creator">${escapeHtml(post.creator)}</span>
         <span class="post-date">${new Date(post.pub_date).toLocaleString()}</span>
-        ${showStatus ? `<span class="tag tag-status" title="${statusTitle}">${statusIcon}</span>` : ""}
       </div>
+      ${subRowHtml}
     `;
     return el;
   }

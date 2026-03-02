@@ -344,7 +344,6 @@ export class DatabaseService {
 
     if (filters) {
       if (filters.pushStatusIn && filters.pushStatusIn.length > 0) {
-        // 同时查询多个状态（如 [1, 3] 表示已匹配的文章）
         const placeholders = filters.pushStatusIn.map(() => '?').join(',');
         conditions.push(`p.push_status IN (${placeholders})`);
         params.push(...filters.pushStatusIn);
@@ -376,18 +375,27 @@ export class DatabaseService {
     
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
     
-    // 查询文章
+    // 查询文章，LEFT JOIN 订阅表以获取匹配的订阅详情
     const postsStmt = this.db.query(`
-      SELECT * FROM posts 
+      SELECT p.*,
+             ks.keyword1 AS sub_keyword1,
+             ks.keyword2 AS sub_keyword2,
+             ks.keyword3 AS sub_keyword3,
+             ks.creator  AS sub_creator,
+             ks.category AS sub_category
+      FROM posts p
+      LEFT JOIN keywords_sub ks ON p.sub_id = ks.id
       ${whereClause}
-      ORDER BY pub_date DESC 
+      ORDER BY p.pub_date DESC 
       LIMIT ? OFFSET ?
     `);
     const posts = postsStmt.all(...params, limit, offset) as Post[];
     
-    // 查询总数
+    // 查询总数（使用与主查询相同的别名和 JOIN）
     const countStmt = this.db.query(`
-      SELECT COUNT(*) as count FROM posts p
+      SELECT COUNT(*) as count
+      FROM posts p
+      LEFT JOIN keywords_sub ks ON p.sub_id = ks.id
       ${whereClause}
     `);
     const countResult = countStmt.get(...params) as { count: number };
