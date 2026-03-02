@@ -328,6 +328,7 @@ export class DatabaseService {
       creator?: string;
       category?: string;
       search?: string;
+      subId?: number;
     }
   ): {
     posts: Array<Post & { keywords?: string[] }>;
@@ -370,6 +371,11 @@ export class DatabaseService {
       if (filters.search) {
         conditions.push('p.title LIKE ?');
         params.push(`%${filters.search}%`);
+      }
+      
+      if (filters.subId !== undefined) {
+        conditions.push('sub_id = ?');
+        params.push(filters.subId);
       }
     }
     

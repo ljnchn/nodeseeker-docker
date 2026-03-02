@@ -406,6 +406,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const filterToggleBtn = document.getElementById("filterToggleBtn");
     const filterPanel = document.getElementById("filterPanel");
     const filterCategory = document.getElementById("filterCategory");
+    const filterSubscription = document.getElementById("filterSubscription");
     const filterCreator = document.getElementById("filterCreator");
     const clearFiltersBtn = document.getElementById("clearFiltersBtn");
 
@@ -461,6 +462,17 @@ document.addEventListener("DOMContentLoaded", function () {
       loadPosts(1, currentFilters);
     });
 
+    // 订阅筛选
+    filterSubscription?.addEventListener("change", (e) => {
+      const value = e.target.value;
+      if (value) {
+        currentFilters.subId = value;
+      } else {
+        delete currentFilters.subId;
+      }
+      loadPosts(1, currentFilters);
+    });
+
     // 作者筛选
     filterCreator?.addEventListener("input", (e) => {
       clearTimeout(searchTimeout);
@@ -473,8 +485,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // 清除筛选
     clearFiltersBtn?.addEventListener("click", () => {
       filterCategory.value = "";
+      if (filterSubscription) filterSubscription.value = "";
       filterCreator.value = "";
       delete currentFilters.category;
+      delete currentFilters.subId;
       delete currentFilters.creator;
       loadPosts(1, currentFilters);
     });
@@ -649,6 +663,37 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // ============================================
+  // 筛选面板订阅下拉框
+  // ============================================
+  async function loadFilterSubscriptions() {
+    const filterSubscription = document.getElementById("filterSubscription");
+    if (!filterSubscription) return;
+
+    const result = await apiRequest("/api/subscriptions");
+    if (!result?.success) return;
+
+    const subs = result.data;
+    const currentValue = filterSubscription.value;
+
+    filterSubscription.innerHTML = '<option value="">全部订阅</option>';
+    subs.forEach((sub) => {
+      const keywords = [sub.keyword1, sub.keyword2, sub.keyword3].filter(Boolean).join(", ");
+      const extra = [
+        sub.creator ? `👤${sub.creator}` : "",
+        sub.category ? `📂${getCategoryName(sub.category)}` : "",
+      ].filter(Boolean).join(" ");
+      const label = [keywords, extra].filter(Boolean).join(" ") || `订阅 #${sub.id}`;
+
+      const option = document.createElement("option");
+      option.value = sub.id;
+      option.textContent = label;
+      filterSubscription.appendChild(option);
+    });
+
+    if (currentValue) filterSubscription.value = currentValue;
+  }
+
+  // ============================================
   // 订阅管理
   // ============================================
   async function loadSubscriptions() {
@@ -702,6 +747,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (result?.success) {
           Toast.success("订阅已删除");
           loadSubscriptions();
+          loadFilterSubscriptions();
         }
       });
     });
@@ -734,6 +780,7 @@ document.addEventListener("DOMContentLoaded", function () {
         Toast.success("订阅已添加");
         document.getElementById("addSubForm").reset();
         loadSubscriptions();
+        loadFilterSubscriptions();
         updateStats();
       } else {
         Toast.error(result?.message || "添加失败");
@@ -887,6 +934,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // 加载初始数据
     loadPosts();
     updateStats();
+    loadFilterSubscriptions();
   }
 
   init();
