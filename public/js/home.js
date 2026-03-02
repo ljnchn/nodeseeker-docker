@@ -288,7 +288,24 @@ document.addEventListener("DOMContentLoaded", function () {
     const statusClass = isPushed ? "matched" : isMatchedNotPushed ? "matched-not-pushed" : "";
     const statusIcon = isPushed ? "✈️" : "🎯";
     const statusTitle = isPushed ? "已推送" : "已匹配";
-    const statusColor = isPushed ? "" : "";
+
+    // 构建匹配订阅的组合条件标签
+    let subTagsHtml = "";
+    if (showStatus && post.sub_id) {
+      const parts = [];
+      [post.sub_keyword1, post.sub_keyword2, post.sub_keyword3]
+        .filter((k) => k)
+        .forEach((k) => parts.push(`<span class="tag tag-blue">${escapeHtml(k)}</span>`));
+      if (post.sub_creator) {
+        parts.push(`<span class="tag tag-green">👤 ${escapeHtml(post.sub_creator)}</span>`);
+      }
+      if (post.sub_category) {
+        parts.push(`<span class="tag tag-orange">📂 ${escapeHtml(getCategoryName(post.sub_category))}</span>`);
+      }
+      if (parts.length > 0) {
+        subTagsHtml = `<span class="post-sub-tags" title="匹配订阅条件">${statusIcon} ${parts.join("")}</span>`;
+      }
+    }
 
     const el = document.createElement("div");
     el.className = `post-card ${statusClass}`;
@@ -305,8 +322,9 @@ document.addEventListener("DOMContentLoaded", function () {
       <div class="post-meta">
         <span class="post-creator">${escapeHtml(post.creator)}</span>
         <span class="post-date">${new Date(post.pub_date).toLocaleString()}</span>
-        ${showStatus ? `<span class="tag ${statusColor}" title="${statusTitle}">${statusIcon}</span>` : ""}
+        ${showStatus && !subTagsHtml ? `<span class="tag" title="${statusTitle}">${statusIcon}</span>` : ""}
       </div>
+      ${subTagsHtml}
     `;
     return el;
   }
