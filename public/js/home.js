@@ -295,12 +295,12 @@ document.addEventListener("DOMContentLoaded", function () {
       const parts = [];
       [post.sub_keyword1, post.sub_keyword2, post.sub_keyword3]
         .filter((k) => k)
-        .forEach((k) => parts.push(`<span class="tag tag-blue">${escapeHtml(k)}</span>`));
+        .forEach((k) => parts.push(`<span class="tag tag-blue"><span class="sub-tag-label">关键词</span>${escapeHtml(k)}</span>`));
       if (post.sub_creator) {
-        parts.push(`<span class="tag tag-green">👤 ${escapeHtml(post.sub_creator)}</span>`);
+        parts.push(`<span class="tag tag-green"><span class="sub-tag-label">作者</span>${escapeHtml(post.sub_creator)}</span>`);
       }
       if (post.sub_category) {
-        parts.push(`<span class="tag tag-orange">📂 ${escapeHtml(getCategoryName(post.sub_category))}</span>`);
+        parts.push(`<span class="tag tag-orange"><span class="sub-tag-label">分类</span>${escapeHtml(getCategoryName(post.sub_category))}</span>`);
       }
       if (parts.length > 0) {
         subTagsHtml = `<span class="post-sub-tags" title="匹配订阅条件">${statusIcon} ${parts.join("")}</span>`;
