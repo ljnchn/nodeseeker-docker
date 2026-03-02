@@ -317,7 +317,7 @@ export class DatabaseService {
     return stmt.all() as Post[];
   }
 
-  // 新增：带分页的文章查询
+  // 新增：带分页的文章查询（包含匹配的关键词信息）
   getPostsWithPagination(
     page: number = 1, 
     limit: number = 30, 
@@ -330,7 +330,7 @@ export class DatabaseService {
       search?: string;
     }
   ): {
-    posts: Post[];
+    posts: Array<Post & { keywords?: string[] }>;
     total: number;
     page: number;
     totalPages: number;
