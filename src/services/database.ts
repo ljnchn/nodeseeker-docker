@@ -677,6 +677,7 @@ export class DatabaseService {
     matched_not_pushed: number; // 已匹配但未推送 (状态 1)
     total_subscriptions: number;
     today_pushed: number;
+    today_posts: number;
     last_update: string | null;
   } {
     try {
@@ -685,6 +686,7 @@ export class DatabaseService {
       const matchedNotPushed = this.getPostsCountByStatus(1); // 已匹配但未推送
       const totalSubscriptions = this.getSubscriptionsCount();
       const todayPushed = this.getTodayPushedCount();
+      const todayPosts = this.getTodayPostsCount();
       const lastUpdate = this.getLastUpdateTime();
 
       return {
@@ -693,6 +695,7 @@ export class DatabaseService {
         matched_not_pushed: matchedNotPushed,
         total_subscriptions: totalSubscriptions,
         today_pushed: todayPushed,
+        today_posts: todayPosts,
         last_update: lastUpdate
       };
     } catch (error) {
@@ -703,6 +706,7 @@ export class DatabaseService {
         matched_not_pushed: 0,
         total_subscriptions: 0,
         today_pushed: 0,
+        today_posts: 0,
         last_update: null
       };
     }

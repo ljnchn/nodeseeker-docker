@@ -526,10 +526,10 @@ document.addEventListener("DOMContentLoaded", function () {
       const data = result.data;
       // 统计抽屉
       const el = (id) => document.getElementById(id);
-      if (el("drawerStatSubscriptions")) el("drawerStatSubscriptions").textContent = data.total_subscriptions || 0;
       if (el("drawerStatTodayPushed")) el("drawerStatTodayPushed").textContent = data.today_pushed || 0;
-      if (el("drawerStatTotalPosts")) el("drawerStatTotalPosts").textContent = data.total_posts || 0;
+      if (el("drawerStatTodayPosts")) el("drawerStatTodayPosts").textContent = data.today_posts || 0;
       if (el("drawerStatPushed")) el("drawerStatPushed").textContent = data.pushed_posts || 0;
+      if (el("drawerStatTotalPosts")) el("drawerStatTotalPosts").textContent = data.total_posts || 0;
     }
   }
 
