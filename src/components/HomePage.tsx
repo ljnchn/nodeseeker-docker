@@ -111,6 +111,9 @@ export const HomePage: FC = () => {
                 <option value="inside">内版</option>
                 <option value="sandbox">沙盒</option>
               </select>
+              <select id="filterSubscription" class="filter-select">
+                <option value="">全部订阅</option>
+              </select>
               <input type="text" id="filterCreator" placeholder="作者筛选" class="filter-input" />
               <button id="clearFiltersBtn" class="btn btn-text">清除筛选</button>
             </div>
