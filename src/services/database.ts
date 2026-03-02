@@ -374,7 +374,7 @@ export class DatabaseService {
       }
       
       if (filters.subId !== undefined) {
-        conditions.push('sub_id = ?');
+        conditions.push('p.sub_id = ?');
         params.push(filters.subId);
       }
     }

@@ -287,30 +287,20 @@ document.addEventListener("DOMContentLoaded", function () {
     const showStatus = isMatchedNotPushed || isPushed;
     const statusClass = isPushed ? "matched" : isMatchedNotPushed ? "matched-not-pushed" : "";
 
-    // 构建匹配订阅行：条件标签(左) + 推送状态(右)
-    let subRowHtml = "";
+    // 判断分类和作者是否匹配
+    const isCategoryMatched = post.sub_category && post.sub_category === post.category;
+    const isCreatorMatched = post.sub_creator && post.sub_creator === post.creator;
+
+    // 构建关键词标签
+    let keywordTagsHtml = "";
     if (showStatus && post.sub_id) {
       const parts = [];
       [post.sub_keyword1, post.sub_keyword2, post.sub_keyword3]
         .filter((k) => k)
         .forEach((k) => parts.push(`<span class="tag tag-blue">${escapeHtml(k)}</span>`));
-      if (post.sub_category) {
-        parts.push(`<span class="tag tag-orange">🗂️ ${escapeHtml(getCategoryName(post.sub_category))}</span>`);
-      }
-      if (post.sub_creator) {
-        parts.push(`<span class="tag tag-green">👤 ${escapeHtml(post.sub_creator)}</span>`);
-      }
-      const statusTag = isPushed
-        ? `<span class="push-status push-status-done">已推送</span>`
-        : `<span class="push-status push-status-pending">已匹配</span>`;
       if (parts.length > 0) {
-        subRowHtml = `<div class="post-sub-row"><span class="post-sub-tags">${parts.join("")}</span>${statusTag}</div>`;
+        keywordTagsHtml = `<span class="post-sub-tags">${parts.join("")}</span>`;
       }
-    } else if (showStatus) {
-      const statusTag = isPushed
-        ? `<span class="push-status push-status-done">已推送</span>`
-        : `<span class="push-status push-status-pending">已匹配</span>`;
-      subRowHtml = `<div class="post-sub-row"><span></span>${statusTag}</div>`;
     }
 
     const el = document.createElement("div");
@@ -322,14 +312,18 @@ document.addEventListener("DOMContentLoaded", function () {
             ${escapeHtml(post.title)}
           </a>
         </h3>
-        <span class="post-category">${escapeHtml(getCategoryName(post.category))}</span>
+        <span class="post-category ${isCategoryMatched ? 'highlight' : ''}">${escapeHtml(getCategoryName(post.category))}</span>
       </div>
       <p class="post-memo">${escapeHtml(post.memo)}</p>
       <div class="post-meta">
-        <span class="post-creator">${escapeHtml(post.creator)}</span>
-        <span class="post-date">${new Date(post.pub_date).toLocaleString()}</span>
+        <div class="post-meta-left">
+          <span class="post-creator ${isCreatorMatched ? 'highlight' : ''}">${escapeHtml(post.creator)}</span>
+          <span class="post-date">${new Date(post.pub_date).toLocaleString()}</span>
+        </div>
+        <div class="post-meta-right">
+          ${keywordTagsHtml}
+        </div>
       </div>
-      ${subRowHtml}
     `;
     return el;
   }

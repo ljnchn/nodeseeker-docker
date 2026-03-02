@@ -541,10 +541,36 @@
 .post-meta {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
   font-size: 13px;
   color: var(--text-muted);
+}
+
+.post-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.post-meta-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+}
+
+/* 高亮样式 - 分类和作者匹配时使用 */
+.post-category.highlight {
+  background: var(--warning-alpha);
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.post-creator.highlight {
+  color: var(--success);
+  font-weight: 600;
 }
 
 /* ============================================
