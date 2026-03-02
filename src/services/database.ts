@@ -317,7 +317,7 @@ export class DatabaseService {
     return stmt.all() as Post[];
   }
 
-  // 新增：带分页的文章查询
+  // 新增：带分页的文章查询（包含匹配的关键词信息）
   getPostsWithPagination(
     page: number = 1, 
     limit: number = 30, 
@@ -330,7 +330,7 @@ export class DatabaseService {
       search?: string;
     }
   ): {
-    posts: Post[];
+    posts: Array<Post & { keywords?: string[] }>;
     total: number;
     page: number;
     totalPages: number;
@@ -346,48 +346,64 @@ export class DatabaseService {
       if (filters.pushStatusIn && filters.pushStatusIn.length > 0) {
         // 同时查询多个状态（如 [1, 3] 表示已匹配的文章）
         const placeholders = filters.pushStatusIn.map(() => '?').join(',');
-        conditions.push(`push_status IN (${placeholders})`);
+        conditions.push(`p.push_status IN (${placeholders})`);
         params.push(...filters.pushStatusIn);
       } else if (filters.pushStatus !== undefined && filters.pushStatus !== null && filters.pushStatus.toString() !== '') {
-        conditions.push('push_status = ?');
+        conditions.push('p.push_status = ?');
         params.push(filters.pushStatus);
       }
       
       if (filters.pushStatusNot !== undefined && filters.pushStatusNot !== null && filters.pushStatusNot.toString() !== '') {
-        conditions.push('push_status != ?');
+        conditions.push('p.push_status != ?');
         params.push(filters.pushStatusNot);
       }
       
       if (filters.creator) {
-        conditions.push('creator LIKE ?');
+        conditions.push('p.creator LIKE ?');
         params.push(`%${filters.creator}%`);
       }
       
       if (filters.category) {
-        conditions.push('category LIKE ?');
+        conditions.push('p.category LIKE ?');
         params.push(`%${filters.category}%`);
       }
       
       if (filters.search) {
-        conditions.push('title LIKE ?');
+        conditions.push('p.title LIKE ?');
         params.push(`%${filters.search}%`);
       }
     }
     
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
     
-    // 查询文章
+    // 查询文章（LEFT JOIN 关联 keywords_sub 表）
     const postsStmt = this.db.query(`
-      SELECT * FROM posts 
+      SELECT 
+        p.*,
+        k.keyword1,
+        k.keyword2,
+        k.keyword3
+      FROM posts p
+      LEFT JOIN keywords_sub k ON p.sub_id = k.id
       ${whereClause}
-      ORDER BY pub_date DESC 
+      ORDER BY p.pub_date DESC 
       LIMIT ? OFFSET ?
     `);
-    const posts = postsStmt.all(...params, limit, offset) as Post[];
+    const rows = postsStmt.all(...params, limit, offset) as Array<Post & { keyword1?: string; keyword2?: string; keyword3?: string }>;
+    
+    // 处理结果，将关键词合并为数组
+    const posts = rows.map(row => {
+      const { keyword1, keyword2, keyword3, ...post } = row;
+      const keywords = [keyword1, keyword2, keyword3].filter((k): k is string => !!k);
+      return {
+        ...post,
+        keywords: keywords.length > 0 ? keywords : undefined
+      };
+    });
     
     // 查询总数
     const countStmt = this.db.query(`
-      SELECT COUNT(*) as count FROM posts 
+      SELECT COUNT(*) as count FROM posts p
       ${whereClause}
     `);
     const countResult = countStmt.get(...params) as { count: number };
