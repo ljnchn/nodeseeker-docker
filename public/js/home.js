@@ -288,7 +288,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const statusClass = isPushed ? "matched" : isMatchedNotPushed ? "matched-not-pushed" : "";
     const statusIcon = isPushed ? "✈️" : "🎯";
     const statusTitle = isPushed ? "已推送" : "已匹配";
-    const statusColor = isPushed ? "" : "";
 
     const el = document.createElement("div");
     el.className = `post-card ${statusClass}`;
@@ -305,7 +304,7 @@ document.addEventListener("DOMContentLoaded", function () {
       <div class="post-meta">
         <span class="post-creator">${escapeHtml(post.creator)}</span>
         <span class="post-date">${new Date(post.pub_date).toLocaleString()}</span>
-        ${showStatus ? `<span class="tag ${statusColor}" title="${statusTitle}">${statusIcon}</span>` : ""}
+        ${showStatus ? `<span class="tag tag-status" title="${statusTitle}">${statusIcon}</span>` : ""}
       </div>
     `;
     return el;

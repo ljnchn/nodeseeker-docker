@@ -376,30 +376,14 @@ export class DatabaseService {
     
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
     
-    // 查询文章（LEFT JOIN 关联 keywords_sub 表）
+    // 查询文章
     const postsStmt = this.db.query(`
-      SELECT 
-        p.*,
-        k.keyword1,
-        k.keyword2,
-        k.keyword3
-      FROM posts p
-      LEFT JOIN keywords_sub k ON p.sub_id = k.id
+      SELECT * FROM posts 
       ${whereClause}
-      ORDER BY p.pub_date DESC 
+      ORDER BY pub_date DESC 
       LIMIT ? OFFSET ?
     `);
-    const rows = postsStmt.all(...params, limit, offset) as Array<Post & { keyword1?: string; keyword2?: string; keyword3?: string }>;
-    
-    // 处理结果，将关键词合并为数组
-    const posts = rows.map(row => {
-      const { keyword1, keyword2, keyword3, ...post } = row;
-      const keywords = [keyword1, keyword2, keyword3].filter((k): k is string => !!k);
-      return {
-        ...post,
-        keywords: keywords.length > 0 ? keywords : undefined
-      };
-    });
+    const posts = postsStmt.all(...params, limit, offset) as Post[];
     
     // 查询总数
     const countStmt = this.db.query(`
