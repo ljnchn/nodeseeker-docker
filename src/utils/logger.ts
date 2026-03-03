@@ -28,17 +28,17 @@ const COLORS = {
 
 // 标签配置（固定 5 字符宽度，保证对齐）
 const TAGS = {
-  debug: '[DBG]',
-  info:  '[INF]',
-  success: '[ OK]',
-  warn:  '[WRN]',
-  error: '[ERR]',
-  rss:   '[RSS]',
-  telegram: '[ TG]',
-  db:    '[ DB]',
-  match: '[MAT]',
-  server: '[SRV]',
-  scheduler: '[SCH]',
+  debug: '[🔍]',
+  info:  '[ℹ️]',
+  success: '[✅]',
+  warn:  '[⚠️]',
+  error: '[❌]',
+  rss:   '[📰]',
+  telegram: '[✈️]',
+  db:    '[🗄️]',
+  match: '[🎯]',
+  server: '[🖥️]',
+  scheduler: '[⏰]',
 };
 
 // 格式化时间
@@ -88,14 +88,14 @@ export const logger = {
 
   // 任务相关（带缩进）
   task: {
-    start: (name: string) => log('info', '[>>>]', name),
+    start: (name: string) => log('info', '[▶️]', name),
     end: (name: string, duration?: number) => {
       const timeStr = duration ? ` (${duration}ms)` : '';
-      log('info', '[<<<]', `${name}${timeStr}`);
+      log('info', '[⏹️]', `${name}${timeStr}`);
     },
-    info: (message: string) => log('info', '[   ]', `  ${message}`),
-    warn: (message: string) => log('warn', '[WRN]', `  ${message}`),
-    error: (message: string) => log('error', '[ERR]', `  ${message}`),
+    info: (message: string) => log('info', '[📋]', `  ${message}`),
+    warn: (message: string) => log('warn', '[⚠️]', `  ${message}`),
+    error: (message: string) => log('error', '[❌]', `  ${message}`),
   },
 
   // 统计输出

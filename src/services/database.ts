@@ -317,7 +317,7 @@ export class DatabaseService {
     return stmt.all() as Post[];
   }
 
-  // 新增：带分页的文章查询
+  // 新增：带分页的文章查询（包含匹配的关键词信息）
   getPostsWithPagination(
     page: number = 1, 
     limit: number = 30, 
@@ -328,9 +328,10 @@ export class DatabaseService {
       creator?: string;
       category?: string;
       search?: string;
+      subId?: number;
     }
   ): {
-    posts: Post[];
+    posts: Array<Post & { keywords?: string[] }>;
     total: number;
     page: number;
     totalPages: number;
@@ -344,50 +345,63 @@ export class DatabaseService {
 
     if (filters) {
       if (filters.pushStatusIn && filters.pushStatusIn.length > 0) {
-        // 同时查询多个状态（如 [1, 3] 表示已匹配的文章）
         const placeholders = filters.pushStatusIn.map(() => '?').join(',');
-        conditions.push(`push_status IN (${placeholders})`);
+        conditions.push(`p.push_status IN (${placeholders})`);
         params.push(...filters.pushStatusIn);
       } else if (filters.pushStatus !== undefined && filters.pushStatus !== null && filters.pushStatus.toString() !== '') {
-        conditions.push('push_status = ?');
+        conditions.push('p.push_status = ?');
         params.push(filters.pushStatus);
       }
       
       if (filters.pushStatusNot !== undefined && filters.pushStatusNot !== null && filters.pushStatusNot.toString() !== '') {
-        conditions.push('push_status != ?');
+        conditions.push('p.push_status != ?');
         params.push(filters.pushStatusNot);
       }
       
       if (filters.creator) {
-        conditions.push('creator LIKE ?');
+        conditions.push('p.creator LIKE ?');
         params.push(`%${filters.creator}%`);
       }
       
       if (filters.category) {
-        conditions.push('category LIKE ?');
+        conditions.push('p.category LIKE ?');
         params.push(`%${filters.category}%`);
       }
       
       if (filters.search) {
-        conditions.push('title LIKE ?');
+        conditions.push('p.title LIKE ?');
         params.push(`%${filters.search}%`);
+      }
+      
+      if (filters.subId !== undefined) {
+        conditions.push('p.sub_id = ?');
+        params.push(filters.subId);
       }
     }
     
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
     
-    // 查询文章
+    // 查询文章，LEFT JOIN 订阅表以获取匹配的订阅详情
     const postsStmt = this.db.query(`
-      SELECT * FROM posts 
+      SELECT p.*,
+             ks.keyword1 AS sub_keyword1,
+             ks.keyword2 AS sub_keyword2,
+             ks.keyword3 AS sub_keyword3,
+             ks.creator  AS sub_creator,
+             ks.category AS sub_category
+      FROM posts p
+      LEFT JOIN keywords_sub ks ON p.sub_id = ks.id
       ${whereClause}
-      ORDER BY pub_date DESC 
+      ORDER BY p.pub_date DESC 
       LIMIT ? OFFSET ?
     `);
     const posts = postsStmt.all(...params, limit, offset) as Post[];
     
-    // 查询总数
+    // 查询总数（使用与主查询相同的别名和 JOIN）
     const countStmt = this.db.query(`
-      SELECT COUNT(*) as count FROM posts 
+      SELECT COUNT(*) as count
+      FROM posts p
+      LEFT JOIN keywords_sub ks ON p.sub_id = ks.id
       ${whereClause}
     `);
     const countResult = countStmt.get(...params) as { count: number };
@@ -663,6 +677,7 @@ export class DatabaseService {
     matched_not_pushed: number; // 已匹配但未推送 (状态 1)
     total_subscriptions: number;
     today_pushed: number;
+    today_posts: number;
     last_update: string | null;
   } {
     try {
@@ -671,6 +686,7 @@ export class DatabaseService {
       const matchedNotPushed = this.getPostsCountByStatus(1); // 已匹配但未推送
       const totalSubscriptions = this.getSubscriptionsCount();
       const todayPushed = this.getTodayPushedCount();
+      const todayPosts = this.getTodayPostsCount();
       const lastUpdate = this.getLastUpdateTime();
 
       return {
@@ -679,6 +695,7 @@ export class DatabaseService {
         matched_not_pushed: matchedNotPushed,
         total_subscriptions: totalSubscriptions,
         today_pushed: todayPushed,
+        today_posts: todayPosts,
         last_update: lastUpdate
       };
     } catch (error) {
@@ -689,6 +706,7 @@ export class DatabaseService {
         matched_not_pushed: 0,
         total_subscriptions: 0,
         today_pushed: 0,
+        today_posts: 0,
         last_update: null
       };
     }

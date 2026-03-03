@@ -180,7 +180,27 @@ export class RSSService {
       if (error instanceof Error && error.name === "AbortError") {
         throw new Error(`RSS 请求超时 (${this.TIMEOUT}ms)`);
       }
-      throw new Error(`RSS 抓取失败: ${error}`);
+      
+      // 提取友好的错误信息
+      let errorMessage = '未知错误';
+      if (error instanceof Error) {
+        const message = error.message;
+        if (message.includes('socket connection was closed unexpectedly')) {
+          errorMessage = '连接被意外关闭（网络不稳定或服务器拒绝连接）';
+        } else if (message.includes('ENOTFOUND') || message.includes('getaddrinfo')) {
+          errorMessage = 'DNS 解析失败（请检查 RSS 地址是否正确）';
+        } else if (message.includes('ETIMEDOUT') || message.includes('timeout')) {
+          errorMessage = '连接超时（网络延迟或服务器响应慢）';
+        } else if (message.includes('ECONNREFUSED')) {
+          errorMessage = '连接被拒绝（服务器未运行或端口错误）';
+        } else if (message.includes('certificate') || message.includes('TLS') || message.includes('SSL')) {
+          errorMessage = 'SSL/TLS 证书错误';
+        } else {
+          errorMessage = message;
+        }
+      }
+      
+      throw new Error(`RSS 抓取失败: ${errorMessage}`);
     }
   }
 

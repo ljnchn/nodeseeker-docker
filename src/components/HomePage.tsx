@@ -111,6 +111,9 @@ export const HomePage: FC = () => {
                 <option value="inside">内版</option>
                 <option value="sandbox">沙盒</option>
               </select>
+              <select id="filterSubscription" class="filter-select">
+                <option value="">全部订阅</option>
+              </select>
               <input type="text" id="filterCreator" placeholder="作者筛选" class="filter-input" />
               <button id="clearFiltersBtn" class="btn btn-text">清除筛选</button>
             </div>
@@ -384,20 +387,20 @@ export const HomePage: FC = () => {
         <div class="drawer-content">
           <div class="stats-grid-simple">
             <div class="stat-card-simple">
-              <span class="stat-value" id="drawerStatSubscriptions">0</span>
-              <span class="stat-label">关键词订阅</span>
-            </div>
-            <div class="stat-card-simple">
               <span class="stat-value" id="drawerStatTodayPushed">0</span>
-              <span class="stat-label">今日匹配</span>
+              <span class="stat-label">今天匹配</span>
             </div>
             <div class="stat-card-simple">
-              <span class="stat-value" id="drawerStatTotalPosts">0</span>
-              <span class="stat-label">帖子总数</span>
+              <span class="stat-value" id="drawerStatTodayPosts">0</span>
+              <span class="stat-label">今日帖子</span>
             </div>
             <div class="stat-card-simple">
               <span class="stat-value" id="drawerStatPushed">0</span>
-              <span class="stat-label">累计匹配</span>
+              <span class="stat-label">历史匹配</span>
+            </div>
+            <div class="stat-card-simple">
+              <span class="stat-value" id="drawerStatTotalPosts">0</span>
+              <span class="stat-label">历史帖子</span>
             </div>
           </div>
         </div>

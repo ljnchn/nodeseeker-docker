@@ -113,7 +113,8 @@ export class SchedulerService {
 
         } catch (error) {
             const duration = Date.now() - startTime;
-            logger.error(`RSS 任务失败 (${duration}ms)`, error);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            logger.warn(`RSS 任务失败 (${duration}ms): ${errorMessage}`);
         }
     }
 

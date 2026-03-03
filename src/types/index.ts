@@ -162,6 +162,7 @@ export interface DatabaseStats {
   pushed_posts: number;       // 已推送成功 (状态 3)
   total_subscriptions: number;
   today_pushed: number;       // 今日推送成功
+  today_posts: number;        // 今日帖子数
   today_messages: number;
   last_update: string | null;
 }

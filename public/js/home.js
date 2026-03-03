@@ -286,9 +286,22 @@ document.addEventListener("DOMContentLoaded", function () {
     const isPushed = post.push_status === 3;
     const showStatus = isMatchedNotPushed || isPushed;
     const statusClass = isPushed ? "matched" : isMatchedNotPushed ? "matched-not-pushed" : "";
-    const statusIcon = isPushed ? "✈️" : "🎯";
-    const statusTitle = isPushed ? "已推送" : "已匹配";
-    const statusColor = isPushed ? "" : "";
+
+    // 判断分类和作者是否匹配
+    const isCategoryMatched = post.sub_category && post.sub_category === post.category;
+    const isCreatorMatched = post.sub_creator && post.sub_creator === post.creator;
+
+    // 构建关键词标签
+    let keywordTagsHtml = "";
+    if (showStatus && post.sub_id) {
+      const parts = [];
+      [post.sub_keyword1, post.sub_keyword2, post.sub_keyword3]
+        .filter((k) => k)
+        .forEach((k) => parts.push(`<span class="tag tag-blue">${escapeHtml(k)}</span>`));
+      if (parts.length > 0) {
+        keywordTagsHtml = `<span class="post-sub-tags">${parts.join("")}</span>`;
+      }
+    }
 
     const el = document.createElement("div");
     el.className = `post-card ${statusClass}`;
@@ -299,13 +312,17 @@ document.addEventListener("DOMContentLoaded", function () {
             ${escapeHtml(post.title)}
           </a>
         </h3>
-        <span class="post-category">${escapeHtml(getCategoryName(post.category))}</span>
+        <span class="post-category ${isCategoryMatched ? 'highlight' : ''}">${escapeHtml(getCategoryName(post.category))}</span>
       </div>
       <p class="post-memo">${escapeHtml(post.memo)}</p>
       <div class="post-meta">
-        <span class="post-creator">${escapeHtml(post.creator)}</span>
-        <span class="post-date">${new Date(post.pub_date).toLocaleString()}</span>
-        ${showStatus ? `<span class="tag ${statusColor}" title="${statusTitle}">${statusIcon}</span>` : ""}
+        <div class="post-meta-left">
+          <span class="post-creator ${isCreatorMatched ? 'highlight' : ''}">${escapeHtml(post.creator)}</span>
+          <span class="post-date">${new Date(post.pub_date).toLocaleString()}</span>
+        </div>
+        <div class="post-meta-right">
+          ${keywordTagsHtml}
+        </div>
       </div>
     `;
     return el;
@@ -383,6 +400,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const filterToggleBtn = document.getElementById("filterToggleBtn");
     const filterPanel = document.getElementById("filterPanel");
     const filterCategory = document.getElementById("filterCategory");
+    const filterSubscription = document.getElementById("filterSubscription");
     const filterCreator = document.getElementById("filterCreator");
     const clearFiltersBtn = document.getElementById("clearFiltersBtn");
 
@@ -438,6 +456,17 @@ document.addEventListener("DOMContentLoaded", function () {
       loadPosts(1, currentFilters);
     });
 
+    // 订阅筛选
+    filterSubscription?.addEventListener("change", (e) => {
+      const value = e.target.value;
+      if (value) {
+        currentFilters.subId = value;
+      } else {
+        delete currentFilters.subId;
+      }
+      loadPosts(1, currentFilters);
+    });
+
     // 作者筛选
     filterCreator?.addEventListener("input", (e) => {
       clearTimeout(searchTimeout);
@@ -450,8 +479,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // 清除筛选
     clearFiltersBtn?.addEventListener("click", () => {
       filterCategory.value = "";
+      if (filterSubscription) filterSubscription.value = "";
       filterCreator.value = "";
       delete currentFilters.category;
+      delete currentFilters.subId;
       delete currentFilters.creator;
       loadPosts(1, currentFilters);
     });
@@ -495,10 +526,10 @@ document.addEventListener("DOMContentLoaded", function () {
       const data = result.data;
       // 统计抽屉
       const el = (id) => document.getElementById(id);
-      if (el("drawerStatSubscriptions")) el("drawerStatSubscriptions").textContent = data.total_subscriptions || 0;
       if (el("drawerStatTodayPushed")) el("drawerStatTodayPushed").textContent = data.today_pushed || 0;
-      if (el("drawerStatTotalPosts")) el("drawerStatTotalPosts").textContent = data.total_posts || 0;
+      if (el("drawerStatTodayPosts")) el("drawerStatTodayPosts").textContent = data.today_posts || 0;
       if (el("drawerStatPushed")) el("drawerStatPushed").textContent = data.pushed_posts || 0;
+      if (el("drawerStatTotalPosts")) el("drawerStatTotalPosts").textContent = data.total_posts || 0;
     }
   }
 
@@ -626,6 +657,37 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // ============================================
+  // 筛选面板订阅下拉框
+  // ============================================
+  async function loadFilterSubscriptions() {
+    const filterSubscription = document.getElementById("filterSubscription");
+    if (!filterSubscription) return;
+
+    const result = await apiRequest("/api/subscriptions");
+    if (!result?.success) return;
+
+    const subs = result.data;
+    const currentValue = filterSubscription.value;
+
+    filterSubscription.innerHTML = '<option value="">全部订阅</option>';
+    subs.forEach((sub) => {
+      const keywords = [sub.keyword1, sub.keyword2, sub.keyword3].filter(Boolean).join(", ");
+      const extra = [
+        sub.creator ? `👤${sub.creator}` : "",
+        sub.category ? `📂${getCategoryName(sub.category)}` : "",
+      ].filter(Boolean).join(" ");
+      const label = [keywords, extra].filter(Boolean).join(" ") || `订阅 #${sub.id}`;
+
+      const option = document.createElement("option");
+      option.value = sub.id;
+      option.textContent = label;
+      filterSubscription.appendChild(option);
+    });
+
+    if (currentValue) filterSubscription.value = currentValue;
+  }
+
+  // ============================================
   // 订阅管理
   // ============================================
   async function loadSubscriptions() {
@@ -679,6 +741,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (result?.success) {
           Toast.success("订阅已删除");
           loadSubscriptions();
+          loadFilterSubscriptions();
         }
       });
     });
@@ -711,6 +774,7 @@ document.addEventListener("DOMContentLoaded", function () {
         Toast.success("订阅已添加");
         document.getElementById("addSubForm").reset();
         loadSubscriptions();
+        loadFilterSubscriptions();
         updateStats();
       } else {
         Toast.error(result?.message || "添加失败");
@@ -864,6 +928,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // 加载初始数据
     loadPosts();
     updateStats();
+    loadFilterSubscriptions();
   }
 
   init();
