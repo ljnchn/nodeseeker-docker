@@ -89,6 +89,38 @@ type Variables = ContextVariables & {
 
 export const apiRoutes = new Hono<{ Variables: Variables }>();
 
+// 公开路由（无需认证）
+apiRoutes.get('/posts', createQueryValidationMiddleware(paginationSchema), async (c) => {
+    try {
+        const query = c.get('validatedQuery');
+        const dbService = c.get('dbService');
+
+        // 解析 pushStatusIn 参数（格式: "1,3"）
+        let pushStatusIn: number[] | undefined;
+        if (query.pushStatusIn) {
+            pushStatusIn = query.pushStatusIn.split(',').map((s: string) => parseInt(s.trim(), 10)).filter((n: number) => !isNaN(n));
+        }
+
+        const result = dbService.getPostsWithPagination(
+            query.page,
+            query.limit,
+            {
+                pushStatus: query.pushStatus,
+                pushStatusIn,
+                pushStatusNot: query.pushStatusNot,
+                creator: query.creator,
+                category: query.category,
+                search: query.search,
+                subId: query.subId
+            }
+        );
+
+        return c.json(createSuccessResponse(result));
+    } catch (error) {
+        return c.json(createErrorResponse(`获取文章列表失败: ${error}`), 500);
+    }
+});
+
 // Session 中间件
 const sessionMiddleware = async (c: any, next: any) => {
     const authHeader = c.req.header('Authorization');
@@ -99,11 +131,11 @@ const sessionMiddleware = async (c: any, next: any) => {
 
     const sessionId = authHeader.substring(7);
     const authService = c.get('authService');
-    
+
     // 获取客户端IP地址用于验证
-    const ipAddress = c.req.header('x-forwarded-for') || 
-                     c.req.header('x-real-ip') || 
-                     c.env?.CF_CONNECTING_IP || 
+    const ipAddress = c.req.header('x-forwarded-for') ||
+                     c.req.header('x-real-ip') ||
+                     c.env?.CF_CONNECTING_IP ||
                      '127.0.0.1';
 
     const verification = await authService.verifySession(sessionId, ipAddress);
@@ -117,7 +149,7 @@ const sessionMiddleware = async (c: any, next: any) => {
     await next();
 };
 
-// 应用Session中间件到所有API路由
+// 应用Session中间件到所有后续API路由
 apiRoutes.use('*', sessionMiddleware);
 
 // 获取基础配置
@@ -299,38 +331,6 @@ apiRoutes.delete('/subscriptions/:id', createParamValidationMiddleware(idParamSc
         return c.json(createSuccessResponse(null, '订阅删除成功'));
     } catch (error) {
         return c.json(createErrorResponse(`删除订阅失败: ${error}`), 500);
-    }
-});
-
-// 获取文章列表
-apiRoutes.get('/posts', createQueryValidationMiddleware(paginationSchema), async (c) => {
-    try {
-        const query = c.get('validatedQuery');
-        const dbService = c.get('dbService');
-
-        // 解析 pushStatusIn 参数（格式: "1,3"）
-        let pushStatusIn: number[] | undefined;
-        if (query.pushStatusIn) {
-            pushStatusIn = query.pushStatusIn.split(',').map((s: string) => parseInt(s.trim(), 10)).filter((n: number) => !isNaN(n));
-        }
-
-        const result = dbService.getPostsWithPagination(
-            query.page,
-            query.limit,
-            {
-                pushStatus: query.pushStatus,
-                pushStatusIn,
-                pushStatusNot: query.pushStatusNot,
-                creator: query.creator,
-                category: query.category,
-                search: query.search,
-                subId: query.subId
-            }
-        );
-
-        return c.json(createSuccessResponse(result));
-    } catch (error) {
-        return c.json(createErrorResponse(`获取文章列表失败: ${error}`), 500);
     }
 });
 

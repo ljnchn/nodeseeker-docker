@@ -4,11 +4,26 @@
 
 document.addEventListener("DOMContentLoaded", function () {
   const sessionId = localStorage.getItem("sessionId");
+  const isLoggedIn = !!sessionId;
 
-  // 检查登录状态
-  if (!sessionId) {
-    window.location.href = "/login";
-    return;
+  // 根据登录状态显示/隐藏元素
+  const loginBtn = document.getElementById("loginBtn");
+  const settingsDropdown = document.getElementById("settingsDropdown");
+  const subscribedOnlyChip = document.getElementById("subscribedOnlyChip");
+  const filterSubscription = document.getElementById("filterSubscription");
+  
+  if (isLoggedIn) {
+    // 已登录：显示设置菜单和订阅相关功能，隐藏登录按钮
+    if (loginBtn) loginBtn.style.display = "none";
+    if (settingsDropdown) settingsDropdown.style.display = "block";
+    if (subscribedOnlyChip) subscribedOnlyChip.style.display = "inline-flex";
+    if (filterSubscription) filterSubscription.style.display = "block";
+  } else {
+    // 未登录：显示登录按钮，隐藏设置菜单和订阅相关功能
+    if (loginBtn) loginBtn.style.display = "inline-flex";
+    if (settingsDropdown) settingsDropdown.style.display = "none";
+    if (subscribedOnlyChip) subscribedOnlyChip.style.display = "none";
+    if (filterSubscription) filterSubscription.style.display = "none";
   }
 
   // ============================================
@@ -81,21 +96,26 @@ document.addEventListener("DOMContentLoaded", function () {
   // API 请求封装
   // ============================================
   async function apiRequest(url, options = {}) {
-    const defaultOptions = {
-      headers: {
-        Authorization: `Bearer ${sessionId}`,
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
+    const headers = {
+      "Content-Type": "application/json",
+      ...options.headers,
     };
+
+    if (sessionId) {
+      headers.Authorization = `Bearer ${sessionId}`;
+    }
+
+    const defaultOptions = { headers };
 
     try {
       const response = await fetch(url, { ...options, ...defaultOptions });
       const result = await response.json();
 
       if (response.status === 401) {
-        localStorage.removeItem("sessionId");
-        window.location.href = "/login";
+        if (sessionId) {
+          localStorage.removeItem("sessionId");
+          window.location.href = "/login";
+        }
         return null;
       }
 
@@ -521,6 +541,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // 统计数据
   // ============================================
   async function updateStats() {
+    if (!isLoggedIn) return;
     const result = await apiRequest("/api/stats");
     if (result?.success) {
       const data = result.data;
@@ -660,6 +681,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // 筛选面板订阅下拉框
   // ============================================
   async function loadFilterSubscriptions() {
+    if (!isLoggedIn) return;
     const filterSubscription = document.getElementById("filterSubscription");
     if (!filterSubscription) return;
 

@@ -21,7 +21,12 @@ export const HomePage: FC = () => {
                 <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
               </svg>
             </button>
-            <div class="dropdown">
+            {/* 登录按钮 - 未登录时显示 */}
+            <a href="/login" id="loginBtn" class="btn btn-sm btn-primary" style="display: none;">
+              登录
+            </a>
+            {/* 设置下拉菜单 - 登录时显示 */}
+            <div class="dropdown" id="settingsDropdown" style="display: none;">
               <button id="settingsBtn" class="icon-btn" title="设置">
                 <svg viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
@@ -74,7 +79,8 @@ export const HomePage: FC = () => {
           {/* 工具栏 */}
           <div class="toolbar">
             <div class="toolbar-left">
-              <div class="toggle-chip" id="subscribedOnlyChip" role="button" tabindex={0}>
+              {/* 只看订阅 - 登录时显示 */}
+              <div class="toggle-chip" id="subscribedOnlyChip" role="button" tabindex={0} style="display: none;">
                 <span class="toggle-chip-label">只看订阅</span>
               </div>
               <button id="filterToggleBtn" class="filter-toggle-btn" title="更多筛选">
@@ -111,7 +117,8 @@ export const HomePage: FC = () => {
                 <option value="inside">内版</option>
                 <option value="sandbox">沙盒</option>
               </select>
-              <select id="filterSubscription" class="filter-select">
+              {/* 订阅筛选 - 登录时显示 */}
+              <select id="filterSubscription" class="filter-select" style="display: none;">
                 <option value="">全部订阅</option>
               </select>
               <input type="text" id="filterCreator" placeholder="作者筛选" class="filter-input" />
