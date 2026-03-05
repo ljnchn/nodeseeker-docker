@@ -21,7 +21,7 @@ export const InitPage: FC = () => {
         <div class="content-wrapper" style="padding-top: 40px;">
           <div class="form-card" style={{ maxWidth: "400px", margin: "0 auto" }}>
             <div style="text-align: center; margin-bottom: 24px;">
-              <div style="font-size: 48px; margin-bottom: 12px;">🚀</div>
+              <div style="font-size: 48px; margin-bottom: 12px;">📡</div>
               <h2 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">
                 欢迎使用 NodeSeeker
               </h2>
