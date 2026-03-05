@@ -7,8 +7,7 @@
     "start": "bun run dist/server.js",
     "db:migrate": "bun run src/database/run-migrations.ts",
     "db:reset": "bun run src/database/reset-database.ts",
-    "test": "bun test",
-    "pwa:icons": "python scripts/generate-favicon-png.py"
+    "test": "bun test"
   },
   "dependencies": {
     "hono": "^4.9.2",

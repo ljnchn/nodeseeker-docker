@@ -1,49 +1,64 @@
-# PWA Icons
+# Icons 目录
 
-PWA 图标已基于 `favicon.svg` (📡) 生成。
+PWA 和网站图标目录。
 
-## 图标列表
+## 目录结构
 
-### PNG 图标（推荐）
-
-| 文件名 | 尺寸 | 用途 |
-|--------|------|------|
-| icon-72x72.png | 72x72 | Android 启动图标 |
-| icon-96x96.png | 96x96 | Android 启动图标 |
-| icon-128x128.png | 128x128 | Chrome Web Store |
-| icon-144x144.png | 144x144 | Microsoft 磁贴 |
-| icon-152x152.png | 152x152 | iPad 主屏幕 |
-| icon-192x192.png | 192x192 | Android 主屏幕 |
-| icon-384x384.png | 384x384 | Android 启动画面 |
-| icon-512x512.png | 512x512 | Android 启动画面 |
-| maskable-icon.png | 512x512 | Android 自适应图标 |
-
-### 源文件
-
-- **favicon.svg** - 主图标源文件（位于 `public/favicon.svg`）
-- **maskable-icon.svg** - 自适应图标源文件
-
-## 重新生成图标
-
-如果修改了 `favicon.svg`，可以重新生成 PNG 图标：
-
-```bash
-python scripts/generate-favicon-png.py
+```
+public/icons/
+├── favicon.ico                 # 主 favicon
+├── og-image.png               # Open Graph 图片 (1200x630)
+├── pwa-icon-512x512.png       # PWA 启动画面图标 (512x512)
+├── favicons/                  # 浏览器 favicon
+│   ├── favicon-16x16.png
+│   ├── favicon-32x32.png
+│   └── favicon-48x48.png
+└── apple-touch-icon/          # Apple 设备图标 + PWA 图标
+    ├── apple-touch-icon-57x57.png
+    ├── apple-touch-icon-60x60.png
+    ├── apple-touch-icon-72x72.png
+    ├── apple-touch-icon-76x76.png
+    ├── apple-touch-icon-114x114.png
+    ├── apple-touch-icon-120x120.png
+    ├── apple-touch-icon-144x144.png
+    ├── apple-touch-icon-152x152.png
+    ├── apple-touch-icon-180x180.png
+    └── apple-touch-icon-192x192.png   # PWA 必需
 ```
 
-要求：
-- Python 3.x
-- Pillow (`pip install Pillow`)
+## 图标用途
 
-或使用 CairoSVG（效果更好）：
+| 路径 | 用途 |
+|------|------|
+| `favicon.ico` | 浏览器标签页图标 |
+| `favicons/*.png` | 各种尺寸的浏览器图标 |
+| `apple-touch-icon/*.png` | iOS 主屏幕图标 |
+| `apple-touch-icon-192x192.png` | **PWA 安装图标 (必需)** |
+| `pwa-icon-512x512.png` | **PWA 启动画面 (推荐)** |
+| `og-image.png` | 社交媒体分享预览图 |
+
+## PWA 必需图标
+
+为了 PWA 安装提示正常工作，你需要这两个文件：
+
+1. **`apple-touch-icon/apple-touch-icon-192x192.png`** (必需)
+   - 用于 PWA 安装图标
+   - 如果没有，复制 180x180 并重命名
+
+2. **`pwa-icon-512x512.png`** (推荐)
+   - 用于 PWA 启动画面
+   - 如果没有，可以将 192x192 放大或重新导出
+
+## 快速修复
+
+如果没有 192x192 和 512x512：
+
 ```bash
-pip install cairosvg
-python scripts/generate-favicon-png.py
+# 复制 180x180 作为 192x192 (临时方案)
+cp apple-touch-icon/apple-touch-icon-180x180.png apple-touch-icon/apple-touch-icon-192x192.png
+
+# 复制 192x192 作为 512x512 (临时方案)
+cp apple-touch-icon/apple-touch-icon-192x192.png pwa-icon-512x512.png
 ```
 
-## 图标设计
-
-图标基于 favicon.svg 中的 📡 (卫星天线 emoji)，使用：
-- 背景色：`#0f172a`（深蓝 slate）
-- 圆角矩形背景
-- 蓝色信号塔图形
+> 建议后期重新导出清晰的 192x192 和 512x512 图标。

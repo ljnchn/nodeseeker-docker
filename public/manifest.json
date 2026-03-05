@@ -1,7 +1,7 @@
 {
-    "name": "NodeSeeker RSS 监控",
+    "name": "NodeSeeker",
     "short_name": "NodeSeeker",
-    "description": "NodeSeek 社区 RSS 监控和 Telegram 推送通知系统",
+    "description": "NodeSeeker RSS 监控",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#0f172a",
@@ -13,78 +13,60 @@
     "categories": ["utilities", "productivity", "news"],
     "icons": [
         {
-            "src": "/icons/icon-192x192.png",
+            "src": "/icons/apple-touch-icon/apple-touch-icon-192x192.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "/icons/icon-512x512.png",
+            "src": "/icons/pwa-icon-512x512.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "/icons/maskable-icon.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "maskable"
-        },
-        {
-            "src": "/favicon.svg",
-            "sizes": "any",
-            "type": "image/svg+xml",
-            "purpose": "any"
-        },
-        {
-            "src": "/icons/icon-72x72.png",
-            "sizes": "72x72",
+            "src": "/icons/apple-touch-icon/apple-touch-icon-180x180.png",
+            "sizes": "180x180",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "/icons/icon-96x96.png",
-            "sizes": "96x96",
-            "type": "image/png",
-            "purpose": "any"
-        },
-        {
-            "src": "/icons/icon-128x128.png",
-            "sizes": "128x128",
-            "type": "image/png",
-            "purpose": "any"
-        },
-        {
-            "src": "/icons/icon-144x144.png",
-            "sizes": "144x144",
-            "type": "image/png",
-            "purpose": "any"
-        },
-        {
-            "src": "/icons/icon-152x152.png",
+            "src": "/icons/apple-touch-icon/apple-touch-icon-152x152.png",
             "sizes": "152x152",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "/icons/icon-384x384.png",
-            "sizes": "384x384",
+            "src": "/icons/apple-touch-icon/apple-touch-icon-144x144.png",
+            "sizes": "144x144",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/apple-touch-icon/apple-touch-icon-120x120.png",
+            "sizes": "120x120",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/apple-touch-icon/apple-touch-icon-72x72.png",
+            "sizes": "72x72",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/favicons/favicon-48x48.png",
+            "sizes": "48x48",
             "type": "image/png",
             "purpose": "any"
         }
     ],
     "screenshots": [
         {
-            "src": "/screenshots/desktop.png",
-            "sizes": "1280x720",
+            "src": "/icons/og-image.png",
+            "sizes": "1200x630",
             "type": "image/png",
             "form_factor": "wide"
-        },
-        {
-            "src": "/screenshots/mobile.png",
-            "sizes": "750x1334",
-            "type": "image/png",
-            "form_factor": "narrow"
         }
     ],
     "shortcuts": [
@@ -93,21 +75,21 @@
             "short_name": "仪表盘",
             "description": "查看 RSS 监控仪表盘",
             "url": "/dashboard",
-            "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+            "icons": [{ "src": "/icons/apple-touch-icon/apple-touch-icon-192x192.png", "sizes": "192x192" }]
         },
         {
             "name": "关键词",
             "short_name": "关键词",
             "description": "管理监控关键词",
             "url": "/keywords",
-            "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+            "icons": [{ "src": "/icons/apple-touch-icon/apple-touch-icon-192x192.png", "sizes": "192x192" }]
         },
         {
             "name": "设置",
             "short_name": "设置",
             "description": "系统设置",
             "url": "/settings",
-            "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+            "icons": [{ "src": "/icons/apple-touch-icon/apple-touch-icon-192x192.png", "sizes": "192x192" }]
         }
     ]
 }
