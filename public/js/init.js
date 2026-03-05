@@ -1,12 +1,12 @@
 // 初始化页面 JavaScript
 document.addEventListener('DOMContentLoaded', function() {
   const initForm = document.getElementById('initForm');
-  const messageDiv = document.getElementById('message');
+  const messageDiv = document.getElementById('initMessage');
 
   // 显示消息
   function showMessage(message, type = 'info') {
     messageDiv.textContent = message;
-    messageDiv.className = `message ${type}`;
+    messageDiv.className = `login-message ${type}`;
     messageDiv.style.display = 'block';
   }
 

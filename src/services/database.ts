@@ -616,14 +616,14 @@ export class DatabaseService {
   }
 
   getTodayPushedCount(): number {
-    const cacheKey = this.getCacheKey('getTodayPushedCount', []);
+    const cacheKey = this.getCacheKey('getTodayMatchedCount', []);
     const cached = this.getFromCache<number>(cacheKey);
     if (cached !== null) return cached;
 
     const today = new Date().toISOString().split('T')[0];
     const stmt = this.db.query(`
       SELECT COUNT(*) as count FROM posts
-      WHERE push_status = 3 AND date(created_at) = date(?)
+      WHERE push_status IN (1, 3) AND date(created_at) = date(?)
     `);
     const result = stmt.get(today) as { count: number };
     const count = result?.count || 0;

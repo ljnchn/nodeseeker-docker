@@ -675,20 +675,22 @@
    ============================================ */
 .pagination-wrapper {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  gap: 12px;
   padding: 16px 0 32px;
 }
 
 .pagination-info {
   font-size: 13px;
   color: var(--text-muted);
+  font-weight: 500;
 }
 
 .pagination-controls {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .pagination-btn {
@@ -711,6 +713,18 @@
 .pagination-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+.pagination-btn.icon-only {
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-btn.icon-only svg {
+  width: 18px;
+  height: 18px;
 }
 
 .page-numbers {
@@ -1316,16 +1330,12 @@
   }
 
   .pagination-wrapper {
-    flex-direction: column;
-    gap: 14px;
+    gap: 10px;
     padding: 12px 0 20px;
   }
 
   .pagination-controls {
-    width: 100%;
-    overflow-x: auto;
-    justify-content: flex-start;
-    padding-bottom: 2px;
+    gap: 4px;
   }
 
   .drawer {
@@ -1409,4 +1419,85 @@
   .dropdown-divider {
     margin: 6px 0;
   }
+}
+
+/* ============================================
+   登录抽屉
+   ============================================ */
+#loginModal {
+  max-width: 380px;
+}
+
+#loginModal .form-label {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+#loginModal .form-actions {
+  margin-top: 8px;
+}
+
+/* ============================================
+   初始化页面
+   ============================================ */
+.init-container {
+  min-height: 100vh;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.init-card {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 24px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.init-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.init-logo {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.init-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.init-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.login-message {
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.login-message.info {
+  background: var(--primary-alpha);
+  color: var(--primary);
+}
+
+.login-message.success {
+  background: var(--success-alpha);
+  color: var(--success);
+}
+
+.login-message.error {
+  background: var(--danger-alpha);
+  color: var(--danger);
 }

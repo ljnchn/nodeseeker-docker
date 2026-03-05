@@ -21,7 +21,14 @@ export const HomePage: FC = () => {
                 <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
               </svg>
             </button>
-            <div class="dropdown">
+            {/* 登录按钮 - 未登录时显示 */}
+            <button id="loginBtn" class="icon-btn" title="登录" style="display: none;">
+              <svg viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+            </button>
+            {/* 设置下拉菜单 - 登录时显示 */}
+            <div class="dropdown" id="settingsDropdown" style="display: none;">
               <button id="settingsBtn" class="icon-btn" title="设置">
                 <svg viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
@@ -74,7 +81,8 @@ export const HomePage: FC = () => {
           {/* 工具栏 */}
           <div class="toolbar">
             <div class="toolbar-left">
-              <div class="toggle-chip" id="subscribedOnlyChip" role="button" tabindex={0}>
+              {/* 只看订阅 - 登录时显示 */}
+              <div class="toggle-chip" id="subscribedOnlyChip" role="button" tabindex={0} style="display: none;">
                 <span class="toggle-chip-label">只看订阅</span>
               </div>
               <button id="filterToggleBtn" class="filter-toggle-btn" title="更多筛选">
@@ -111,7 +119,8 @@ export const HomePage: FC = () => {
                 <option value="inside">内版</option>
                 <option value="sandbox">沙盒</option>
               </select>
-              <select id="filterSubscription" class="filter-select">
+              {/* 订阅筛选 - 登录时显示 */}
+              <select id="filterSubscription" class="filter-select" style="display: none;">
                 <option value="">全部订阅</option>
               </select>
               <input type="text" id="filterCreator" placeholder="作者筛选" class="filter-input" />
@@ -146,17 +155,30 @@ export const HomePage: FC = () => {
 
           {/* 分页 */}
           <div id="pagination" class="pagination-wrapper" style="display: none;">
-            <div class="pagination-info">
-              <span id="paginationInfo">第 1 页，共 0 条记录</span>
-            </div>
             <div class="pagination-controls">
-              <button id="prevPageBtn" class="pagination-btn" disabled>
-                ← 上一页
+              {/* 首页 */}
+              <button id="firstPageBtn" class="pagination-btn icon-only" title="首页" disabled>
+                <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                  <path fill-rule="evenodd" d="M15.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 010 1.414zm-6 0a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 011.414 1.414L5.414 10l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                </svg>
               </button>
+              {/* 上一页 */}
+              <button id="prevPageBtn" class="pagination-btn icon-only" title="上一页" disabled>
+                <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                  <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+              </button>
+              {/* 页码 */}
               <div id="pageNumbers" class="page-numbers"></div>
-              <button id="nextPageBtn" class="pagination-btn" disabled>
-                下一页 →
+              {/* 下一页 */}
+              <button id="nextPageBtn" class="pagination-btn icon-only" title="下一页" disabled>
+                <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                </svg>
               </button>
+            </div>
+            <div class="pagination-info">
+              <span id="paginationInfo">1 / 1</span>
             </div>
           </div>
         </div>
@@ -213,7 +235,7 @@ export const HomePage: FC = () => {
             </div>
             {/* 第三行：添加按钮 */}
             <div class="sub-form-row sub-form-row-action">
-              <button type="submit" class="btn btn-success">添加订阅</button>
+              <button type="submit" class="btn btn-primary">添加订阅</button>
             </div>
           </form>
 
@@ -388,7 +410,7 @@ export const HomePage: FC = () => {
           <div class="stats-grid-simple">
             <div class="stat-card-simple">
               <span class="stat-value" id="drawerStatTodayPushed">0</span>
-              <span class="stat-label">今天匹配</span>
+              <span class="stat-label">今日匹配</span>
             </div>
             <div class="stat-card-simple">
               <span class="stat-value" id="drawerStatTodayPosts">0</span>
@@ -403,6 +425,48 @@ export const HomePage: FC = () => {
               <span class="stat-label">历史帖子</span>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* 登录抽屉 */}
+      <div id="loginModal" class="drawer" style="display: none;">
+        <div class="drawer-header">
+          <h3 class="drawer-title">用户登录</h3>
+          <button id="closeLoginModal" class="drawer-close" data-drawer="login">
+            <svg viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            </svg>
+          </button>
+        </div>
+        <div class="drawer-content">
+          <form id="loginForm" class="form-stack">
+            <div class="form-group">
+              <label for="loginUsername" class="form-label">用户名</label>
+              <input
+                type="text"
+                id="loginUsername"
+                class="input-field"
+                placeholder="请输入用户名"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="loginPassword" class="form-label">密码</label>
+              <input
+                type="password"
+                id="loginPassword"
+                class="input-field"
+                placeholder="请输入密码"
+                required
+              />
+            </div>
+            <div id="loginMessage" class="login-message" style="display: none;"></div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" style="width: 100%;">
+                登录
+              </button>
+            </div>
+          </form>
         </div>
       </div>
 

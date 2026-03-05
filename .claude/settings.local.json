@@ -13,7 +13,10 @@
       "Bash(findstr:*)",
       "Bash(powershell:*)",
       "Bash(taskkill:*)",
-      "Skill(superpowers:brainstorming)"
+      "Skill(superpowers:brainstorming)",
+      "Bash(npx tsc:*)",
+      "Bash(grep:*)",
+      "Bash(bun build:*)"
     ],
     "deny": [],
     "ask": []
