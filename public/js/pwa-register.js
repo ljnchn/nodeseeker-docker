@@ -3,7 +3,7 @@
  * 处理 Service Worker 注册和 PWA 安装提示
  */
 
-(function() {
+(function () {
     'use strict';
 
     // PWA 状态管理
@@ -35,7 +35,7 @@
         // 检查是否在安全上下文（HTTPS 或 localhost）
         const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
         const isHTTPS = location.protocol === 'https:';
-        
+
         if (!isLocalhost && !isHTTPS) {
             console.warn('[PWA] Service Worker 需要 HTTPS 或 Localhost');
             console.warn('[PWA] 当前:', location.protocol, location.hostname);
@@ -44,7 +44,7 @@
 
         try {
             console.log('[PWA] 正在注册 Service Worker...');
-            
+
             const registration = await navigator.serviceWorker.register('/sw.js', {
                 scope: '/',
                 updateViaCache: 'imports'
@@ -52,7 +52,7 @@
 
             PWAState.swRegistration = registration;
             console.log('[PWA] Service Worker 注册成功:', registration.scope);
-            
+
             // 详细记录状态
             if (registration.installing) {
                 console.log('[PWA] Service Worker 正在安装...');
@@ -88,14 +88,14 @@
         } catch (error) {
             console.error('[PWA] Service Worker 注册失败:', error);
             console.error('[PWA] 错误详情:', error.message);
-            
+
             // 常见错误提示
             if (error.message.includes('MIME type')) {
                 console.error('[PWA] 提示: sw.js 必须以 JavaScript MIME type (application/javascript) 提供');
             } else if (error.message.includes('path')) {
                 console.error('[PWA] 提示: Service Worker 路径必须是绝对路径 /sw.js');
             }
-            
+
             return false;
         }
     }
@@ -276,9 +276,6 @@
             e.preventDefault();
             PWAState.deferredPrompt = e;
             console.log('[PWA] 安装提示已保存');
-
-            // 显示自定义安装按钮
-            showInstallButton();
         });
 
         window.addEventListener('appinstalled', () => {
@@ -286,67 +283,7 @@
             PWAState.deferredPrompt = null;
             document.documentElement.classList.add('pwa-installed');
             console.log('[PWA] 应用已安装');
-
-            // 隐藏安装按钮
-            hideInstallButton();
         });
-    }
-
-    // 显示安装按钮
-    function showInstallButton() {
-        // 检查是否已存在
-        if (document.getElementById('pwa-install-btn')) return;
-
-        const installBtn = document.createElement('button');
-        installBtn.id = 'pwa-install-btn';
-        installBtn.className = 'pwa-install-btn';
-        installBtn.innerHTML = '📲 安装应用';
-        installBtn.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 12px 20px;
-            background: #3b82f6;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-            z-index: 10000;
-            transition: all 0.3s ease;
-        `;
-
-        installBtn.addEventListener('mouseenter', () => {
-            installBtn.style.transform = 'translateY(-2px)';
-            installBtn.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.5)';
-        });
-
-        installBtn.addEventListener('mouseleave', () => {
-            installBtn.style.transform = 'translateY(0)';
-            installBtn.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.4)';
-        });
-
-        installBtn.addEventListener('click', async () => {
-            if (!PWAState.deferredPrompt) return;
-
-            PWAState.deferredPrompt.prompt();
-            const { outcome } = await PWAState.deferredPrompt.userChoice;
-            console.log('[PWA] 用户安装选择:', outcome);
-
-            PWAState.deferredPrompt = null;
-            installBtn.remove();
-        });
-
-        document.body.appendChild(installBtn);
-    }
-
-    // 隐藏安装按钮
-    function hideInstallButton() {
-        const installBtn = document.getElementById('pwa-install-btn');
-        if (installBtn) {
-            installBtn.remove();
-        }
     }
 
     // 后台同步
