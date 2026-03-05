@@ -10,9 +10,17 @@ type Variables = ContextVariables & {
 
 export const pageRoutes = new Hono<{ Variables: Variables }>();
 
-// 首页 - 已登录用户显示帖子列表，未登录会由前端重定向
+// 首页 - 检查初始化状态，未初始化跳转到初始化页面
 pageRoutes.get('/', async (c) => {
   try {
+    const authService = c.get('authService');
+    const initStatus = authService.checkInitialization();
+    
+    // 未初始化时跳转到初始化页面
+    if (!initStatus.initialized) {
+      return c.redirect('/init');
+    }
+    
     return c.html(<HomePage />);
   } catch (error) {
     return c.html(<ErrorPage message={`加载页面失败: ${error}`} />);

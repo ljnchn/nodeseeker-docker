@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (filterSubscription) filterSubscription.style.display = "block";
   } else {
     // 未登录：显示登录按钮，隐藏设置菜单和订阅相关功能
-    if (loginBtn) loginBtn.style.display = "inline-flex";
+    if (loginBtn) loginBtn.style.display = "flex";
     if (settingsDropdown) settingsDropdown.style.display = "none";
     if (subscribedOnlyChip) subscribedOnlyChip.style.display = "none";
     if (filterSubscription) filterSubscription.style.display = "none";
@@ -377,6 +377,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function updatePagination(currentPageNum, totalPages, total) {
     const pagination = document.getElementById("pagination");
     const paginationInfo = document.getElementById("paginationInfo");
+    const firstBtn = document.getElementById("firstPageBtn");
     const prevBtn = document.getElementById("prevPageBtn");
     const nextBtn = document.getElementById("nextPageBtn");
     const pageNumbers = document.getElementById("pageNumbers");
@@ -387,7 +388,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     pagination.style.display = "flex";
-    paginationInfo.textContent = `第 ${currentPageNum} 页，共 ${total} 条记录`;
+    paginationInfo.textContent = `${currentPageNum} / ${totalPages}`;
+    firstBtn.disabled = currentPageNum <= 1;
     prevBtn.disabled = currentPageNum <= 1;
     nextBtn.disabled = currentPageNum >= totalPages;
 
@@ -526,6 +528,12 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // 分页按钮
+    document.getElementById("firstPageBtn")?.addEventListener("click", () => {
+      if (currentPage > 1) {
+        loadPosts(1, currentFilters);
+      }
+    });
+
     document.getElementById("prevPageBtn")?.addEventListener("click", () => {
       if (currentPage > 1) {
         loadPosts(currentPage - 1, currentFilters);
@@ -919,6 +927,134 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // ============================================
+  // 登录抽屉
+  // ============================================
+  const LoginModal = {
+    modal: null,
+    form: null,
+    message: null,
+
+    init() {
+      this.modal = document.getElementById("loginModal");
+      this.form = document.getElementById("loginForm");
+      this.message = document.getElementById("loginMessage");
+
+      if (!this.modal || !this.form) return;
+
+      // 关闭按钮
+      document.getElementById("closeLoginModal")?.addEventListener("click", () => {
+        this.close();
+      });
+
+      // 表单提交
+      this.form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        await this.handleSubmit();
+      });
+    },
+
+    open() {
+      if (!this.modal || !Drawer.overlay) return;
+      
+      Drawer.closeAll();
+      this.modal.style.display = "block";
+      Drawer.overlay.style.display = "block";
+      
+      // 触发重绘以启动动画
+      requestAnimationFrame(() => {
+        this.modal.classList.add("drawer-open");
+        Drawer.overlay.classList.add("overlay-visible");
+      });
+      
+      this.clearMessage();
+      this.form?.reset();
+      // 聚焦到用户名输入框
+      setTimeout(() => {
+        document.getElementById("loginUsername")?.focus();
+      }, 100);
+      document.body.style.overflow = "hidden";
+    },
+
+    close() {
+      if (!this.modal) return;
+      
+      this.modal.classList.remove("drawer-open");
+      
+      setTimeout(() => {
+        this.modal.style.display = "none";
+        Drawer.overlay.style.display = "none";
+        Drawer.overlay.classList.remove("overlay-visible");
+        document.body.style.overflow = "";
+      }, 300);
+    },
+
+    isOpen() {
+      return this.modal?.classList.contains("drawer-open");
+    },
+
+    showMessage(message, type = "info") {
+      if (!this.message) return;
+      this.message.textContent = message;
+      this.message.className = `login-message ${type}`;
+      this.message.style.display = "block";
+    },
+
+    clearMessage() {
+      if (!this.message) return;
+      this.message.style.display = "none";
+      this.message.textContent = "";
+    },
+
+    async handleSubmit() {
+      const username = document.getElementById("loginUsername")?.value?.trim();
+      const password = document.getElementById("loginPassword")?.value;
+
+      if (!username || !password) {
+        this.showMessage("请填写用户名和密码", "error");
+        return;
+      }
+
+      this.showMessage("正在登录...", "info");
+
+      try {
+        const response = await fetch("/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ username, password }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          this.showMessage("登录成功！", "success");
+          localStorage.setItem("sessionId", result.sessionId);
+          
+          // 延迟刷新页面以应用登录状态
+          setTimeout(() => {
+            window.location.reload();
+          }, 800);
+        } else {
+          this.showMessage(result.message || "登录失败", "error");
+        }
+      } catch (error) {
+        console.error("登录错误:", error);
+        this.showMessage("网络错误，请重试", "error");
+      }
+    },
+  };
+
+  function initLoginModal() {
+    LoginModal.init();
+
+    // 登录按钮点击打开弹窗
+    document.getElementById("loginBtn")?.addEventListener("click", () => {
+      LoginModal.open();
+    });
+  }
+
+  // ============================================
   // 退出登录
   // ============================================
   function initLogout() {
@@ -929,7 +1065,7 @@ document.addEventListener("DOMContentLoaded", function () {
           body: JSON.stringify({ sessionId }),
         });
         localStorage.removeItem("sessionId");
-        window.location.href = "/login";
+        window.location.reload();
       }
     });
   }
@@ -945,6 +1081,7 @@ document.addEventListener("DOMContentLoaded", function () {
     initTelegramConfig();
     initSubscriptions();
     initSettingsDropdown();
+    initLoginModal();
     initLogout();
 
     // 加载初始数据
