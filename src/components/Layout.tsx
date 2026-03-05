@@ -13,16 +13,22 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
   children,
 }) => {
   return (
-    <html>
+    <html lang="zh-CN">
       <head>
         <title>{title}</title>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         {description && <meta name="description" content={description} />}
 
+        {/* PWA Config */}
+        <meta name="theme-color" content="#3b82f6" />
+        <meta name="color-scheme" content="dark light" />
+        <link rel="manifest" href="/manifest.json" />
+
         {/* Favicon */}
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="alternate icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
 
         {/* Inter 字体 */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -66,6 +72,9 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
       </head>
       <body>
         {children}
+        {/* PWA Scripts */}
+        <script src="/js/pwa-register.js" defer></script>
+        <script src="/js/pwa-debug.js" defer></script>
         {scriptSrc && <script src={scriptSrc}></script>}
       </body>
     </html>
