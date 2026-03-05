@@ -26,18 +26,19 @@ const COLORS = {
   white: '\x1b[37m',
 };
 
-// 标签配置（固定 5 字符宽度，保证对齐）
+// 标签配置（固定宽度，保证对齐）
+// 注意：避免使用带变体选择符(U+FE0F)的 emoji，否则终端宽度不一致导致第三列错位
 const TAGS = {
   debug: '[🔍]',
-  info:  '[ℹ️]',
+  info: '[📝]',
   success: '[✅]',
-  warn:  '[⚠️]',
+  warn: '[🔔]',
   error: '[❌]',
-  rss:   '[📰]',
-  telegram: '[✈️]',
-  db:    '[🗄️]',
+  rss: '[📰]',
+  telegram: '[📮]',
+  db: '[💾]',
   match: '[🎯]',
-  server: '[🖥️]',
+  server: '[💻]',
   scheduler: '[⏰]',
 };
 
@@ -52,12 +53,13 @@ function log(level: LogLevel, tag: string, message: string, ...args: any[]) {
   if (LOG_LEVELS[level] < currentLevelValue) return;
 
   const time = `${COLORS.dim}${formatTime()}${COLORS.reset}`;
-  const levelColor = {
+  const levelColor: string = {
     debug: COLORS.cyan,
     info: COLORS.blue,
     warn: COLORS.yellow,
     error: COLORS.red,
-  }[level] || COLORS.white;
+    silent: COLORS.white,
+  }[level];
 
   const tagStr = `${levelColor}${tag}${COLORS.reset}`;
   const levelStr = `${levelColor}${level.toUpperCase().padEnd(5)}${COLORS.reset}`;
@@ -88,14 +90,14 @@ export const logger = {
 
   // 任务相关（带缩进）
   task: {
-    start: (name: string) => log('info', '[▶️]', name),
+    start: (name: string) => log('info', '[➡️]', name),
     end: (name: string, duration?: number) => {
       const timeStr = duration ? ` (${duration}ms)` : '';
       log('info', '[⏹️]', `${name}${timeStr}`);
     },
-    info: (message: string) => log('info', '[📋]', `  ${message}`),
-    warn: (message: string) => log('warn', '[⚠️]', `  ${message}`),
-    error: (message: string) => log('error', '[❌]', `  ${message}`),
+    info: (message: string) => log('info', '[📋]', message),
+    warn: (message: string) => log('warn', '[🔔]', message),
+    error: (message: string) => log('error', '[❌]', message),
   },
 
   // 统计输出
