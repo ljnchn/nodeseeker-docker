@@ -373,9 +373,34 @@ export class DatabaseService {
         params.push(`%${filters.search}%`);
       }
       
+      // 按订阅筛选：直接从订阅详情构建查询条件，而非通过 sub_id 关联
       if (filters.subId !== undefined) {
-        conditions.push('p.sub_id = ?');
-        params.push(filters.subId);
+        const sub = this.getKeywordSubById(filters.subId);
+        if (sub) {
+          // 关键词匹配：每个非空关键词必须在标题或内容中出现（AND 关系）
+          const keywords = [sub.keyword1, sub.keyword2, sub.keyword3]
+            .filter(k => k && k.trim().length > 0) as string[];
+          
+          for (const keyword of keywords) {
+            conditions.push('(p.title LIKE ? OR p.memo LIKE ?)');
+            params.push(`%${keyword}%`, `%${keyword}%`);
+          }
+          
+          // 作者匹配
+          if (sub.creator && sub.creator.trim().length > 0) {
+            conditions.push('p.creator LIKE ?');
+            params.push(`%${sub.creator.trim()}%`);
+          }
+          
+          // 分类匹配
+          if (sub.category && sub.category.trim().length > 0) {
+            conditions.push('p.category LIKE ?');
+            params.push(`%${sub.category.trim()}%`);
+          }
+        } else {
+          // 订阅不存在，返回空结果
+          conditions.push('1 = 0');
+        }
       }
     }
     
