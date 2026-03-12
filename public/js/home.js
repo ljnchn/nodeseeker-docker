@@ -590,10 +590,10 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // 将数据重排，使其从早上 8 点开始 (8-23, 0-7)
-    const shiftedData = [...data.slice(8), ...data.slice(0, 8)];
+    // 最近 24 小时趋势：数据已按时间顺序排列，index 0 = 24h 前，index 23 = 1h 前
+    const chartData = data;
 
-    const maxCount = Math.max(...shiftedData.map(d => d.count), 1);
+    const maxCount = Math.max(...chartData.map(d => d.count), 1);
     const width = container.clientWidth || 600;
     const height = 130;
     const padding = { top: 10, right: 10, bottom: 20, left: 24 };
@@ -602,15 +602,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const innerHeight = height - padding.top - padding.bottom;
 
     // 坐标转换函数
-    const getX = (index) => padding.left + (index / (shiftedData.length - 1 || 1)) * innerWidth;
+    const getX = (index) => padding.left + (index / (chartData.length - 1 || 1)) * innerWidth;
     const getY = (count) => padding.top + innerHeight - (count / maxCount) * innerHeight;
 
     // 构建平滑曲线路径 (Catmull-Rom spline approximation)
     let linePath = '';
     let areaPath = '';
     
-    if (shiftedData.length > 1) {
-      const points = shiftedData.map((d, i) => [getX(i), getY(d.count)]);
+    if (chartData.length > 1) {
+      const points = chartData.map((d, i) => [getX(i), getY(d.count)]);
       
       linePath = `M ${points[0][0]},${points[0][1]}`;
       areaPath = `M ${points[0][0]},${points[0][1]}`;
@@ -622,8 +622,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const y1 = points[i][1];
         const x2 = points[i + 1][0];
         const y2 = points[i + 1][1];
-        const x3 = i < points.length - 2 ? points[i + 2][0] : points[i + 1][0];
-        const y3 = i < points.length - 2 ? points[i + 2][1] : points[i + 1][1];
+        const x3 = i < chartData.length - 2 ? points[i + 2][0] : points[i + 1][0];
+        const y3 = i < chartData.length - 2 ? points[i + 2][1] : points[i + 1][1];
         
         // Tension control (0.5 = Catmull-Rom)
         const t = 0.25; 
@@ -654,19 +654,24 @@ document.addEventListener("DOMContentLoaded", function () {
       yLabels.push(`<text class="chart-y-label" x="${padding.left - 6}" y="${y + 3}">${val}</text>`);
     }
 
-    // 生成 X 标签 (每 4 小时) - 在 shiftedData 中对应索引 0/4/8/12/16/20 即 8h/12h/16h/20h/0h/4h
-    shiftedData.forEach((d, i) => {
-      if (d.hour % 4 === 0) {
-        const hourStr = String(d.hour).padStart(2, '0') + ':00';
-        xLabels.push(`<text x="${getX(i)}" y="${height - 4}" text-anchor="middle" font-size="9" fill="var(--text-muted)">${hourStr}</text>`);
+    // 生成 X 标签：显示具体小时 (HH:00)
+    const getHourLabel = (bucketIndex) => {
+      const pastTime = new Date(Date.now() - (24 - bucketIndex) * 60 * 60 * 1000);
+      return String(pastTime.getHours()).padStart(2, '0') + ':00';
+    };
+    [0, 6, 12, 18, 23].forEach((i) => {
+      if (i < chartData.length) {
+        const label = getHourLabel(i);
+        xLabels.push(`<text x="${getX(i)}" y="${height - 4}" text-anchor="middle" font-size="9" fill="var(--text-muted)">${label}</text>`);
       }
     });
 
     // 交互点
-    const dots = shiftedData.map((d, i) => {
+    const dots = chartData.map((d, i) => {
       const cx = getX(i);
       const cy = getY(d.count);
-      return `<circle class="chart-dot" cx="${cx}" cy="${cy}" r="3" data-index="${i}" data-hour="${d.hour}" data-count="${d.count}" />`;
+      const hoursAgo = 24 - i;
+      return `<circle class="chart-dot" cx="${cx}" cy="${cy}" r="3" data-index="${i}" data-hours-ago="${hoursAgo}" data-count="${d.count}" />`;
     }).join('');
 
     container.innerHTML = `
@@ -703,7 +708,7 @@ document.addEventListener("DOMContentLoaded", function () {
       let closestIdx = 0;
       let minDiff = Infinity;
       
-      shiftedData.forEach((_, i) => {
+      chartData.forEach((_, i) => {
         const diff = Math.abs(getX(i) - mouseX);
         if (diff < minDiff) {
           minDiff = diff;
@@ -711,7 +716,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       });
       
-      const d = shiftedData[closestIdx];
+      const d = chartData[closestIdx];
       const dotX = getX(closestIdx);
       const dotY = getY(d.count);
 
@@ -720,8 +725,10 @@ document.addEventListener("DOMContentLoaded", function () {
       hoverLine.setAttribute('x2', dotX);
       hoverLine.classList.add('visible');
 
-      // 更新Tooltip
-      document.getElementById('tooltipHour').textContent = `${String(d.hour).padStart(2, '0')}:00`;
+      // 更新Tooltip：显示具体小时 (HH:00)
+      const pastTime = new Date(Date.now() - (24 - d.hour) * 60 * 60 * 1000);
+      const hourLabel = String(pastTime.getHours()).padStart(2, '0') + ':00';
+      document.getElementById('tooltipHour').textContent = hourLabel;
       document.getElementById('tooltipCount').textContent = `${d.count} 篇`;
       tooltip.style.left = `${dotX}px`;
       tooltip.style.top = `${dotY - 45}px`;
