@@ -121,6 +121,23 @@ apiRoutes.get('/posts', createQueryValidationMiddleware(paginationSchema), async
     }
 });
 
+// 获取图表统计数据（公开接口，无需认证）
+apiRoutes.get('/stats/charts', async (c) => {
+    try {
+        const daysStr = c.req.query('days');
+        const days = daysStr !== undefined ? parseInt(daysStr, 10) : 7;
+        const validDays = isNaN(days) ? 7 : Math.max(-1, Math.min(365, days));
+
+        const dbService = c.get('dbService');
+        const hourlyStats = dbService.getHourlyPostStats(validDays);
+        const categoryStats = dbService.getCategoryDistribution(validDays);
+
+        return c.json(createSuccessResponse({ hourly: hourlyStats, category: categoryStats }));
+    } catch (error) {
+        return c.json(createErrorResponse(`获取图表数据失败: ${error}`), 500);
+    }
+});
+
 // Session 中间件
 const sessionMiddleware = async (c: any, next: any) => {
     const authHeader = c.req.header('Authorization');

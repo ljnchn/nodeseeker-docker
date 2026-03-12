@@ -563,6 +563,228 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // ============================================
+  // 统计图表
+  // ============================================
+  let currentChartDays = -1;
+
+  const categoryNames = {
+    daily: '日常', tech: '技术', info: '情报', review: '测评',
+    trade: '交易', carpool: '拼车', promotion: '推广', life: '生活',
+    dev: 'Dev', expose: '曝光', inside: '内版', sandbox: '沙盒',
+    'photo-share': '图片',
+  };
+
+  async function loadChartData(days) {
+    const result = await apiRequest(`/api/stats/charts?days=${days}`);
+    if (!result?.success) return;
+    renderHourlyChart(result.data.hourly || []);
+    renderCategoryChart(result.data.category || []);
+  }
+
+  function renderHourlyChart(data) {
+    const container = document.getElementById('hourlyChart');
+    if (!container) return;
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<div class="chart-empty">暂无数据</div>';
+      return;
+    }
+
+    // 将数据重排，使其从早上 8 点开始 (8-23, 0-7)
+    const shiftedData = [...data.slice(8), ...data.slice(0, 8)];
+
+    const maxCount = Math.max(...shiftedData.map(d => d.count), 1);
+    const width = container.clientWidth || 600;
+    const height = 130;
+    const padding = { top: 10, right: 10, bottom: 20, left: 24 };
+    
+    const innerWidth = width - padding.left - padding.right;
+    const innerHeight = height - padding.top - padding.bottom;
+
+    // 坐标转换函数
+    const getX = (index) => padding.left + (index / (shiftedData.length - 1 || 1)) * innerWidth;
+    const getY = (count) => padding.top + innerHeight - (count / maxCount) * innerHeight;
+
+    // 构建平滑曲线路径 (Catmull-Rom spline approximation)
+    let linePath = '';
+    let areaPath = '';
+    
+    if (shiftedData.length > 1) {
+      const points = shiftedData.map((d, i) => [getX(i), getY(d.count)]);
+      
+      linePath = `M ${points[0][0]},${points[0][1]}`;
+      areaPath = `M ${points[0][0]},${points[0][1]}`;
+      
+      for (let i = 0; i < points.length - 1; i++) {
+        const x0 = i > 0 ? points[i - 1][0] : points[i][0];
+        const y0 = i > 0 ? points[i - 1][1] : points[i][1];
+        const x1 = points[i][0];
+        const y1 = points[i][1];
+        const x2 = points[i + 1][0];
+        const y2 = points[i + 1][1];
+        const x3 = i < points.length - 2 ? points[i + 2][0] : points[i + 1][0];
+        const y3 = i < points.length - 2 ? points[i + 2][1] : points[i + 1][1];
+        
+        // Tension control (0.5 = Catmull-Rom)
+        const t = 0.25; 
+        
+        const cp1x = x1 + (x2 - x0) * t;
+        const cp1y = y1 + (y2 - y0) * t;
+        const cp2x = x2 - (x3 - x1) * t;
+        const cp2y = y2 - (y3 - y1) * t;
+        
+        linePath += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${x2},${y2}`;
+        areaPath += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${x2},${y2}`;
+      }
+      
+      // 闭合区域路径
+      areaPath += ` L ${points[points.length-1][0]},${padding.top + innerHeight} L ${points[0][0]},${padding.top + innerHeight} Z`;
+    }
+
+    // 生成网格和 Y 标签
+    const gridLines = [];
+    const yLabels = [];
+    const xLabels = [];
+    const yTicks = 4;
+    
+    for (let i = 0; i <= yTicks; i++) {
+      const y = padding.top + innerHeight - (i / yTicks) * innerHeight;
+      const val = Math.round((i / yTicks) * maxCount);
+      gridLines.push(`<line class="chart-grid-line" x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" />`);
+      yLabels.push(`<text class="chart-y-label" x="${padding.left - 6}" y="${y + 3}">${val}</text>`);
+    }
+
+    // 生成 X 标签 (每 4 小时) - 在 shiftedData 中对应索引 0/4/8/12/16/20 即 8h/12h/16h/20h/0h/4h
+    shiftedData.forEach((d, i) => {
+      if (d.hour % 4 === 0) {
+        const hourStr = String(d.hour).padStart(2, '0') + ':00';
+        xLabels.push(`<text x="${getX(i)}" y="${height - 4}" text-anchor="middle" font-size="9" fill="var(--text-muted)">${hourStr}</text>`);
+      }
+    });
+
+    // 交互点
+    const dots = shiftedData.map((d, i) => {
+      const cx = getX(i);
+      const cy = getY(d.count);
+      return `<circle class="chart-dot" cx="${cx}" cy="${cy}" r="3" data-index="${i}" data-hour="${d.hour}" data-count="${d.count}" />`;
+    }).join('');
+
+    container.innerHTML = `
+      <div class="line-chart-wrap" id="chartInteractionWrap">
+        <svg class="line-chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+          <g class="chart-grid">
+            ${gridLines.join('')}
+            ${yLabels.join('')}
+            ${xLabels.join('')}
+          </g>
+          <path class="chart-area-path" d="${areaPath}" />
+          <path class="chart-line-path" d="${linePath}" />
+          <line class="chart-hover-line" id="chartHoverLine" y1="${padding.top}" y2="${padding.top + innerHeight}" />
+          <g class="chart-dots">${dots}</g>
+        </svg>
+        <div class="chart-tooltip" id="chartTooltip">
+          <div class="chart-tooltip-hour" id="tooltipHour"></div>
+          <div class="chart-tooltip-count" id="tooltipCount"></div>
+        </div>
+      </div>
+    `;
+
+    // 绑定交互
+    const wrap = document.getElementById('chartInteractionWrap');
+    const hoverLine = document.getElementById('chartHoverLine');
+    const tooltip = document.getElementById('chartTooltip');
+    const dotEls = wrap.querySelectorAll('.chart-dot');
+
+    wrap.addEventListener('mousemove', (e) => {
+      const rect = wrap.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      
+      // 寻找最近的点
+      let closestIdx = 0;
+      let minDiff = Infinity;
+      
+      shiftedData.forEach((_, i) => {
+        const diff = Math.abs(getX(i) - mouseX);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestIdx = i;
+        }
+      });
+      
+      const d = shiftedData[closestIdx];
+      const dotX = getX(closestIdx);
+      const dotY = getY(d.count);
+
+      // 更新悬停线
+      hoverLine.setAttribute('x1', dotX);
+      hoverLine.setAttribute('x2', dotX);
+      hoverLine.classList.add('visible');
+
+      // 更新Tooltip
+      document.getElementById('tooltipHour').textContent = `${String(d.hour).padStart(2, '0')}:00`;
+      document.getElementById('tooltipCount').textContent = `${d.count} 篇`;
+      tooltip.style.left = `${dotX}px`;
+      tooltip.style.top = `${dotY - 45}px`;
+      tooltip.classList.add('visible');
+
+      // 激活圆点
+      dotEls.forEach(dot => dot.classList.remove('active'));
+      dotEls[closestIdx].classList.add('active');
+    });
+
+    wrap.addEventListener('mouseleave', () => {
+      hoverLine.classList.remove('visible');
+      tooltip.classList.remove('visible');
+      dotEls.forEach(dot => dot.classList.remove('active'));
+    });
+  }
+
+  function renderCategoryChart(data) {
+    const container = document.getElementById('categoryChart');
+    if (!container) return;
+
+    if (data.length === 0) {
+      container.innerHTML = '<div class="chart-empty">暂无数据</div>';
+      return;
+    }
+
+    const maxCount = Math.max(...data.map(d => d.count), 1);
+    container.innerHTML = data.map(d => {
+      const pct = Math.round((d.count / maxCount) * 100);
+      const label = categoryNames[d.category] || d.category;
+      return `
+        <div class="category-bar-row">
+          <span class="category-bar-label" title="${label}">${label}</span>
+          <div class="category-bar-track">
+            <div class="category-bar-fill" style="width:${pct}%"></div>
+          </div>
+          <span class="category-bar-count">${d.count}</span>
+        </div>`;
+    }).join('');
+  }
+
+  function initCharts() {
+    const selector = document.getElementById('chartRangeSelector');
+    if (!selector) return;
+
+    selector.querySelectorAll('.chart-range-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selector.querySelectorAll('.chart-range-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentChartDays = parseInt(btn.dataset.days, 10);
+        loadChartData(currentChartDays);
+      });
+    });
+    
+    // 监听窗口大小变化以重绘图表
+    window.addEventListener('resize', () => {
+      if (document.getElementById('hourlyChart')?.innerHTML.includes('line-chart-wrap')) {
+        loadChartData(currentChartDays);
+      }
+    });
+  }
+
+  // ============================================
   // RSS 配置
   // ============================================
   async function loadRssConfig() {
@@ -920,6 +1142,8 @@ document.addEventListener("DOMContentLoaded", function () {
           loadRssConfig();
         } else if (drawerName === "telegram") {
           loadTelegramConfig();
+        } else if (drawerName === "stats") {
+          loadChartData(currentChartDays);
         }
         Drawer.open(drawerName);
       });
@@ -1083,6 +1307,7 @@ document.addEventListener("DOMContentLoaded", function () {
     initSettingsDropdown();
     initLoginModal();
     initLogout();
+    initCharts();
 
     // 加载初始数据
     loadPosts();

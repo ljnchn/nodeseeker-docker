@@ -397,7 +397,7 @@ export const HomePage: FC = () => {
       </div>
 
       {/* 统计信息抽屉 */}
-      <div id="statsDrawer" class="drawer" style="display: none;">
+      <div id="statsDrawer" class="drawer drawer-large" style="display: none;">
         <div class="drawer-header">
           <h3 class="drawer-title">统计信息</h3>
           <button class="drawer-close" data-drawer="stats">
@@ -407,6 +407,7 @@ export const HomePage: FC = () => {
           </button>
         </div>
         <div class="drawer-content">
+          {/* 数字统计卡片 */}
           <div class="stats-grid-simple">
             <div class="stat-card-simple">
               <span class="stat-value" id="drawerStatTodayPushed">0</span>
@@ -424,6 +425,35 @@ export const HomePage: FC = () => {
               <span class="stat-value" id="drawerStatTotalPosts">0</span>
               <span class="stat-label">历史帖子</span>
             </div>
+          </div>
+
+          {/* 24小时发帖分布 */}
+          <div class="chart-section">
+            <div class="chart-section-title">每小时发帖分布</div>
+            <div id="hourlyChart" class="hourly-chart">
+              {/* 加载占位 */}
+              {[...Array(24)].map((_, i) => (
+                <div class="hourly-bar-wrap">
+                  <div class="hourly-bar zero-bar" style={{ height: '2px' }}></div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 分类分布 */}
+          <div class="chart-section">
+            <div class="chart-section-title">分类分布</div>
+            <div id="categoryChart" class="category-chart">
+              <div class="chart-empty">加载中...</div>
+            </div>
+          </div>
+
+          {/* 时间范围选择器 (移至底部) */}
+          <div class="chart-range-selector" id="chartRangeSelector">
+            <button class="chart-range-btn active" data-days="-1">今日</button>
+            <button class="chart-range-btn" data-days="7">近 7 天</button>
+            <button class="chart-range-btn" data-days="30">近 30 天</button>
+            <button class="chart-range-btn" data-days="0">全部</button>
           </div>
         </div>
       </div>
