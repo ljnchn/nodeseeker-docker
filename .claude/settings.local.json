@@ -17,7 +17,8 @@
       "Bash(npx tsc:*)",
       "Bash(grep:*)",
       "Bash(bun build:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(bun tsc:*)"
     ],
     "deny": [],
     "ask": []
