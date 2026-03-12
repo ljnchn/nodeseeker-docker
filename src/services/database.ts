@@ -737,6 +737,96 @@ export class DatabaseService {
     }
   }
 
+  /**
+   * 按小时统计最近 N 天的发帖数量
+   * days=-1 → 仅今日；days=0 → 全部；days>0 → 最近 N 天
+   */
+  getHourlyPostStats(days: number = 7): Array<{ hour: number; count: number }> {
+    const cacheKey = this.getCacheKey('getHourlyPostStats', [days]);
+    const cached = this.getFromCache<Array<{ hour: number; count: number }>>(cacheKey);
+    if (cached !== null) return cached;
+
+    let rows: Array<{ hour: number; count: number }>;
+
+    if (days === -1) {
+      // 仅今日
+      rows = this.db.query(`
+        SELECT CAST(strftime('%H', pub_date) AS INTEGER) AS hour, COUNT(*) AS count
+        FROM posts
+        WHERE date(pub_date, 'localtime') = date('now', 'localtime')
+        GROUP BY hour
+        ORDER BY hour
+      `).all() as Array<{ hour: number; count: number }>;
+    } else if (days === 0) {
+      rows = this.db.query(`
+        SELECT CAST(strftime('%H', pub_date) AS INTEGER) AS hour, COUNT(*) AS count
+        FROM posts
+        GROUP BY hour
+        ORDER BY hour
+      `).all() as Array<{ hour: number; count: number }>;
+    } else {
+      rows = this.db.query(`
+        SELECT CAST(strftime('%H', pub_date) AS INTEGER) AS hour, COUNT(*) AS count
+        FROM posts
+        WHERE pub_date >= datetime('now', ?, 'localtime')
+        GROUP BY hour
+        ORDER BY hour
+      `).all(`-${days} days`) as Array<{ hour: number; count: number }>;
+    }
+
+    // 填充缺失的小时（保证 0-23 都有值）
+    const hourMap = new Map<number, number>();
+    rows.forEach(r => hourMap.set(r.hour, r.count));
+    const result = Array.from({ length: 24 }, (_, i) => ({
+      hour: i,
+      count: hourMap.get(i) || 0,
+    }));
+
+    this.setCache(cacheKey, result, 60000);
+    return result;
+  }
+
+  /**
+   * 统计最近 N 天各分类的帖子数量
+   * days=-1 → 仅今日；days=0 → 全部；days>0 → 最近 N 天
+   */
+  getCategoryDistribution(days: number = 7): Array<{ category: string; count: number }> {
+    const cacheKey = this.getCacheKey('getCategoryDistribution', [days]);
+    const cached = this.getFromCache<Array<{ category: string; count: number }>>(cacheKey);
+    if (cached !== null) return cached;
+
+    let result: Array<{ category: string; count: number }>;
+
+    if (days === -1) {
+      // 仅今日
+      result = this.db.query(`
+        SELECT category, COUNT(*) AS count
+        FROM posts
+        WHERE date(pub_date, 'localtime') = date('now', 'localtime')
+        GROUP BY category
+        ORDER BY count DESC
+      `).all() as Array<{ category: string; count: number }>;
+    } else if (days === 0) {
+      result = this.db.query(`
+        SELECT category, COUNT(*) AS count
+        FROM posts
+        GROUP BY category
+        ORDER BY count DESC
+      `).all() as Array<{ category: string; count: number }>;
+    } else {
+      result = this.db.query(`
+        SELECT category, COUNT(*) AS count
+        FROM posts
+        WHERE pub_date >= datetime('now', ?, 'localtime')
+        GROUP BY category
+        ORDER BY count DESC
+      `).all(`-${days} days`) as Array<{ category: string; count: number }>;
+    }
+
+    this.setCache(cacheKey, result, 60000);
+    return result;
+  }
+
 
   // 关闭数据库连接
   close(): void {

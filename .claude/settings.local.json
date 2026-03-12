@@ -16,7 +16,8 @@
       "Skill(superpowers:brainstorming)",
       "Bash(npx tsc:*)",
       "Bash(grep:*)",
-      "Bash(bun build:*)"
+      "Bash(bun build:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

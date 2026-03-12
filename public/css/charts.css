@@ -1,0 +1,237 @@
+/* ============================================
+   数据图表样式
+   ============================================ */
+
+/* 时间范围选择器 */
+.chart-range-selector {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.chart-range-btn {
+  padding: 5px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-pill);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.chart-range-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.chart-range-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+/* 图表区域 */
+.chart-section {
+  margin-top: 32px;
+  margin-bottom: 28px;
+}
+
+.chart-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* 空状态 */
+.chart-empty {
+  text-align: center;
+  padding: 24px 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* ============================================
+   SVG 曲线图
+   ============================================ */
+.line-chart-wrap {
+  position: relative;
+  width: 100%;
+  user-select: none;
+}
+
+.line-chart-svg {
+  width: 100%;
+  height: 130px;
+  overflow: visible;
+  display: block;
+}
+
+/* 网格线 */
+.chart-grid-line {
+  stroke: var(--border-color);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+/* Y 轴标签 */
+.chart-y-label {
+  font-size: 9px;
+  fill: var(--text-muted);
+  text-anchor: end;
+}
+
+/* X 轴标签 */
+.chart-x-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0 0 24px;
+  margin-top: 2px;
+}
+
+.chart-x-label {
+  font-size: 9px;
+  color: var(--text-muted);
+  line-height: 1;
+  text-align: center;
+  flex: 1;
+}
+
+/* 曲线路径 */
+.chart-area-path {
+  fill: var(--primary-alpha);
+  transition: d 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chart-line-path {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: d 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 数据点 */
+.chart-dot {
+  fill: var(--primary);
+  stroke: var(--bg-card);
+  stroke-width: 2;
+  cursor: pointer;
+  transition: r 0.15s, opacity 0.15s;
+  opacity: 0;
+}
+
+.chart-dot.active,
+.chart-dot:hover {
+  opacity: 1;
+  r: 4;
+}
+
+/* 悬停竖线 */
+.chart-hover-line {
+  stroke: var(--border-hover);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+.chart-hover-line.visible {
+  opacity: 1;
+}
+
+/* 图表 Tooltip */
+.chart-tooltip {
+  position: absolute;
+  background: var(--bg-elevated, #fff);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--text-primary);
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 10;
+  transform: translateX(-50%);
+}
+
+.chart-tooltip.visible {
+  opacity: 1;
+}
+
+.chart-tooltip-hour {
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
+.chart-tooltip-count {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* ============================================
+   水平条形图（分类分布）
+   ============================================ */
+.category-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.category-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.category-bar-label {
+  width: 48px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: right;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.category-bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-hover);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.category-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--primary), var(--primary-light, #419cff));
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.category-bar-count {
+  width: 32px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+/* 深色主题微调 */
+[data-theme="dark"] .category-bar-fill {
+  background: linear-gradient(90deg, var(--primary), #60aeff);
+}
