@@ -629,12 +629,16 @@ export class DatabaseService {
     const cached = this.getFromCache<number>(cacheKey);
     if (cached !== null) return cached;
 
-    const today = new Date().toISOString().split('T')[0];
+    // 从当天 0 点（UTC）开始
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const todayStart = today.toISOString();
+
     const stmt = this.db.query(`
       SELECT COUNT(*) as count FROM posts
-      WHERE date(created_at) = date(?)
+      WHERE pub_date >= ?
     `);
-    const result = stmt.get(today) as { count: number };
+    const result = stmt.get(todayStart) as { count: number };
     const count = result?.count || 0;
     this.setCache(cacheKey, count, 60000);
     return count;
@@ -645,12 +649,16 @@ export class DatabaseService {
     const cached = this.getFromCache<number>(cacheKey);
     if (cached !== null) return cached;
 
-    const today = new Date().toISOString().split('T')[0];
+    // 从当天 0 点（UTC）开始
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const todayStart = today.toISOString();
+
     const stmt = this.db.query(`
       SELECT COUNT(*) as count FROM posts
-      WHERE push_status IN (1, 3) AND date(created_at) = date(?)
+      WHERE push_status IN (1, 3) AND pub_date >= ?
     `);
-    const result = stmt.get(today) as { count: number };
+    const result = stmt.get(todayStart) as { count: number };
     const count = result?.count || 0;
     this.setCache(cacheKey, count, 60000);
     return count;
@@ -661,12 +669,16 @@ export class DatabaseService {
     const cached = this.getFromCache<number>(cacheKey);
     if (cached !== null) return cached;
 
-    const today = new Date().toISOString().split('T')[0];
+    // 从当天 0 点（UTC）开始
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const todayStart = today.toISOString();
+
     const stmt = this.db.query(`
       SELECT COUNT(*) as count FROM posts
-      WHERE push_status = 3 AND date(push_date) = date(?)
+      WHERE push_status = 3 AND push_date >= ?
     `);
-    const result = stmt.get(today) as { count: number };
+    const result = stmt.get(todayStart) as { count: number };
     const count = result?.count || 0;
     this.setCache(cacheKey, count, 60000);
     return count;
@@ -739,7 +751,7 @@ export class DatabaseService {
 
   /**
    * 按小时统计最近 N 天的发帖数量
-   * days=-1 → 仅今日；days=0 → 全部；days>0 → 最近 N 天
+   * days=-1 → 仅今日（从 0 点开始）；days=0 → 全部；days>0 → 最近 N 天
    */
   getHourlyPostStats(days: number = 7): Array<{ hour: number; count: number }> {
     const cacheKey = this.getCacheKey('getHourlyPostStats', [days]);
@@ -749,14 +761,18 @@ export class DatabaseService {
     let rows: Array<{ hour: number; count: number }>;
 
     if (days === -1) {
-      // 仅今日
+      // 仅今日：从当天 0 点（UTC）开始
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      const todayStart = today.toISOString();
+
       rows = this.db.query(`
         SELECT CAST(strftime('%H', pub_date) AS INTEGER) AS hour, COUNT(*) AS count
         FROM posts
-        WHERE date(pub_date, 'localtime') = date('now', 'localtime')
+        WHERE pub_date >= ?
         GROUP BY hour
         ORDER BY hour
-      `).all() as Array<{ hour: number; count: number }>;
+      `).all(todayStart) as Array<{ hour: number; count: number }>;
     } else if (days === 0) {
       rows = this.db.query(`
         SELECT CAST(strftime('%H', pub_date) AS INTEGER) AS hour, COUNT(*) AS count
@@ -765,13 +781,19 @@ export class DatabaseService {
         ORDER BY hour
       `).all() as Array<{ hour: number; count: number }>;
     } else {
+      // 最近 N 天：从 N 天前的 0 点开始
+      const startDate = new Date();
+      startDate.setUTCDate(startDate.getUTCDate() - days);
+      startDate.setUTCHours(0, 0, 0, 0);
+      const startTime = startDate.toISOString();
+
       rows = this.db.query(`
         SELECT CAST(strftime('%H', pub_date) AS INTEGER) AS hour, COUNT(*) AS count
         FROM posts
-        WHERE pub_date >= datetime('now', ?, 'localtime')
+        WHERE pub_date >= ?
         GROUP BY hour
         ORDER BY hour
-      `).all(`-${days} days`) as Array<{ hour: number; count: number }>;
+      `).all(startTime) as Array<{ hour: number; count: number }>;
     }
 
     // 填充缺失的小时（保证 0-23 都有值）
@@ -788,7 +810,7 @@ export class DatabaseService {
 
   /**
    * 统计最近 N 天各分类的帖子数量
-   * days=-1 → 仅今日；days=0 → 全部；days>0 → 最近 N 天
+   * days=-1 → 仅今日（从 0 点开始）；days=0 → 全部；days>0 → 最近 N 天
    */
   getCategoryDistribution(days: number = 7): Array<{ category: string; count: number }> {
     const cacheKey = this.getCacheKey('getCategoryDistribution', [days]);
@@ -798,14 +820,18 @@ export class DatabaseService {
     let result: Array<{ category: string; count: number }>;
 
     if (days === -1) {
-      // 仅今日
+      // 仅今日：从当天 0 点（UTC）开始
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      const todayStart = today.toISOString();
+
       result = this.db.query(`
         SELECT category, COUNT(*) AS count
         FROM posts
-        WHERE date(pub_date, 'localtime') = date('now', 'localtime')
+        WHERE pub_date >= ?
         GROUP BY category
         ORDER BY count DESC
-      `).all() as Array<{ category: string; count: number }>;
+      `).all(todayStart) as Array<{ category: string; count: number }>;
     } else if (days === 0) {
       result = this.db.query(`
         SELECT category, COUNT(*) AS count
@@ -814,13 +840,19 @@ export class DatabaseService {
         ORDER BY count DESC
       `).all() as Array<{ category: string; count: number }>;
     } else {
+      // 最近 N 天：从 N 天前的 0 点开始
+      const startDate = new Date();
+      startDate.setUTCDate(startDate.getUTCDate() - days);
+      startDate.setUTCHours(0, 0, 0, 0);
+      const startTime = startDate.toISOString();
+
       result = this.db.query(`
         SELECT category, COUNT(*) AS count
         FROM posts
-        WHERE pub_date >= datetime('now', ?, 'localtime')
+        WHERE pub_date >= ?
         GROUP BY category
         ORDER BY count DESC
-      `).all(`-${days} days`) as Array<{ category: string; count: number }>;
+      `).all(startTime) as Array<{ category: string; count: number }>;
     }
 
     this.setCache(cacheKey, result, 60000);
