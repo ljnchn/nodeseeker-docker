@@ -427,9 +427,9 @@ export const HomePage: FC = () => {
             </div>
           </div>
 
-          {/* 24小时发帖分布 */}
+          {/* 最近 24小时发帖趋势 */}
           <div class="chart-section">
-            <div class="chart-section-title">每小时发帖分布</div>
+            <div class="chart-section-title">最近 24小时发帖趋势</div>
             <div id="hourlyChart" class="hourly-chart">
               {/* 加载占位 */}
               {[...Array(24)].map((_, i) => (

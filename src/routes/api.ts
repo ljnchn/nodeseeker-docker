@@ -129,10 +129,10 @@ apiRoutes.get('/stats/charts', async (c) => {
         const validDays = isNaN(days) ? 7 : Math.max(-1, Math.min(365, days));
 
         const dbService = c.get('dbService');
-        const hourlyStats = dbService.getHourlyPostStats(validDays);
+        const last24hStats = dbService.getLast24HoursPostStats();
         const categoryStats = dbService.getCategoryDistribution(validDays);
 
-        return c.json(createSuccessResponse({ hourly: hourlyStats, category: categoryStats }));
+        return c.json(createSuccessResponse({ hourly: last24hStats, category: categoryStats }));
     } catch (error) {
         return c.json(createErrorResponse(`获取图表数据失败: ${error}`), 500);
     }

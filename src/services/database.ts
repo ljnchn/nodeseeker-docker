@@ -632,11 +632,11 @@ export class DatabaseService {
     // 从当天 0 点（UTC）开始
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
-    const todayStart = today.toISOString();
+    const todayStart = today.toISOString().replace('T', ' ').substring(0, 19);
 
     const stmt = this.db.query(`
       SELECT COUNT(*) as count FROM posts
-      WHERE pub_date >= ?
+      WHERE datetime(pub_date) >= datetime(?)
     `);
     const result = stmt.get(todayStart) as { count: number };
     const count = result?.count || 0;
@@ -652,11 +652,11 @@ export class DatabaseService {
     // 从当天 0 点（UTC）开始
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
-    const todayStart = today.toISOString();
+    const todayStart = today.toISOString().replace('T', ' ').substring(0, 19);
 
     const stmt = this.db.query(`
       SELECT COUNT(*) as count FROM posts
-      WHERE push_status IN (1, 3) AND pub_date >= ?
+      WHERE push_status IN (1, 3) AND datetime(pub_date) >= datetime(?)
     `);
     const result = stmt.get(todayStart) as { count: number };
     const count = result?.count || 0;
@@ -672,11 +672,11 @@ export class DatabaseService {
     // 从当天 0 点（UTC）开始
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
-    const todayStart = today.toISOString();
+    const todayStart = today.toISOString().replace('T', ' ').substring(0, 19);
 
     const stmt = this.db.query(`
       SELECT COUNT(*) as count FROM posts
-      WHERE push_status = 3 AND push_date >= ?
+      WHERE push_status = 3 AND datetime(push_date) >= datetime(?)
     `);
     const result = stmt.get(todayStart) as { count: number };
     const count = result?.count || 0;
@@ -750,7 +750,42 @@ export class DatabaseService {
   }
 
   /**
-   * 按小时统计最近 N 天的发帖数量
+   * 最近 24 小时发帖趋势：按小时统计过去 24 小时内每小时的发帖数
+   * 返回 24 个桶，index 0 = 24h 前，index 23 = 1h 前（时间顺序从左到右）
+   */
+  getLast24HoursPostStats(): Array<{ hour: number; count: number }> {
+    const cacheKey = this.getCacheKey('getLast24HoursPostStats', []);
+    const cached = this.getFromCache<Array<{ hour: number; count: number }>>(cacheKey);
+    if (cached !== null) return cached;
+
+    // hours_ago: 0=最近1小时, 23=24小时前
+    const rows = this.db.query(`
+      SELECT
+        CAST((julianday('now') - julianday(datetime(pub_date))) * 24 AS INTEGER) AS hours_ago,
+        COUNT(*) AS count
+      FROM posts
+      WHERE datetime(pub_date) >= datetime('now', '-24 hours')
+      GROUP BY hours_ago
+    `).all() as Array<{ hours_ago: number; count: number }>;
+
+    const countByHoursAgo = new Map<number, number>();
+    rows.forEach((r) => {
+      const h = Math.max(0, Math.min(23, r.hours_ago));
+      countByHoursAgo.set(h, r.count);
+    });
+
+    // 转为时间顺序：index 0 = 24h 前，index 23 = 1h 前
+    const result = Array.from({ length: 24 }, (_, i) => ({
+      hour: i,
+      count: countByHoursAgo.get(23 - i) || 0,
+    }));
+
+    this.setCache(cacheKey, result, 60000);
+    return result;
+  }
+
+  /**
+   * 按小时统计最近 N 天的发帖数量（已弃用，保留供兼容）
    * days=-1 → 仅今日（从 0 点开始）；days=0 → 全部；days>0 → 最近 N 天
    */
   getHourlyPostStats(days: number = 7): Array<{ hour: number; count: number }> {
@@ -764,18 +799,18 @@ export class DatabaseService {
       // 仅今日：从当天 0 点（UTC）开始
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
-      const todayStart = today.toISOString();
+      const todayStart = today.toISOString().replace('T', ' ').substring(0, 19);
 
       rows = this.db.query(`
-        SELECT CAST(strftime('%H', pub_date) AS INTEGER) AS hour, COUNT(*) AS count
+        SELECT CAST(strftime('%H', datetime(pub_date)) AS INTEGER) AS hour, COUNT(*) AS count
         FROM posts
-        WHERE pub_date >= ?
+        WHERE datetime(pub_date) >= datetime(?)
         GROUP BY hour
         ORDER BY hour
       `).all(todayStart) as Array<{ hour: number; count: number }>;
     } else if (days === 0) {
       rows = this.db.query(`
-        SELECT CAST(strftime('%H', pub_date) AS INTEGER) AS hour, COUNT(*) AS count
+        SELECT CAST(strftime('%H', datetime(pub_date)) AS INTEGER) AS hour, COUNT(*) AS count
         FROM posts
         GROUP BY hour
         ORDER BY hour
@@ -785,12 +820,12 @@ export class DatabaseService {
       const startDate = new Date();
       startDate.setUTCDate(startDate.getUTCDate() - days);
       startDate.setUTCHours(0, 0, 0, 0);
-      const startTime = startDate.toISOString();
+      const startTime = startDate.toISOString().replace('T', ' ').substring(0, 19);
 
       rows = this.db.query(`
-        SELECT CAST(strftime('%H', pub_date) AS INTEGER) AS hour, COUNT(*) AS count
+        SELECT CAST(strftime('%H', datetime(pub_date)) AS INTEGER) AS hour, COUNT(*) AS count
         FROM posts
-        WHERE pub_date >= ?
+        WHERE datetime(pub_date) >= datetime(?)
         GROUP BY hour
         ORDER BY hour
       `).all(startTime) as Array<{ hour: number; count: number }>;
@@ -823,12 +858,12 @@ export class DatabaseService {
       // 仅今日：从当天 0 点（UTC）开始
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
-      const todayStart = today.toISOString();
+      const todayStart = today.toISOString().replace('T', ' ').substring(0, 19);
 
       result = this.db.query(`
         SELECT category, COUNT(*) AS count
         FROM posts
-        WHERE pub_date >= ?
+        WHERE datetime(pub_date) >= datetime(?)
         GROUP BY category
         ORDER BY count DESC
       `).all(todayStart) as Array<{ category: string; count: number }>;
@@ -844,12 +879,12 @@ export class DatabaseService {
       const startDate = new Date();
       startDate.setUTCDate(startDate.getUTCDate() - days);
       startDate.setUTCHours(0, 0, 0, 0);
-      const startTime = startDate.toISOString();
+      const startTime = startDate.toISOString().replace('T', ' ').substring(0, 19);
 
       result = this.db.query(`
         SELECT category, COUNT(*) AS count
         FROM posts
-        WHERE pub_date >= ?
+        WHERE datetime(pub_date) >= datetime(?)
         GROUP BY category
         ORDER BY count DESC
       `).all(startTime) as Array<{ category: string; count: number }>;
