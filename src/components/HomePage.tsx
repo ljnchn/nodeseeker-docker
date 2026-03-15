@@ -354,28 +354,66 @@ export const HomePage: FC = () => {
           {/* 交互服务配置 */}
           <div class="form-card" style={{ marginTop: "24px" }}>
             <h4 class="form-section-title">🔗 交互服务配置（可选）</h4>
-            <form id="webhookConfigForm" class="form-stack">
-              <div class="form-group">
-                <label for="webhookUrl" class="form-label">Webhook URL</label>
-                <input type="url" id="webhookUrl" class="input-field" placeholder="https://your-domain.com/telegram/webhook" />
-                <span class="form-hint">需要 HTTPS，用于接收 Telegram 命令</span>
+            <div class="form-hint" style={{ background: "var(--bg-primary)", padding: "12px", borderRadius: "8px", marginBottom: "16px" }}>
+              <strong>说明：</strong>交互服务允许通过 Telegram Bot 命令管理订阅、查看文章等。
+              可以选择 Webhook 模式（需要 HTTPS 公网域名）或 Polling 模式（无需公网，适合内网部署）。
+            </div>
+            {/* 模式选择 */}
+            <div class="form-group" style={{ marginBottom: "16px" }}>
+              <label class="form-label">交互模式</label>
+              <div class="mode-selector" id="telegramModeSelector">
+                <label class="mode-option">
+                  <input type="radio" name="telegramMode" value="disabled" checked />
+                  <span class="mode-label">🚫 关闭</span>
+                </label>
+                <label class="mode-option">
+                  <input type="radio" name="telegramMode" value="webhook" />
+                  <span class="mode-label">🔗 Webhook</span>
+                </label>
+                <label class="mode-option">
+                  <input type="radio" name="telegramMode" value="polling" />
+                  <span class="mode-label">🔄 Polling</span>
+                </label>
               </div>
-              <div class="form-hint" style={{ background: "var(--bg-primary)", padding: "12px", borderRadius: "8px" }}>
-                <strong>说明：</strong>交互服务允许通过 Telegram Bot 命令管理订阅、查看文章等。
-                配置 Webhook 后，向 Bot 发送 /start 可自动获取 Chat ID 并绑定用户。
+            </div>
+            {/* Webhook 模式内容 */}
+            <div id="webhookModePanel" style="display: none;">
+              <form id="webhookConfigForm" class="form-stack">
+                <div class="form-group">
+                  <label for="webhookUrl" class="form-label">Webhook URL</label>
+                  <input type="url" id="webhookUrl" class="input-field" placeholder="https://your-domain.com/telegram/webhook" />
+                  <span class="form-hint">需要 HTTPS，用于接收 Telegram 命令</span>
+                </div>
+                <div class="form-actions">
+                  <button type="button" id="testWebhookBtn" class="btn btn-secondary">
+                    测试连接
+                  </button>
+                  <button type="button" id="clearWebhookBtn" class="btn btn-danger">
+                    清除 Webhook
+                  </button>
+                  <button type="submit" class="btn btn-primary">
+                    设置 Webhook
+                  </button>
+                </div>
+              </form>
+            </div>
+            {/* Polling 模式内容 */}
+            <div id="pollingModePanel" style="display: none;">
+              <div class="form-hint" style={{ background: "var(--bg-primary)", padding: "12px", borderRadius: "8px", marginBottom: "12px" }}>
+                Polling 模式不需要公网域名，服务会主动向 Telegram 服务器轮询消息。适合内网或 NAT 环境。
+              </div>
+              <div id="pollingStatusIndicator" class="form-hint" style={{ padding: "10px 12px", borderRadius: "8px", marginBottom: "12px", background: "var(--bg-hover)", fontWeight: "500" }}>
+                ⏹️ Polling 未运行
               </div>
               <div class="form-actions">
-                <button type="button" id="testWebhookBtn" class="btn btn-secondary">
-                  测试连接
+                <button type="button" id="startPollingBtn" class="btn btn-primary">
+                  ▶️ 启动 Polling
                 </button>
-                <button type="button" id="clearWebhookBtn" class="btn btn-danger">
-                  清除 Webhook
-                </button>
-                <button type="submit" class="btn btn-primary">
-                  设置 Webhook
+                <button type="button" id="stopPollingBtn" class="btn btn-danger" style="display: none;">
+                  ⏹️ 停止 Polling
                 </button>
               </div>
-            </form>
+            </div>
           </div>
 
           {/* 状态信息 */}

@@ -30,7 +30,7 @@ export class DatabaseMigrator {
       `).all().map((row: any) => row.filename);
 
       // 读取迁移文件
-      const migrationFiles = ['001_initial.sql', '002_add_rss_config.sql'];
+      const migrationFiles = ['001_initial.sql', '002_add_rss_config.sql', '003_add_telegram_mode.sql'];
 
       for (const filename of migrationFiles) {
         if (executedMigrations.includes(filename)) {

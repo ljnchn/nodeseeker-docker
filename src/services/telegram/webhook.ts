@@ -4,6 +4,9 @@ import type { Post } from '../../types';
 import { logger } from '../../utils/logger';
 
 export class TelegramWebhookService extends TelegramBaseService {
+  private isPolling: boolean = false;
+
+
   /**
    * 发送消息到 Telegram（基础版本，用于测试连接等）
    */
@@ -186,6 +189,100 @@ export class TelegramWebhookService extends TelegramBaseService {
         success: false,
         error: errorMessage
       };
+    }
+  }
+
+  /**
+   * 启动 Long Polling 模式
+   * 注意：Polling 和 Webhook 互斥，启动 Polling 前会自动清除 Webhook
+   */
+  async startPolling(): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    if (this.isPolling) {
+      return { success: true };
+    }
+
+    try {
+      // 确保 Bot 已初始化并注册命令处理器
+      const initResult = await this.initializeWithHandlers();
+      if (!initResult) {
+        return { success: false, error: 'Bot 初始化失败' };
+      }
+
+      // 清除已有的 Webhook（Polling 和 Webhook 互斥）
+      await this.bot.api.deleteWebhook();
+      logger.telegram('已清除 Webhook，准备启动 Polling...');
+
+      // 启动 Long Polling
+      this.bot.start({
+        onStart: () => {
+          logger.telegram('Long Polling 已启动');
+        },
+      });
+
+      this.isPolling = true;
+      return { success: true };
+    } catch (error: any) {
+      logger.error('启动 Polling 失败:', error);
+      this.isPolling = false;
+
+      let errorMessage = 'Polling 启动失败';
+      if (error && error.description) {
+        errorMessage = error.description;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      return { success: false, error: errorMessage };
+    }
+  }
+
+  /**
+   * 停止 Long Polling
+   */
+  async stopPolling(): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    if (!this.isPolling) {
+      return { success: true };
+    }
+
+    try {
+      await this.bot.stop();
+      this.isPolling = false;
+      logger.telegram('Long Polling 已停止');
+      return { success: true };
+    } catch (error: any) {
+      logger.error('停止 Polling 失败:', error);
+
+      let errorMessage = 'Polling 停止失败';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      return { success: false, error: errorMessage };
+    }
+  }
+
+  /**
+   * 获取 Polling 状态
+   */
+  getPollingStatus(): boolean {
+    return this.isPolling;
+  }
+
+  /**
+   * 获取 Webhook 信息（公开方法）
+   */
+  async getWebhookInfo() {
+    try {
+      return await this.bot.api.getWebhookInfo();
+    } catch (error) {
+      logger.error('获取 Webhook 信息失败:', error);
+      return null;
     }
   }
 

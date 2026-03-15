@@ -183,7 +183,7 @@ document.addEventListener("DOMContentLoaded", function () {
       this.closeAll();
       this.activeDrawer = name;
 
-      drawer.style.display = "block";
+      drawer.style.display = "flex";
       this.overlay.style.display = "block";
 
       // 触发重绘以启动动画
@@ -860,6 +860,73 @@ document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("stopPush").checked = result.data.stop_push === 1;
       document.getElementById("onlyTitle").checked = result.data.only_title === 1;
     }
+    // 同时加载交互模式状态
+    await loadTelegramInteractionStatus();
+  }
+
+  async function loadTelegramInteractionStatus() {
+    const result = await apiRequest("/api/webhook/status");
+    if (!result?.success) return;
+
+    const data = result.data;
+    const mode = data.telegram_mode || "disabled";
+    const pollingActive = data.polling_active || false;
+
+    // 同步模式选择器
+    const radio = document.querySelector(`input[name="telegramMode"][value="${mode}"]`);
+    if (radio) radio.checked = true;
+
+    // 切换面板显示
+    updateTelegramModeUI(mode, pollingActive);
+
+    // 更新状态面板
+    const statusPanel = document.getElementById("telegramStatusPanel");
+    if (statusPanel && data.configured) {
+      statusPanel.style.display = "block";
+      const botStatus = document.getElementById("telegramBotStatus");
+      const webhookStatus = document.getElementById("telegramWebhookStatus");
+      const bindingStatus = document.getElementById("telegramBindingStatus");
+      if (botStatus) botStatus.textContent = data.connected ? "✅ 已连接" : "❌ 未连接";
+      if (webhookStatus) {
+        if (pollingActive) {
+          webhookStatus.textContent = "🔄 Polling 运行中";
+        } else if (data.webhook_set) {
+          webhookStatus.textContent = "✅ 已设置";
+        } else {
+          webhookStatus.textContent = "❌ 未设置";
+        }
+      }
+      if (bindingStatus) bindingStatus.textContent = data.bound ? "✅ 已绑定" : "❌ 未绑定";
+    }
+  }
+
+  function updateTelegramModeUI(mode, pollingActive) {
+    const webhookPanel = document.getElementById("webhookModePanel");
+    const pollingPanel = document.getElementById("pollingModePanel");
+    const startBtn = document.getElementById("startPollingBtn");
+    const stopBtn = document.getElementById("stopPollingBtn");
+    const statusIndicator = document.getElementById("pollingStatusIndicator");
+
+    if (webhookPanel) webhookPanel.style.display = mode === "webhook" ? "block" : "none";
+    if (pollingPanel) pollingPanel.style.display = mode === "polling" ? "block" : "none";
+
+    if (pollingActive) {
+      if (startBtn) startBtn.style.display = "none";
+      if (stopBtn) stopBtn.style.display = "inline-flex";
+      if (statusIndicator) {
+        statusIndicator.textContent = "▶️ Polling 运行中";
+        statusIndicator.style.background = "var(--success-alpha)";
+        statusIndicator.style.color = "var(--success)";
+      }
+    } else {
+      if (startBtn) startBtn.style.display = "inline-flex";
+      if (stopBtn) stopBtn.style.display = "none";
+      if (statusIndicator) {
+        statusIndicator.textContent = "⏹️ Polling 未运行";
+        statusIndicator.style.background = "var(--bg-hover)";
+        statusIndicator.style.color = "";
+      }
+    }
   }
 
   function initTelegramConfig() {
@@ -910,6 +977,90 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       } else {
         Toast.success("Bot 连接测试成功（未配置 Chat ID，跳过消息测试）");
+      }
+    });
+
+    // 交互模式切换
+    document.querySelectorAll('input[name="telegramMode"]').forEach((radio) => {
+      radio.addEventListener("change", (e) => {
+        const mode = e.target.value;
+        updateTelegramModeUI(mode, false);
+      });
+    });
+
+    // Webhook 表单提交
+    document.getElementById("webhookConfigForm")?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const webhookUrl = document.getElementById("webhookUrl").value.trim();
+      if (!webhookUrl) {
+        Toast.warning("请输入 Webhook URL");
+        return;
+      }
+
+      Toast.info("正在设置 Webhook...");
+      const result = await apiRequest("/api/webhook/setup", {
+        method: "POST",
+        body: JSON.stringify({ webhook_url: webhookUrl }),
+      });
+
+      if (result?.success) {
+        Toast.success("Webhook 设置成功");
+        // 保存模式
+        await apiRequest("/api/config", {
+          method: "PUT",
+          body: JSON.stringify({ telegram_mode: "webhook" }),
+        });
+        await loadTelegramInteractionStatus();
+      } else {
+        Toast.error(result?.message || "Webhook 设置失败");
+      }
+    });
+
+    // 清除 Webhook
+    document.getElementById("clearWebhookBtn")?.addEventListener("click", async () => {
+      Toast.info("正在清除 Webhook...");
+      const result = await apiRequest("/api/webhook/clear-webhook", { method: "POST" });
+      if (result?.success) {
+        Toast.success("Webhook 已清除");
+        await loadTelegramInteractionStatus();
+      } else {
+        Toast.error(result?.message || "清除失败");
+      }
+    });
+
+    // 测试 Webhook 连接
+    document.getElementById("testWebhookBtn")?.addEventListener("click", async () => {
+      Toast.info("正在测试 Webhook 连接...");
+      const result = await apiRequest("/api/webhook/test-connection", { method: "POST" });
+      if (result?.success) {
+        Toast.success("Bot 连接正常");
+      } else {
+        Toast.error(result?.message || "连接测试失败");
+      }
+    });
+
+    // 启动 Polling
+    document.getElementById("startPollingBtn")?.addEventListener("click", async () => {
+      Toast.info("正在启动 Polling...");
+      const result = await apiRequest("/api/webhook/start-polling", { method: "POST" });
+      if (result?.success) {
+        Toast.success("Polling 已启动");
+        updateTelegramModeUI("polling", true);
+        await loadTelegramInteractionStatus();
+      } else {
+        Toast.error(result?.message || "启动失败");
+      }
+    });
+
+    // 停止 Polling
+    document.getElementById("stopPollingBtn")?.addEventListener("click", async () => {
+      Toast.info("正在停止 Polling...");
+      const result = await apiRequest("/api/webhook/stop-polling", { method: "POST" });
+      if (result?.success) {
+        Toast.success("Polling 已停止");
+        updateTelegramModeUI("polling", false);
+      } else {
+        Toast.error(result?.message || "停止失败");
       }
     });
   }
@@ -1188,7 +1339,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!this.modal || !Drawer.overlay) return;
       
       Drawer.closeAll();
-      this.modal.style.display = "block";
+      this.modal.style.display = "flex";
       Drawer.overlay.style.display = "block";
       
       // 触发重绘以启动动画

@@ -32,16 +32,21 @@ const clearSettingsSchema = z.object({
   clearWebhook: z.boolean().optional().default(true)
 });
 
+// 单例 polling 服务（需要保持长连接状态）
+let pollingService: TelegramWebhookService | null = null;
+
 // 获取 Webhook 状态
 telegramWebhookRoutes.get('/status', async (c) => {
   try {
     const dbService = c.get('dbService');
     const config = dbService.getBaseConfig();
     
-    const status = {
+    const status: any = {
       configured: !!config?.bot_token,
       connected: false,
       webhook_set: false,
+      polling_active: pollingService?.getPollingStatus() || false,
+      telegram_mode: config?.telegram_mode || 'disabled',
       bot_info: null,
       bound: false,
       config: {
@@ -64,8 +69,8 @@ telegramWebhookRoutes.get('/status', async (c) => {
           
           // 检查 webhook 是否实际设置
           try {
-            const webhookInfo = await telegramService.bot.api.getWebhookInfo();
-            status.webhook_set = !!(webhookInfo.url && webhookInfo.url.trim() !== '');
+            const webhookInfo = await telegramService.getWebhookInfo();
+            status.webhook_set = !!(webhookInfo?.url && webhookInfo.url.trim() !== '');
           } catch (webhookError) {
             logger.error('获取 Webhook 信息失败:', webhookError);
             status.webhook_set = false;
@@ -81,6 +86,62 @@ telegramWebhookRoutes.get('/status', async (c) => {
     return c.json(createErrorResponse(`获取 Webhook 状态失败: ${error}`), 500);
   }
 });
+
+// 启动 Polling
+telegramWebhookRoutes.post('/start-polling', async (c) => {
+  try {
+    const dbService = c.get('dbService');
+    const config = dbService.getBaseConfig();
+
+    if (!config?.bot_token) {
+      return c.json(createErrorResponse('未配置 Bot Token'), 400);
+    }
+
+    // 创建或复用 polling 服务单例
+    if (!pollingService) {
+      pollingService = new TelegramWebhookService(dbService, config.bot_token);
+    }
+
+    const result = await pollingService.startPolling();
+
+    if (result.success) {
+      // 保存模式到配置
+      dbService.updateBaseConfig({ telegram_mode: 'polling' });
+      return c.json(createSuccessResponse({
+        polling_active: true,
+      }, 'Polling 已启动'));
+    } else {
+      return c.json(createErrorResponse(`Polling 启动失败: ${result.error}`), 500);
+    }
+  } catch (error) {
+    return c.json(createErrorResponse(`启动 Polling 失败: ${error}`), 500);
+  }
+});
+
+// 停止 Polling
+telegramWebhookRoutes.post('/stop-polling', async (c) => {
+  try {
+    if (!pollingService) {
+      return c.json(createSuccessResponse({ polling_active: false }, 'Polling 未在运行'));
+    }
+
+    const result = await pollingService.stopPolling();
+    pollingService = null;
+
+    if (result.success) {
+      const dbService = c.get('dbService');
+      dbService.updateBaseConfig({ telegram_mode: 'disabled' });
+      return c.json(createSuccessResponse({
+        polling_active: false,
+      }, 'Polling 已停止'));
+    } else {
+      return c.json(createErrorResponse(`Polling 停止失败: ${result.error}`), 500);
+    }
+  } catch (error) {
+    return c.json(createErrorResponse(`停止 Polling 失败: ${error}`), 500);
+  }
+});
+
 
 // 设置 Webhook
 telegramWebhookRoutes.post('/setup', createValidationMiddleware(setupWebhookSchema), async (c) => {
