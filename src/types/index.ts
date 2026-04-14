@@ -12,9 +12,11 @@ export interface BaseConfig {
   rss_url?: string;
   rss_interval_seconds?: number;
   rss_proxy?: string;
+  telegram_mode?: string; // 'disabled' | 'webhook' | 'polling'
   created_at?: string;
   updated_at?: string;
 }
+
 
 // 文章接口
 export interface Post {

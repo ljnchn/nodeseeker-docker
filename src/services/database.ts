@@ -163,6 +163,10 @@ export class DatabaseService {
       updates.push('rss_proxy = ?');
       values.push(config.rss_proxy);
     }
+    if (config.telegram_mode !== undefined) {
+      updates.push('telegram_mode = ?');
+      values.push(config.telegram_mode);
+    }
 
     if (updates.length === 0) {
       return this.getBaseConfig();
