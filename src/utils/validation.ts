@@ -17,7 +17,7 @@ export const baseConfigUpdateSchema = z.object({
     username: z.string().min(1).max(50).optional(),
     password: z.string().min(6).max(100).optional(),
     bot_token: z.string().optional(),
-    chat_id: z.string().min(1).optional(),
+    chat_id: z.string().optional(),
     bound_user_name: z.string().optional(),
     bound_user_username: z.string().optional(),
     stop_push: z.union([z.number().int().min(0).max(1), z.boolean().transform(val => val ? 1 : 0)]).optional(),

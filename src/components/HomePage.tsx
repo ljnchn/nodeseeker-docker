@@ -320,7 +320,7 @@ export const HomePage: FC = () => {
               <div class="form-group">
                 <label for="chatId" class="form-label">用户 Chat ID</label>
                 <input type="text" id="chatId" class="input-field" placeholder="用户或群组的 Chat ID" />
-                <span class="form-hint">可通过 /start 命令自动获取</span>
+                <span class="form-hint">可通过 /start 命令自动获取（需开启交互服务）</span>
               </div>
               <div class="form-group">
                 <div class="checkbox-wrapper">
@@ -367,12 +367,12 @@ export const HomePage: FC = () => {
                   <span class="mode-label">🚫 关闭</span>
                 </label>
                 <label class="mode-option">
-                  <input type="radio" name="telegramMode" value="webhook" />
-                  <span class="mode-label">🔗 Webhook</span>
-                </label>
-                <label class="mode-option">
                   <input type="radio" name="telegramMode" value="polling" />
                   <span class="mode-label">🔄 Polling</span>
+                </label>
+                <label class="mode-option">
+                  <input type="radio" name="telegramMode" value="webhook" />
+                  <span class="mode-label">🔗 Webhook</span>
                 </label>
               </div>
             </div>
