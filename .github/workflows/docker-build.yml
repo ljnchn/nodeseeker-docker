@@ -181,8 +181,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta-ghcr.outputs.tags }}
           labels: ${{ steps.meta-ghcr.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE_NAME }}:cache
-          cache-to: type=registry,ref=${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE_NAME }}:cache,mode=max
+          cache-from: type=gha,ref=${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE_NAME }}:cache
+          cache-to: type=gha,ref=${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE_NAME }}:cache,mode=max
 
       - name: Build and push to Docker Hub
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
