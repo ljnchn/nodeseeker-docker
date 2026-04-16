@@ -569,19 +569,12 @@ export class DatabaseService {
     return stmt.get(id) as KeywordSub | null;
   }
 
-  // 数据库初始化检查
+  // 数据库初始化检查：只要用户存在即视为已初始化
   isInitialized(): boolean {
     try {
-      // 首先检查数据库表是否存在
-      if (!this.checkTablesExist()) {
-        return false;
-      }
-      
-      // 然后检查是否有基础配置
       const config = this.getBaseConfig();
       return config !== null;
     } catch (error) {
-      logger.error('检查数据库初始化状态失败:', error);
       return false;
     }
   }
