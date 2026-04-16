@@ -28,9 +28,9 @@ document.addEventListener('DOMContentLoaded', function() {
           showMessage('正在初始化数据库...', 'info');
           await initializeDatabase();
         } else if (initialized) {
-          showMessage('系统已经初始化，正在跳转到登录页面...', 'info');
+          showMessage('系统已经初始化，正在跳转到首页...', 'info');
           setTimeout(() => {
-            window.location.href = '/login';
+            window.location.href = '/';
           }, 1500);
           return false; // 阻止表单显示
         }
@@ -123,9 +123,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // 保存 sessionId
         localStorage.setItem('sessionId', result.data.sessionId);
         
-        // 跳转到控制台
+        // 跳转到首页
         setTimeout(() => {
-          window.location.href = '/dashboard';
+          window.location.href = '/';
         }, 1500);
       } else {
         showMessage(result.message || '初始化失败', 'error');

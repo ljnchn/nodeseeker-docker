@@ -114,7 +114,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (response.status === 401) {
         if (sessionId) {
           localStorage.removeItem("sessionId");
-          window.location.href = "/login";
+          window.location.reload();
         }
         return null;
       }

@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { DatabaseService } from '../services/database';
 import { AuthService } from '../services/auth';
-import { InitPage, LoginPage, HomePage, ErrorPage } from '../components';
+import { InitPage, HomePage, ErrorPage } from '../components';
 import type { ContextVariables } from '../types';
 
 type Variables = ContextVariables & {
@@ -43,12 +43,11 @@ pageRoutes.get('/init', async (c) => {
   }
 });
 
-// 登录页面
+// 兼容旧版路由（重定向到首页）
 pageRoutes.get('/login', async (c) => {
-  return c.html(<LoginPage />);
+  return c.redirect('/');
 });
 
-// 兼容旧版控制台路由（重定向到首页）
 pageRoutes.get('/dashboard', async (c) => {
   return c.redirect('/');
 });
