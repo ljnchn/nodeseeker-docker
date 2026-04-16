@@ -10,10 +10,8 @@ const DYNAMIC_CACHE = 'nodeseeker-dynamic-v1';
 // 预缓存的核心静态资源
 const STATIC_ASSETS = [
     '/',
-    '/login',
     '/css/style.css',
     '/css/theme.css',
-    '/css/auth.css',
     '/css/buttons.css',
     '/css/dashboard.css',
     '/css/form-enhance.css',
@@ -22,7 +20,6 @@ const STATIC_ASSETS = [
     '/css/tabs.css',
     '/css/toast.css',
     '/js/init.js',
-    '/js/login.js',
     '/js/home.js',
     '/icons/icon-192x192.png',
     '/icons/icon-512x512.png',
