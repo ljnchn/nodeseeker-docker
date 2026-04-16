@@ -65,7 +65,6 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
         <link href="/css/toast.css" rel="stylesheet" />
         <link href="/css/skeleton.css" rel="stylesheet" />
         <link href="/css/dashboard.css" rel="stylesheet" />
-        <link href="/css/auth.css" rel="stylesheet" />
         <link href="/css/home.css" rel="stylesheet" />
         <link href="/css/charts.css" rel="stylesheet" />
 
